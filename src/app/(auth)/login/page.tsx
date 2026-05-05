@@ -114,7 +114,11 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <p className="text-center text-xs mt-6" style={{ color: 'var(--text-s)' }}>
+            <p className="text-center text-xs mt-4" style={{ color: 'var(--text-s)' }}>
+              Primeira vez?{' '}
+              <a href="/signup" style={{ color: 'var(--brand-orange)', fontWeight: 600 }}>Criar conta</a>
+            </p>
+            <p className="text-center text-xs mt-2" style={{ color: 'var(--text-s)' }}>
               Cidade Viva Education © {new Date().getFullYear()}
             </p>
           </div>
