@@ -1,10 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
-import { formatCurrency, formatDate, diasDesdeData } from '@/lib/utils'
+import { formatCurrency, formatDate } from '@/lib/utils'
 import { Plus, AlertTriangle } from 'lucide-react'
-import type { Registro, Escola, Tarefa } from '@/types/database'
-import { MEIO_LABELS } from '@/types/database'
+import { LABEL } from '@/types/database'
 
 export default async function ComercialDashboard() {
   const supabase = await createClient()
@@ -108,7 +107,7 @@ export default async function ComercialDashboard() {
                           </Link>
                         </td>
                         <td style={{ fontSize: '.75rem', color: 'var(--text-s)' }}>{formatDate(r.data_contato)}</td>
-                        <td style={{ fontSize: '.75rem' }}>{MEIO_LABELS[r.meio_contato as keyof typeof MEIO_LABELS]}</td>
+                        <td style={{ fontSize: '.75rem' }}>{LABEL.meio_contato?.[r.meio_contato] ?? r.meio_contato}</td>
                         <td>
                           <span className={`badge badge-${r.classificacao}`}>
                             {r.classificacao === 'quente' ? 'Quente' : r.classificacao === 'morno' ? 'Morno' : 'Frio'}
