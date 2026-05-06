@@ -2,8 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
 import { formatCurrency, formatDate, diasDesdeData } from '@/lib/utils'
-import { Plus, Search, MapPin, Users, TrendingUp, Phone, Mail, ChevronRight } from 'lucide-react'
+import { Plus, MapPin, Users, ChevronRight } from 'lucide-react'
 import { LABEL } from '@/types/database'
+import { EscolasToolbar } from './EscolasToolbar'
 
 interface Props {
   searchParams: Promise<{ q?: string; estado?: string; page?: string; view?: string; classif?: string }>
@@ -174,87 +175,11 @@ export default async function EscolasPage({ searchParams }: Props) {
           })}
         </div>
 
-        {/* ── Toolbar ─────────────────────────────────────────── */}
-        <form style={{
-          background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12,
-          padding: '.85rem 1.1rem', boxShadow: '0 1px 3px rgba(0,0,0,.04)',
-          display: 'flex', alignItems: 'center', gap: '.75rem', flexWrap: 'wrap',
-        }}>
-          <input type="hidden" name="view" value={view} />
-          {classif && <input type="hidden" name="classif" value={classif} />}
-
-          {/* Search */}
-          <div style={{ position: 'relative', flex: 1, minWidth: 220, maxWidth: 360 }}>
-            <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
-            <input name="q" defaultValue={q} placeholder="Buscar escola, cidade, contato…"
-              style={{
-                width: '100%', paddingLeft: 32, paddingRight: 12,
-                paddingTop: 8, paddingBottom: 8,
-                fontSize: '.82rem', border: '1.5px solid #e2e8f0', borderRadius: 8,
-                outline: 'none', color: '#0f172a', background: '#f8fafc',
-                fontFamily: 'var(--font-inter,sans-serif)',
-                transition: 'border-color .15s',
-              }}
-              onFocus={(e: any) => e.target.style.borderColor = '#d97706'}
-              onBlur={(e: any) => e.target.style.borderColor = '#e2e8f0'}
-            />
-          </div>
-
-          {/* Estado */}
-          <select name="estado" defaultValue={estado} style={{
-            padding: '8px 12px', fontSize: '.82rem',
-            border: '1.5px solid #e2e8f0', borderRadius: 8,
-            background: '#f8fafc', color: '#0f172a', outline: 'none',
-            fontFamily: 'var(--font-inter,sans-serif)', cursor: 'pointer',
-          }}>
-            <option value="">Todos os estados</option>
-            {estados.map(uf => <option key={uf} value={uf}>{uf}</option>)}
-          </select>
-
-          <button type="submit" style={{
-            background: '#0f172a', color: '#fff', padding: '8px 16px',
-            borderRadius: 8, border: 'none', cursor: 'pointer',
-            fontSize: '.82rem', fontWeight: 700,
-            fontFamily: 'var(--font-montserrat,sans-serif)',
-          }}>
-            Filtrar
-          </button>
-
-          {(q || estado || classif) && (
-            <Link href="/comercial/escolas" style={{
-              fontSize: '.78rem', color: '#94a3b8', textDecoration: 'none',
-              fontFamily: 'var(--font-inter,sans-serif)',
-            }}>
-              Limpar filtros
-            </Link>
-          )}
-
-          {/* View toggle */}
-          <div style={{
-            marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 2,
-            background: '#f1f5f9', borderRadius: 8, padding: 3,
-          }}>
-            {[
-              { v: 'table', icon: '☰', label: 'Lista' },
-              { v: 'grid',  icon: '⊞', label: 'Cards' },
-            ].map(t => (
-              <Link key={t.v}
-                href={`/comercial/escolas?q=${q}&estado=${estado}&classif=${classif}&page=${page}&view=${t.v}`}
-                title={t.label}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: 30, height: 28, borderRadius: 6,
-                  fontSize: '.85rem', textDecoration: 'none',
-                  background: view === t.v ? '#fff' : 'transparent',
-                  color: view === t.v ? '#0f172a' : '#94a3b8',
-                  boxShadow: view === t.v ? '0 1px 3px rgba(0,0,0,.1)' : 'none',
-                  transition: 'all .15s',
-                }}>
-                {t.icon}
-              </Link>
-            ))}
-          </div>
-        </form>
+        {/* ── Toolbar (Client Component) ───────────────────────── */}
+        <EscolasToolbar
+          q={q} estado={estado} classif={classif}
+          view={view} page={page} estados={estados}
+        />
 
         {/* ── Conteúdo ─────────────────────────────────────────── */}
         {escolas && escolas.length > 0 ? (
@@ -274,8 +199,6 @@ export default async function EscolasPage({ searchParams }: Props) {
                     boxShadow: '0 2px 8px rgba(15,23,42,.05)',
                     transition: 'all .2s', overflow: 'hidden',
                   }}
-                    onMouseEnter={(el: any) => { el.currentTarget.style.boxShadow = '0 8px 24px rgba(15,23,42,.1)'; el.currentTarget.style.transform = 'translateY(-2px)' }}
-                    onMouseLeave={(el: any) => { el.currentTarget.style.boxShadow = '0 2px 8px rgba(15,23,42,.05)'; el.currentTarget.style.transform = 'translateY(0)' }}
                   >
                     <div style={{ padding: '1.1rem 1.25rem' }}>
                       {/* Header */}
@@ -400,8 +323,6 @@ export default async function EscolasPage({ searchParams }: Props) {
                           background: idx % 2 === 0 ? '#fff' : '#fafafa',
                           transition: 'background .12s',
                         }}
-                          onMouseEnter={(el: any) => el.currentTarget.style.background = '#fffbeb'}
-                          onMouseLeave={(el: any) => el.currentTarget.style.background = idx % 2 === 0 ? '#fff' : '#fafafa'}
                         >
                           {/* Nome */}
                           <td style={{ padding: '.85rem 1rem', verticalAlign: 'middle' }}>
@@ -411,8 +332,6 @@ export default async function EscolasPage({ searchParams }: Props) {
                                 textDecoration: 'none', fontFamily: 'var(--font-montserrat,sans-serif)',
                                 transition: 'color .15s',
                               }}
-                                onMouseEnter={(el: any) => el.target.style.color = '#d97706'}
-                                onMouseLeave={(el: any) => el.target.style.color = '#0f172a'}
                               >
                                 {e.nome}
                               </Link>
@@ -498,8 +417,6 @@ export default async function EscolasPage({ searchParams }: Props) {
                                 fontSize: '1rem', fontWeight: 700,
                                 transition: 'background .15s',
                               }} title="Novo registro"
-                                onMouseEnter={(el: any) => el.currentTarget.style.background = '#b45309'}
-                                onMouseLeave={(el: any) => el.currentTarget.style.background = '#d97706'}
                               >
                                 +
                               </Link>
@@ -510,8 +427,6 @@ export default async function EscolasPage({ searchParams }: Props) {
                                 fontSize: '.7rem', fontWeight: 700,
                                 transition: 'all .15s',
                               }} title="Ver ficha"
-                                onMouseEnter={(el: any) => { el.currentTarget.style.background = '#0f172a'; el.currentTarget.style.color = '#fff' }}
-                                onMouseLeave={(el: any) => { el.currentTarget.style.background = '#f1f5f9'; el.currentTarget.style.color = '#475569' }}
                               >
                                 →
                               </Link>
