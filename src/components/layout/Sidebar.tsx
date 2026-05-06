@@ -10,32 +10,159 @@ import {
   LayoutDashboard, School, Users, FileText, Activity,
   Kanban, Calculator, LogOut, Settings,
   Package, FlaskConical, BarChart2, Download,
-  Bot, DollarSign, Table2, Info, FileSignature, ClipboardList
+  Bot, DollarSign, Table2, Info, FileSignature, ClipboardList,
+  ExternalLink, ChevronRight
 } from 'lucide-react'
 
 interface SidebarProps { profile: Profile | null }
 
-const NAV_MAIN = [
-  { href: '/comercial',           label: 'Dashboard',              icon: LayoutDashboard },
-  { href: '/comercial/escolas',   label: 'Escolas / Parceiros',    icon: School },
-  { href: '/comercial/leads',     label: 'Leads',                  icon: Users },
-  { href: '/comercial/registros', label: 'Registros',              icon: FileText },
-  { href: '/comercial/jornada',   label: 'Jornada Relacionamento', icon: Activity },
-  { href: '/comercial/contratos', label: 'Jornada Contratual',     icon: FileSignature },
-  { href: '/comercial/pipeline',  label: 'Pipeline',               icon: Kanban },
-  { href: '/comercial/tabela',    label: 'Tabela Geral',           icon: Table2 },
-  { href: '/calculadora',         label: 'Calculadora Eskolare',   icon: Calculator },
-  { href: '/exports',             label: 'Downloads',              icon: Download },
-  { href: '/sobre',               label: 'Sobre',                  icon: Info },
+// ── Nav groups ───────────────────────────────────────────────────────────────
+
+const NAV_CRM = [
+  { href: '/comercial',           label: 'Dashboard',        icon: LayoutDashboard },
+  { href: '/comercial/escolas',   label: 'Escolas',          icon: School          },
+  { href: '/comercial/leads',     label: 'Leads',            icon: Users           },
+  { href: '/comercial/registros', label: 'Registros',        icon: FileText        },
+]
+
+const NAV_PROCESS = [
+  { href: '/comercial/jornada',   label: 'Jornada Relac.',   icon: Activity        },
+  { href: '/comercial/contratos', label: 'Jornada Contrat.', icon: FileSignature   },
+  { href: '/comercial/pipeline',  label: 'Pipeline',         icon: Kanban          },
+  { href: '/comercial/tabela',    label: 'Tabela Geral',     icon: Table2          },
+]
+
+const NAV_TOOLS = [
+  { href: '/calculadora',         label: 'Calculadora',      icon: Calculator      },
+  { href: '/exports',             label: 'Downloads',        icon: Download        },
+  { href: '/sobre',               label: 'Sobre',            icon: Info            },
 ]
 
 const NAV_WIP = [
-  { href: '/estoque',    label: 'Estoque',         icon: Package },
-  { href: '/amostras',   label: 'Amostras',        icon: FlaskConical },
-  { href: '/dashboards', label: 'Dashboards / BI', icon: BarChart2 },
-  { href: '/ai-bob',     label: 'BOB — IA',        icon: Bot },
-  { href: '/financeiro', label: 'Financeiro',      icon: DollarSign },
+  { href: '/estoque',    label: 'Estoque',       icon: Package    },
+  { href: '/amostras',   label: 'Amostras',      icon: FlaskConical },
+  { href: '/dashboards', label: 'BI / Analytics',icon: BarChart2  },
+  { href: '/ai-bob',     label: 'BOB — IA',      icon: Bot        },
+  { href: '/financeiro', label: 'Financeiro',    icon: DollarSign },
 ]
+
+// ── Subcomponents ─────────────────────────────────────────────────────────────
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      fontSize: '.58rem', fontWeight: 700, textTransform: 'uppercase',
+      letterSpacing: '.1em', color: 'rgba(255,255,255,.2)',
+      padding: '.85rem 1.25rem .3rem',
+      fontFamily: 'var(--font-montserrat, sans-serif)',
+    }}>
+      {children}
+    </div>
+  )
+}
+
+function NavDivider() {
+  return <div style={{ height: '1px', background: 'rgba(255,255,255,.05)', margin: '.4rem .75rem' }} />
+}
+
+interface NavItemProps {
+  href: string
+  label: string
+  icon: React.ComponentType<{ size?: number; className?: string }>
+  active: boolean
+  badge?: number | string
+  external?: boolean
+  wip?: boolean
+}
+
+function NavItem({ href, label, icon: Icon, active, badge, external, wip }: NavItemProps) {
+  const baseStyle: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: '.6rem',
+    padding: '.5rem .9rem', margin: '1px 6px',
+    color: active ? '#ffffff' : 'rgba(255,255,255,.6)',
+    fontSize: '.8rem', fontWeight: active ? 600 : 500,
+    borderRadius: 7, textDecoration: 'none', transition: 'all .15s',
+    fontFamily: 'var(--font-montserrat, sans-serif)',
+    letterSpacing: '.005em',
+    position: 'relative',
+    background: active
+      ? 'linear-gradient(135deg, rgba(217,119,6,.9), rgba(180,83,9,.85))'
+      : 'transparent',
+    boxShadow: active ? '0 2px 10px rgba(217,119,6,.3)' : 'none',
+    opacity: wip ? .4 : 1,
+    pointerEvents: wip ? 'none' : 'auto',
+  }
+
+  const content = (
+    <>
+      {/* Ícone com mini fundo */}
+      <span style={{
+        width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        borderRadius: 6, flexShrink: 0,
+        background: active ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.04)',
+        transition: 'background .15s',
+      }}>
+        <Icon size={14} />
+      </span>
+
+      <span style={{ flex: 1, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {label}
+      </span>
+
+      {badge !== undefined && (
+        <span style={{
+          marginLeft: 'auto', background: active ? 'rgba(255,255,255,.25)' : '#d97706',
+          color: '#fff', fontSize: '.58rem', fontWeight: 800, padding: '.1rem .4rem',
+          borderRadius: 99, minWidth: 18, textAlign: 'center',
+        }}>
+          {badge}
+        </span>
+      )}
+
+      {wip && (
+        <span style={{
+          marginLeft: 'auto', fontSize: '.55rem', fontWeight: 700,
+          color: 'rgba(255,255,255,.3)', background: 'rgba(255,255,255,.06)',
+          border: '1px solid rgba(255,255,255,.1)', padding: '.04rem .3rem',
+          borderRadius: 4, textTransform: 'uppercase', letterSpacing: '.04em',
+        }}>
+          Em breve
+        </span>
+      )}
+
+      {external && !wip && (
+        <ExternalLink size={10} style={{ marginLeft: 'auto', opacity: .4 }} />
+      )}
+    </>
+  )
+
+  if (external) {
+    return <a href={href} target="_blank" rel="noopener noreferrer" style={baseStyle}>{content}</a>
+  }
+  if (wip) {
+    return <div style={baseStyle}>{content}</div>
+  }
+  return (
+    <Link href={href} style={baseStyle}
+      onMouseEnter={e => {
+        if (!active) {
+          e.currentTarget.style.background = 'rgba(255,255,255,.07)'
+          e.currentTarget.style.color = 'rgba(255,255,255,.9)'
+        }
+      }}
+      onMouseLeave={e => {
+        if (!active) {
+          e.currentTarget.style.background = 'transparent'
+          e.currentTarget.style.color = 'rgba(255,255,255,.6)'
+        }
+      }}
+    >
+      {content}
+    </Link>
+  )
+}
+
+// ── Main Sidebar ──────────────────────────────────────────────────────────────
 
 export default function Sidebar({ profile }: SidebarProps) {
   const pathname = usePathname()
@@ -56,152 +183,180 @@ export default function Sidebar({ profile }: SidebarProps) {
   return (
     <aside style={{
       width: 'var(--sidebar-w)', minHeight: '100vh',
-      background: '#0f172a',                        /* slate-900 igual recrutamento */
+      background: 'linear-gradient(180deg, #0f172a 0%, #111827 100%)',
       position: 'fixed', top: 0, left: 0, bottom: 0,
       zIndex: 100, display: 'flex', flexDirection: 'column',
-      borderRight: '1px solid rgba(255,255,255,.06)',
+      borderRight: '1px solid rgba(255,255,255,.05)',
     }}>
 
-      {/* ── Brand ──────────────────────────────────────────── */}
+      {/* ── Brand ─────────────────────────────────────────────── */}
       <div style={{
-        padding: '1.25rem 1.25rem 1rem',
-        borderBottom: '1px solid rgba(255,255,255,.06)',
+        padding: '1.1rem 1.1rem .9rem',
+        borderBottom: '1px solid rgba(255,255,255,.05)',
       }}>
         <Image
           src="/images/logo-education.png"
           alt="Cidade Viva Education"
-          width={150}
-          height={40}
-          style={{ objectFit: 'contain', objectPosition: 'left', filter: 'brightness(0) invert(1)', opacity: .9 }}
+          width={144}
+          height={36}
+          style={{ objectFit: 'contain', objectPosition: 'left', filter: 'brightness(0) invert(1)', opacity: .88 }}
         />
-        <div style={{
-          marginTop: '.65rem',
-          fontSize: '.65rem', fontWeight: 700, letterSpacing: '.1em',
-          textTransform: 'uppercase', color: '#d97706',
-          fontFamily: 'var(--font-montserrat, sans-serif)',
-        }}>
-          ✦ Gestão Comercial
+        <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem', marginTop: '.55rem' }}>
+          <span style={{
+            display: 'inline-block',
+            width: 6, height: 6, borderRadius: '50%', background: '#d97706', flexShrink: 0,
+          }} />
+          <span style={{
+            fontSize: '.6rem', fontWeight: 700, letterSpacing: '.1em',
+            textTransform: 'uppercase', color: 'rgba(217,119,6,.85)',
+            fontFamily: 'var(--font-montserrat, sans-serif)',
+          }}>
+            Gestão Comercial
+          </span>
         </div>
       </div>
 
-      {/* ── Nav principal ──────────────────────────────────── */}
-      <nav style={{ flex: 1, overflowY: 'auto', paddingTop: '.75rem', paddingBottom: '.75rem' }}>
+      {/* ── Nav ───────────────────────────────────────────────── */}
+      <nav style={{ flex: 1, overflowY: 'auto', padding: '.5rem 0 1rem' }}>
 
-        <div className="nav-section-label">Comercial</div>
-        {NAV_MAIN.map(item => {
-          const Icon = item.icon
-          const active = isActive(item.href)
-          return (
-            <Link key={item.href} href={item.href}
-              className={`nav-item ${active ? 'active' : ''}`}>
-              <Icon size={16} style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: '.8rem', lineHeight: 1.2 }}>{item.label}</span>
-            </Link>
-          )
-        })}
+        <SectionLabel>CRM</SectionLabel>
+        {NAV_CRM.map(item => (
+          <NavItem
+            key={item.href}
+            href={item.href}
+            label={item.label}
+            icon={item.icon}
+            active={isActive(item.href)}
+          />
+        ))}
+
+        <NavDivider />
+        <SectionLabel>Processos</SectionLabel>
+        {NAV_PROCESS.map(item => (
+          <NavItem
+            key={item.href}
+            href={item.href}
+            label={item.label}
+            icon={item.icon}
+            active={isActive(item.href)}
+          />
+        ))}
+
+        <NavDivider />
+        <SectionLabel>Ferramentas</SectionLabel>
+        {NAV_TOOLS.map(item => (
+          <NavItem
+            key={item.href}
+            href={item.href}
+            label={item.label}
+            icon={item.icon}
+            active={isActive(item.href)}
+          />
+        ))}
 
         {/* Formulário público */}
-        <div style={{ margin: '.5rem 8px 0', borderTop: '1px solid rgba(255,255,255,.06)', paddingTop: '.5rem' }}>
-          <a href="/formulario" target="_blank"
-            style={{
-              display: 'flex', alignItems: 'center', gap: '.75rem',
-              padding: '.6rem 1rem', color: 'rgba(255,255,255,.55)',
-              fontSize: '.8rem', fontWeight: 500, textDecoration: 'none',
-              borderRadius: 6, transition: 'all .15s',
-              fontFamily: 'var(--font-montserrat, sans-serif)',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.07)'; e.currentTarget.style.color = '#fff' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,.55)' }}
-          >
-            <ClipboardList size={16} style={{ flexShrink: 0 }} />
-            <span>Formulário Escola</span>
-            <span style={{
-              marginLeft: 'auto', fontSize: '.55rem', fontWeight: 700,
-              color: '#d97706', background: 'rgba(217,119,6,.15)',
-              border: '1px solid rgba(217,119,6,.3)', padding: '.05rem .35rem',
-              borderRadius: 4, textTransform: 'uppercase', letterSpacing: '.04em',
-            }}>Público</span>
-          </a>
-        </div>
+        <NavItem
+          href="/formulario"
+          label="Formulário Escola"
+          icon={ClipboardList}
+          active={false}
+          external
+        />
 
-        {/* Gestão de usuários (só gerente) */}
+        {/* Gestão de usuários (gerente) */}
         {isGerente && (
-          <div style={{ margin: '0 8px' }}>
-            <Link href="/adminpanel"
-              className={`nav-item ${isActive('/adminpanel') ? 'active' : ''}`}>
-              <Settings size={16} style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: '.8rem' }}>Gestão de Usuários</span>
-            </Link>
-          </div>
+          <>
+            <NavDivider />
+            <NavItem href="/adminpanel" label="Gestão de Usuários" icon={Settings} active={isActive('/adminpanel')} />
+          </>
         )}
 
-        {/* Em desenvolvimento */}
-        <div className="nav-section-label" style={{ marginTop: '1rem' }}>Em Desenvolvimento</div>
-        {NAV_WIP.map(item => {
-          const Icon = item.icon
-          return (
-            <div key={item.href} className="nav-item wip">
-              <Icon size={16} style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: '.8rem' }}>{item.label}</span>
-              <span className="nav-wip-tag">Em breve</span>
-            </div>
-          )
-        })}
+        <NavDivider />
+        <SectionLabel>Em Desenvolvimento</SectionLabel>
+        {NAV_WIP.map(item => (
+          <NavItem
+            key={item.href}
+            href={item.href}
+            label={item.label}
+            icon={item.icon}
+            active={false}
+            wip
+          />
+        ))}
       </nav>
 
-      {/* ── Footer — perfil do usuário ──────────────────────── */}
+      {/* ── User Footer ──────────────────────────────────────── */}
       <div style={{
-        borderTop: '1px solid rgba(255,255,255,.06)',
-        padding: '1rem 1.25rem',
+        borderTop: '1px solid rgba(255,255,255,.05)',
+        padding: '.9rem 1rem',
+        background: 'rgba(0,0,0,.2)',
       }}>
         {profile ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.65rem' }}>
             {/* Avatar */}
             <div style={{
-              width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+              width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
               background: 'linear-gradient(135deg, #d97706, #b45309)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontSize: '.78rem', fontWeight: 700,
-              overflow: 'hidden',
-              boxShadow: '0 0 0 2px rgba(217,119,6,.3)',
+              color: '#fff', fontSize: '.72rem', fontWeight: 700,
+              overflow: 'hidden', boxShadow: '0 0 0 2px rgba(217,119,6,.25)',
               fontFamily: 'var(--font-montserrat, sans-serif)',
             }}>
               {profile.avatar_url
-                ? <img src={profile.avatar_url} alt={profile.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : getInitials(profile.full_name || profile.email)
               }
             </div>
 
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
-                color: '#fff', fontSize: '.8rem', fontWeight: 600,
+                color: 'rgba(255,255,255,.9)', fontSize: '.78rem', fontWeight: 600,
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 fontFamily: 'var(--font-montserrat, sans-serif)',
               }}>
-                {profile.full_name || profile.email}
+                {profile.full_name?.split(' ').slice(0, 2).join(' ') || profile.email}
               </div>
               <div style={{
-                color: 'rgba(255,255,255,.35)', fontSize: '.65rem',
-                textTransform: 'capitalize',
+                color: 'rgba(255,255,255,.3)', fontSize: '.62rem', textTransform: 'capitalize',
                 fontFamily: 'var(--font-montserrat, sans-serif)',
+                display: 'flex', alignItems: 'center', gap: '.3rem',
               }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', flexShrink: 0 }} />
                 {profile.role}
               </div>
             </div>
 
-            <button onClick={handleLogout} title="Sair" style={{
-              color: 'rgba(255,255,255,.3)', background: 'none', border: 'none',
-              cursor: 'pointer', padding: '4px', borderRadius: 6,
-              transition: 'color .15s',
-            }}
-              onMouseEnter={e => e.currentTarget.style.color = '#dc2626'}
-              onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,.3)'}
+            <button
+              onClick={handleLogout}
+              title="Sair"
+              style={{
+                color: 'rgba(255,255,255,.25)', background: 'rgba(255,255,255,.05)',
+                border: '1px solid rgba(255,255,255,.08)', cursor: 'pointer',
+                padding: '5px', borderRadius: 7, transition: 'all .15s',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.color = '#dc2626'
+                e.currentTarget.style.background = 'rgba(220,38,38,.12)'
+                e.currentTarget.style.borderColor = 'rgba(220,38,38,.2)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = 'rgba(255,255,255,.25)'
+                e.currentTarget.style.background = 'rgba(255,255,255,.05)'
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,.08)'
+              }}
             >
-              <LogOut size={15} />
+              <LogOut size={14} />
             </button>
           </div>
         ) : (
-          <div style={{ color: 'rgba(255,255,255,.25)', fontSize: '.72rem' }}>Carregando...</div>
+          <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(255,255,255,.05)' }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ height: 8, background: 'rgba(255,255,255,.07)', borderRadius: 4, marginBottom: 5, width: '70%' }} />
+              <div style={{ height: 6, background: 'rgba(255,255,255,.04)', borderRadius: 4, width: '40%' }} />
+            </div>
+          </div>
         )}
       </div>
     </aside>

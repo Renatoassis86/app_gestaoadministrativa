@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 /* ================================================================
-   CVE Gestão Comercial — Design System
-   Baseado no padrão visual da plataforma de Recrutamento CVE
+   CVE Gestão Comercial — Design System v2
    Fontes: Cormorant Garamond (serif) + Montserrat + Inter (sans)
-   Cores: Slate-900 escuro + Amber dourado + Azul #003366
+   Paleta: Slate-900 dark sidebar + Amber gold + Navy #003366
+   Inspirado em: Salesforce, HubSpot, Pipedrive, Linear
    ================================================================ */
 
 :root {
@@ -14,40 +14,65 @@
   --amber-dark:   #b45309;
   --brand-blue:   #003366;
   --brand-blue-m: #1e4d8c;
+  --brand-blue-l: #dbeafe;
+
+  /* Slate scale */
+  --slate-950:    #020617;
   --slate-900:    #0f172a;
   --slate-800:    #1e293b;
   --slate-700:    #334155;
   --slate-600:    #475569;
+  --slate-500:    #64748b;
   --slate-400:    #94a3b8;
+  --slate-300:    #cbd5e1;
   --slate-200:    #e2e8f0;
   --slate-100:    #f1f5f9;
   --slate-50:     #f8fafc;
 
-  /* UI */
-  --bg:           #f8fafc;
+  /* UI surfaces */
+  --bg:           #f4f6f9;
   --surface:      #ffffff;
-  --surface-2:    #f1f5f9;
+  --surface-2:    #f8fafc;
+  --surface-3:    #f1f5f9;
   --border:       #e2e8f0;
   --border-d:     #cbd5e1;
+
+  /* Text hierarchy */
   --text:         #0f172a;
   --text-m:       #334155;
   --text-s:       #64748b;
+  --text-xs:      #94a3b8;
 
-  /* Status */
-  --success:  #16a34a;
-  --warning:  #d97706;
-  --danger:   #dc2626;
-  --info:     #2563eb;
+  /* Semantic colors */
+  --success:      #16a34a;
+  --success-bg:   #f0fdf4;
+  --warning:      #d97706;
+  --warning-bg:   #fffbeb;
+  --danger:       #dc2626;
+  --danger-bg:    #fef2f2;
+  --info:         #2563eb;
+  --info-bg:      #eff6ff;
 
-  /* Layout */
-  --sidebar-w: 260px;
-  --topbar-h:  64px;
-  --radius:    10px;
-  --radius-lg: 16px;
-  --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
-  --shadow-md: 0 4px 6px rgba(0,0,0,.07);
-  --shadow-lg: 0 10px 40px rgba(15,23,42,.15);
-  --shadow-xl: 0 20px 60px rgba(15,23,42,.2);
+  /* Layout dimensions */
+  --sidebar-w:    256px;
+  --topbar-h:     60px;
+
+  /* Border radius */
+  --radius-sm:    6px;
+  --radius:       10px;
+  --radius-md:    12px;
+  --radius-lg:    16px;
+  --radius-xl:    20px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.05);
+  --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg: 0 10px 40px rgba(15,23,42,.12);
+  --shadow-xl: 0 20px 60px rgba(15,23,42,.18);
+
+  /* Transition */
+  --transition: all .18s ease;
 }
 
 /* ── Reset ───────────────────────────────────────────────────── */
@@ -61,7 +86,11 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
+
+/* Tabular numbers para dados/KPIs */
+.tabular-nums { font-variant-numeric: tabular-nums; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -92,38 +121,39 @@ h1, h2, h3 { font-family: var(--font-cormorant, serif); }
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-md);
     box-shadow: var(--shadow);
   }
   .card-header {
-    padding: 1rem 1.25rem;
+    padding: .9rem 1.25rem;
     border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between;
+    background: #ffffff;
   }
   .card-title {
     font-family: var(--font-cormorant, serif);
-    font-size: 1.1rem; font-weight: 700; color: var(--brand-blue);
+    font-size: 1.05rem; font-weight: 700; color: var(--brand-blue);
     letter-spacing: -.01em;
   }
   .card-body  { padding: 1.25rem; }
   .card-footer {
-    padding: .85rem 1.25rem;
+    padding: .8rem 1.25rem;
     border-top: 1px solid var(--border);
     background: var(--surface-2);
-    border-radius: 0 0 var(--radius) var(--radius);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
   }
 
-  /* KPIs */
+  /* KPIs — mantidos para compatibilidade; prefira <StatCard> */
   .kpi-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-md);
     padding: 1.25rem;
     box-shadow: var(--shadow);
     position: relative; overflow: hidden;
     transition: box-shadow .2s, transform .2s;
   }
-  .kpi-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .kpi-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
   .kpi-card::before {
     content: ""; position: absolute;
     top: 0; left: 0; right: 0; height: 3px;
@@ -133,15 +163,17 @@ h1, h2, h3 { font-family: var(--font-cormorant, serif); }
   .kpi-card.success::before { background: var(--success); }
   .kpi-card.warning::before { background: var(--warning); }
   .kpi-card.danger::before  { background: var(--danger); }
+  .kpi-card.teal::before    { background: #0d9488; }
   .kpi-label {
-    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    font-size: .68rem; font-weight: 700; text-transform: uppercase;
     letter-spacing: .08em; color: var(--text-s); margin-bottom: .35rem;
     font-family: var(--font-montserrat, sans-serif);
   }
   .kpi-value {
-    font-size: 1.75rem; font-weight: 800;
+    font-size: 1.9rem; font-weight: 800;
     color: var(--brand-blue); line-height: 1;
     font-family: var(--font-montserrat, sans-serif);
+    font-variant-numeric: tabular-nums;
   }
   .kpi-sub { font-size: .72rem; color: var(--text-s); margin-top: .35rem; }
 
@@ -233,19 +265,18 @@ h1, h2, h3 { font-family: var(--font-cormorant, serif); }
   /* Table */
   .data-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
   .data-table thead th {
-    background: var(--slate-900); color: rgba(255,255,255,.7);
-    font-size: .68rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .07em; padding: .75rem 1rem;
+    background: #0f172a; color: rgba(255,255,255,.65);
+    font-size: .66rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .07em; padding: .7rem 1rem;
     border-bottom: none; white-space: nowrap; text-align: left;
     font-family: var(--font-montserrat, sans-serif);
   }
-  .data-table thead th:first-child { border-radius: 0; }
   .data-table tbody td {
-    padding: .85rem 1rem; border-bottom: 1px solid var(--border);
-    vertical-align: middle;
+    padding: .8rem 1rem; border-bottom: 1px solid var(--border);
+    vertical-align: middle; color: var(--text-m);
   }
   .data-table tbody tr:last-child td { border-bottom: none; }
-  .data-table tbody tr:hover { background: var(--surface-2); }
+  .data-table tbody tr:hover { background: #fefce8; cursor: pointer; }
 
   /* Nav sidebar */
   .nav-item {

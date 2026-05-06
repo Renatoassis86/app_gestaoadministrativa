@@ -4,8 +4,18 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { calcPotencial, calcProbabilidade, calcClassificacao } from '@/types/database'
+import type { StageNegociacao } from '@/types/database'
+
+// ─── Tipos de retorno das actions (para uso em Client Components) ─────────────
+
+export interface ActionResult {
+  success: boolean
+  error?: string
+  id?: string
+}
 
 // ─── Auth ──────────────────────────────────────────────────────────────────────
+
 export async function signOut() {
   const supabase = await createClient()
   await supabase.auth.signOut()
@@ -13,6 +23,7 @@ export async function signOut() {
 }
 
 // ─── Escola ────────────────────────────────────────────────────────────────────
+
 export async function upsertEscola(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -49,7 +60,8 @@ export async function upsertEscola(formData: FormData) {
   }
 
   if (id) {
-    await supabase.from('escolas').update(payload).eq('id', id)
+    const { error } = await supabase.from('escolas').update(payload).eq('id', id)
+    if (error) throw new Error(error.message)
     revalidatePath(`/comercial/escolas/${id}`)
     redirect(`/comercial/escolas/${id}`)
   } else {
@@ -65,6 +77,7 @@ export async function upsertEscola(formData: FormData) {
 }
 
 // ─── Registro ──────────────────────────────────────────────────────────────────
+
 export async function upsertRegistro(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -87,31 +100,32 @@ export async function upsertRegistro(formData: FormData) {
 
   const payload = {
     escola_id,
-    negociacao_id:   formData.get('negociacao_id') as string || null,
-    data_contato:    formData.get('data_contato') as string,
-    hora_contato:    formData.get('hora_contato') as string || null,
-    meio_contato:    formData.get('meio_contato') as string || 'whatsapp',
-    resumo:          formData.get('resumo') as string,
-    responsavel_id:  formData.get('responsavel_id') as string || user.id,
-    contato_nome:    formData.get('contato_nome') as string || null,
-    contato_cargo:   formData.get('contato_cargo') as string || null,
+    negociacao_id:        formData.get('negociacao_id') as string || null,
+    data_contato:         formData.get('data_contato') as string,
+    hora_contato:         formData.get('hora_contato') as string || null,
+    meio_contato:         formData.get('meio_contato') as string || 'whatsapp',
+    resumo:               formData.get('resumo') as string,
+    responsavel_id:       formData.get('responsavel_id') as string || user.id,
+    contato_nome:         formData.get('contato_nome') as string || null,
+    contato_cargo:        formData.get('contato_cargo') as string || null,
     interesse,
     prontidao,
     abertura,
-    encaminhamentos: enc,
-    qtd_infantil:    qtd_inf,
-    qtd_fund1:       qtd_f1,
-    qtd_fund2:       qtd_f2,
-    qtd_medio:       qtd_med,
+    encaminhamentos:      enc,
+    qtd_infantil:         qtd_inf,
+    qtd_fund1:            qtd_f1,
+    qtd_fund2:            qtd_f2,
+    qtd_medio:            qtd_med,
     potencial_financeiro: pot,
-    probabilidade:   prob,
-    classificacao:   cls,
-    proximo_contato: formData.get('proximo_contato') as string || null,
-    notas_internas:  formData.get('notas_internas') as string || null,
+    probabilidade:        prob,
+    classificacao:        cls,
+    proximo_contato:      formData.get('proximo_contato') as string || null,
+    notas_internas:       formData.get('notas_internas') as string || null,
   }
 
   if (id) {
-    await supabase.from('registros').update(payload).eq('id', id)
+    const { error } = await supabase.from('registros').update(payload).eq('id', id)
+    if (error) throw new Error(error.message)
   } else {
     const { error } = await supabase
       .from('registros')
@@ -124,51 +138,340 @@ export async function upsertRegistro(formData: FormData) {
   redirect(`/comercial/escolas/${escola_id}`)
 }
 
+/**
+ * Deleta um registro individual.
+ * Apenas o criador ou supervisores podem deletar (verificado via RLS).
+ * Retorna ActionResult para uso em Client Components (sem redirect).
+ */
+export async function deleteRegistro(id: string): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Não autenticado' }
+
+  // Busca o escola_id antes de deletar para revalidar o path correto
+  const { data: registro, error: fetchError } = await supabase
+    .from('registros')
+    .select('id, escola_id, created_by, responsavel_id')
+    .eq('id', id)
+    .single()
+
+  if (fetchError || !registro) {
+    return { success: false, error: 'Registro não encontrado' }
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  const isSupervisor = profile?.role === 'gerente' || profile?.role === 'supervisor'
+  const isOwner      = registro.created_by === user.id || registro.responsavel_id === user.id
+
+  if (!isSupervisor && !isOwner) {
+    return { success: false, error: 'Sem permissão para deletar este registro' }
+  }
+
+  const { error } = await supabase.from('registros').delete().eq('id', id)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath(`/comercial/escolas/${registro.escola_id}`)
+  revalidatePath('/comercial')
+  revalidatePath('/comercial/registros')
+
+  return { success: true, id }
+}
+
+// ─── Negociação ────────────────────────────────────────────────────────────────
+
+/**
+ * Cria ou edita uma negociação (upsert).
+ *
+ * Se `formData` contém `id`, faz UPDATE; caso contrário, INSERT.
+ * Após salvar, redireciona para a escola vinculada.
+ */
+export async function upsertNegociacao(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const id        = formData.get('id') as string | null
+  const escola_id = formData.get('escola_id') as string
+
+  if (!escola_id) throw new Error('escola_id é obrigatório')
+
+  const valorRaw = parseFloat(formData.get('valor_estimado') as string)
+  const probRaw  = parseInt(formData.get('probabilidade') as string)
+
+  const payload = {
+    escola_id,
+    titulo:              formData.get('titulo') as string || null,
+    stage:               (formData.get('stage') as StageNegociacao) || 'prospeccao',
+    responsavel_id:      formData.get('responsavel_id') as string || user.id,
+    valor_estimado:      isNaN(valorRaw) ? null : valorRaw,
+    probabilidade:       isNaN(probRaw) ? 0 : Math.min(100, Math.max(0, probRaw)),
+    previsao_fechamento: formData.get('previsao_fechamento') as string || null,
+    motivo_perda:        formData.get('motivo_perda') as string || null,
+    ativa:               formData.get('ativa') !== 'false',
+    observacoes:         formData.get('observacoes') as string || null,
+  }
+
+  if (id) {
+    const { error } = await supabase
+      .from('negociacoes')
+      .update(payload)
+      .eq('id', id)
+    if (error) throw new Error(error.message)
+  } else {
+    const { error } = await supabase
+      .from('negociacoes')
+      .insert({ ...payload, created_by: user.id })
+    if (error) throw new Error(error.message)
+  }
+
+  revalidatePath(`/comercial/escolas/${escola_id}`)
+  revalidatePath('/comercial/pipeline')
+  revalidatePath('/comercial')
+  redirect(`/comercial/escolas/${escola_id}`)
+}
+
+/**
+ * Atualiza o stage de uma negociação.
+ * Pensado para drag-and-drop no Kanban ou botões de stage rápidos.
+ * Não redireciona — retorna ActionResult.
+ */
+export async function updateStageNegociacao(
+  id: string,
+  stage: StageNegociacao,
+  options?: { motivo_perda?: string }
+): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Não autenticado' }
+
+  const updatePayload: Record<string, unknown> = { stage }
+
+  // Se fechando como perdido, registra o motivo
+  if (stage === 'perdido' && options?.motivo_perda) {
+    updatePayload.motivo_perda = options.motivo_perda
+  }
+
+  // Ao marcar ganho ou perdido, desativa a negociação do pipeline ativo
+  if (stage === 'ganho' || stage === 'perdido') {
+    updatePayload.ativa = false
+  }
+
+  const { data: negociacao, error: fetchError } = await supabase
+    .from('negociacoes')
+    .select('id, escola_id')
+    .eq('id', id)
+    .single()
+
+  if (fetchError || !negociacao) {
+    return { success: false, error: 'Negociação não encontrada' }
+  }
+
+  const { error } = await supabase
+    .from('negociacoes')
+    .update(updatePayload)
+    .eq('id', id)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath(`/comercial/escolas/${negociacao.escola_id}`)
+  revalidatePath('/comercial/pipeline')
+  revalidatePath('/comercial')
+
+  return { success: true, id }
+}
+
+/**
+ * Deleta uma negociação (apenas gerente/supervisor ou dono).
+ * Retorna ActionResult.
+ */
+export async function deleteNegociacao(id: string): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Não autenticado' }
+
+  const { data: negociacao, error: fetchError } = await supabase
+    .from('negociacoes')
+    .select('id, escola_id, created_by, responsavel_id')
+    .eq('id', id)
+    .single()
+
+  if (fetchError || !negociacao) {
+    return { success: false, error: 'Negociação não encontrada' }
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  const isSupervisor = profile?.role === 'gerente' || profile?.role === 'supervisor'
+  const isOwner      = negociacao.created_by === user.id || negociacao.responsavel_id === user.id
+
+  if (!isSupervisor && !isOwner) {
+    return { success: false, error: 'Sem permissão para deletar esta negociação' }
+  }
+
+  const { error } = await supabase.from('negociacoes').delete().eq('id', id)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath(`/comercial/escolas/${negociacao.escola_id}`)
+  revalidatePath('/comercial/pipeline')
+  revalidatePath('/comercial')
+
+  return { success: true, id }
+}
+
 // ─── Tarefa ────────────────────────────────────────────────────────────────────
+
 export async function criarTarefa(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
   const escola_id = formData.get('escola_id') as string
-  await supabase.from('tarefas').insert({
+
+  const { error } = await supabase.from('tarefas').insert({
     escola_id,
+    negociacao_id:  formData.get('negociacao_id') as string || null,
     titulo:         formData.get('titulo') as string,
     descricao:      formData.get('descricao') as string || null,
-    responsavel_id: user.id,
+    responsavel_id: formData.get('responsavel_id') as string || user.id,
     vencimento:     formData.get('vencimento') as string || null,
     prioridade:     formData.get('prioridade') as string || 'media',
     created_by:     user.id,
   })
-  revalidatePath(`/comercial/escolas/${escola_id}`)
-}
 
-export async function concluirTarefa(id: string) {
-  const supabase = await createClient()
-  await supabase.from('tarefas').update({
-    status: 'concluida',
-    concluida_em: new Date().toISOString(),
-  }).eq('id', id)
+  if (error) throw new Error(error.message)
+
+  revalidatePath(`/comercial/escolas/${escola_id}`)
   revalidatePath('/comercial')
 }
 
+/**
+ * Conclui uma tarefa pendente.
+ * Já existia — mantida com tratamento de erro melhorado.
+ */
+export async function concluirTarefa(id: string): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Não autenticado' }
+
+  // Busca escola_id para revalidar o path correto
+  const { data: tarefa } = await supabase
+    .from('tarefas')
+    .select('id, escola_id, status')
+    .eq('id', id)
+    .single()
+
+  if (!tarefa) return { success: false, error: 'Tarefa não encontrada' }
+  if (tarefa.status === 'concluida') return { success: true, id } // idempotente
+
+  const { error } = await supabase
+    .from('tarefas')
+    .update({ status: 'concluida', concluida_em: new Date().toISOString() })
+    .eq('id', id)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath(`/comercial/escolas/${tarefa.escola_id}`)
+  revalidatePath('/comercial')
+
+  return { success: true, id }
+}
+
+/**
+ * Cancela uma tarefa (sem excluir — mantém histórico).
+ */
+export async function cancelarTarefa(id: string): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Não autenticado' }
+
+  const { data: tarefa } = await supabase
+    .from('tarefas')
+    .select('id, escola_id')
+    .eq('id', id)
+    .single()
+
+  if (!tarefa) return { success: false, error: 'Tarefa não encontrada' }
+
+  const { error } = await supabase
+    .from('tarefas')
+    .update({ status: 'cancelada' })
+    .eq('id', id)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath(`/comercial/escolas/${tarefa.escola_id}`)
+  revalidatePath('/comercial')
+
+  return { success: true, id }
+}
+
 // ─── Nota ──────────────────────────────────────────────────────────────────────
+
 export async function criarNota(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
   const escola_id = formData.get('escola_id') as string
-  await supabase.from('notas_escola').insert({
+
+  const { error } = await supabase.from('notas_escola').insert({
     escola_id,
     texto:      formData.get('texto') as string,
     fixada:     formData.get('fixada') === 'true',
     created_by: user.id,
   })
+
+  if (error) throw new Error(error.message)
+
   revalidatePath(`/comercial/escolas/${escola_id}`)
 }
 
+export async function deletarNota(id: string): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Não autenticado' }
+
+  const { data: nota } = await supabase
+    .from('notas_escola')
+    .select('id, escola_id, created_by')
+    .eq('id', id)
+    .single()
+
+  if (!nota) return { success: false, error: 'Nota não encontrada' }
+
+  // Apenas o criador pode deletar notas
+  if (nota.created_by !== user.id) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role !== 'gerente') {
+      return { success: false, error: 'Sem permissão para deletar esta nota' }
+    }
+  }
+
+  const { error } = await supabase.from('notas_escola').delete().eq('id', id)
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath(`/comercial/escolas/${nota.escola_id}`)
+  return { success: true, id }
+}
+
 // ─── Contrato ──────────────────────────────────────────────────────────────────
+
 export async function upsertContrato(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -190,60 +493,72 @@ export async function upsertContrato(formData: FormData) {
     contrato_assinado:    formData.get('contrato_assinado') === 'true',
     contrato_arquivado:   formData.get('contrato_arquivado') === 'true',
     encaminhamento_final: formData.get('encaminhamento_final') as string || null,
-    infantil2_qtd:   toNum('infantil2_qtd'),
-    infantil2_valor: toNum('infantil2_valor'),
-    infantil3_qtd:   toNum('infantil3_qtd'),
-    infantil3_valor: toNum('infantil3_valor'),
-    infantil4_qtd:   toNum('infantil4_qtd'),
-    infantil4_valor: toNum('infantil4_valor'),
-    infantil5_qtd:   toNum('infantil5_qtd'),
-    infantil5_valor: toNum('infantil5_valor'),
+    infantil2_qtd:    toNum('infantil2_qtd'),
+    infantil2_valor:  toNum('infantil2_valor'),
+    infantil3_qtd:    toNum('infantil3_qtd'),
+    infantil3_valor:  toNum('infantil3_valor'),
+    infantil4_qtd:    toNum('infantil4_qtd'),
+    infantil4_valor:  toNum('infantil4_valor'),
+    infantil5_qtd:    toNum('infantil5_qtd'),
+    infantil5_valor:  toNum('infantil5_valor'),
     fund1_ano1_qtd:   toNum('fund1_ano1_qtd'),
     fund1_ano1_valor: toNum('fund1_ano1_valor'),
+    fund1_ano2_qtd:   toNum('fund1_ano2_qtd'),
+    fund1_ano2_valor: toNum('fund1_ano2_valor'),
+    fund1_ano3_qtd:   toNum('fund1_ano3_qtd'),
+    fund1_ano3_valor: toNum('fund1_ano3_valor'),
+    fund1_ano4_qtd:   toNum('fund1_ano4_qtd'),
+    fund1_ano4_valor: toNum('fund1_ano4_valor'),
+    fund1_ano5_qtd:   toNum('fund1_ano5_qtd'),
+    fund1_ano5_valor: toNum('fund1_ano5_valor'),
     tempo_contrato:   parseInt(formData.get('tempo_contrato') as string) || 1,
     created_by: user.id,
   }
 
   // UPSERT por escola_id
   const { data: existing } = await supabase
-    .from('contratos').select('id').eq('escola_id', escola_id).single()
+    .from('contratos')
+    .select('id')
+    .eq('escola_id', escola_id)
+    .single()
 
-  if (existing) {
-    await supabase.from('contratos').update(payload).eq('id', existing.id)
-  } else {
-    await supabase.from('contratos').insert(payload)
-  }
+  const { error } = existing
+    ? await supabase.from('contratos').update(payload).eq('id', existing.id)
+    : await supabase.from('contratos').insert(payload)
+
+  if (error) throw new Error(error.message)
 
   revalidatePath('/comercial/contratos')
   redirect(`/comercial/contratos?escola=${escola_id}`)
 }
 
 // ─── Formulário público (sem auth) ────────────────────────────────────────────
+
 export async function enviarFormularioPublico(formData: FormData) {
   const supabase = await createClient()
 
   const toNum = (k: string) => parseInt(formData.get(k) as string) || 0
 
   const payload = {
-    email_responsavel: formData.get('email_responsavel') as string,
-    nome_escola:       formData.get('nome_escola') as string,
-    cnpj:              formData.get('cnpj') as string || null,
-    rua:               formData.get('rua') as string || null,
-    numero:            formData.get('numero') as string || null,
-    complemento:       formData.get('complemento') as string || null,
-    bairro:            formData.get('bairro') as string || null,
-    cidade:            formData.get('cidade') as string || null,
-    estado:            formData.get('estado') as string || null,
-    cep:               formData.get('cep') as string || null,
-    infantil2_qtd:     toNum('infantil2_qtd'),
-    infantil3_qtd:     toNum('infantil3_qtd'),
-    infantil4_qtd:     toNum('infantil4_qtd'),
-    infantil5_qtd:     toNum('infantil5_qtd'),
-    fund1_ano1_qtd:    toNum('fund1_ano1_qtd'),
-    fund1_ano2_qtd:    toNum('fund1_ano2_qtd'),
-    fund1_ano3_qtd:    toNum('fund1_ano3_qtd'),
-    fund1_ano4_qtd:    toNum('fund1_ano4_qtd'),
-    fund1_ano5_qtd:    toNum('fund1_ano5_qtd'),
+    email_responsavel:  formData.get('email_responsavel') as string,
+    nome_escola:        formData.get('nome_escola') as string,
+    cnpj:               formData.get('cnpj') as string || null,
+    rua:                formData.get('rua') as string || null,
+    numero:             formData.get('numero') as string || null,
+    complemento:        formData.get('complemento') as string || null,
+    bairro:             formData.get('bairro') as string || null,
+    cidade:             formData.get('cidade') as string || null,
+    estado:             formData.get('estado') as string || null,
+    cep:                formData.get('cep') as string || null,
+    infantil2_qtd:      toNum('infantil2_qtd'),
+    infantil3_qtd:      toNum('infantil3_qtd'),
+    infantil4_qtd:      toNum('infantil4_qtd'),
+    infantil5_qtd:      toNum('infantil5_qtd'),
+    fund1_ano1_qtd:     toNum('fund1_ano1_qtd'),
+    fund1_ano2_qtd:     toNum('fund1_ano2_qtd'),
+    fund1_ano3_qtd:     toNum('fund1_ano3_qtd'),
+    fund1_ano4_qtd:     toNum('fund1_ano4_qtd'),
+    fund1_ano5_qtd:     toNum('fund1_ano5_qtd'),
     data_inicio_letivo: formData.get('data_inicio_letivo') as string || null,
     data_fim_letivo:    formData.get('data_fim_letivo') as string || null,
     formato_ano_letivo: formData.get('formato_ano_letivo') as string || null,
@@ -281,13 +596,19 @@ export async function enviarFormularioPublico(formData: FormData) {
   redirect('/formulario/obrigado')
 }
 
-// ─── Usuários (gerente only) ────────────────────────────────────────────────
+// ─── Usuários (gerente only) ─────────────────────────────────────────────────
+
 export async function upsertProfile(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const { data: me } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
   if (me?.role !== 'gerente') throw new Error('Sem permissão')
 
   const email    = formData.get('email') as string
@@ -296,7 +617,6 @@ export async function upsertProfile(formData: FormData) {
   const isActive = formData.get('is_active') === 'true'
   const phone    = formData.get('phone') as string || null
 
-  // Atualiza o perfil se já existe
   const { error } = await supabase
     .from('profiles')
     .update({ full_name: fullName, role, is_active: isActive, phone })
