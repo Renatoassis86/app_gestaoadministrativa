@@ -114,11 +114,15 @@ export default function FormularioPublico() {
             <Section title="Informações Acadêmicas">
               <Row>
                 {[
-                  ['infantil2_qtd','Qtd Infantil 2'],
-                  ['infantil3_qtd','Qtd Infantil 3'],
-                  ['infantil4_qtd','Qtd Infantil 4'],
-                  ['infantil5_qtd','Qtd Infantil 5'],
-                  ['fund1_ano1_qtd','Qtd 1º Ano Fund I'],
+                  ['infantil2_qtd',  'Infantil 2'],
+                  ['infantil3_qtd',  'Infantil 3'],
+                  ['infantil4_qtd',  'Infantil 4'],
+                  ['infantil5_qtd',  'Infantil 5'],
+                  ['fund1_ano1_qtd', '1º Ano Fund I'],
+                  ['fund1_ano2_qtd', '2º Ano Fund I'],
+                  ['fund1_ano3_qtd', '3º Ano Fund I'],
+                  ['fund1_ano4_qtd', '4º Ano Fund I'],
+                  ['fund1_ano5_qtd', '5º Ano Fund I'],
                 ].map(([n,l]) => (
                   <div key={n}>
                     <label style={{ display: 'block', fontSize: '.82rem', fontWeight: 600, color: '#4A5568', marginBottom: '.4rem' }}>{l}</label>

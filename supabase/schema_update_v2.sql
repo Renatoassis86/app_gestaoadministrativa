@@ -183,21 +183,19 @@ create policy "Usuário atualiza próprias notificações" on notificacoes for u
 create policy "Sistema insere notificações" on notificacoes for insert with check (true);
 
 -- ============================================================
--- 6. ATUALIZAR VIEW escolas_resumo (incluir novos campos)
+-- 6. RECRIAR VIEW escolas_resumo (DROP + CREATE para evitar erro de coluna)
 -- ============================================================
 
-create or replace view escolas_resumo as
+-- DROP necessário pois CREATE OR REPLACE não permite mudar nomes de colunas
+drop view if exists escolas_resumo;
+
+create view escolas_resumo as
 select
   e.*,
   r_last.data_contato    as ultimo_contato,
   r_last.classificacao   as classificacao_atual,
   r_last.probabilidade   as probabilidade_atual,
-  p.full_name            as responsavel_nome,
-  -- Total geral de alunos (todos os segmentos)
-  (
-    coalesce(e.qtd_infantil,0) + coalesce(e.qtd_fund1,0) +
-    coalesce(e.qtd_fund2,0)   + coalesce(e.qtd_medio,0)
-  ) as total_alunos_geral
+  p.full_name            as responsavel_nome
 from escolas e
 left join profiles p on p.id = e.responsavel_id
 left join lateral (
