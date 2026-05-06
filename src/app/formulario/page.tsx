@@ -8,7 +8,7 @@ const ESTADOS_BR = [
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: '2rem' }}>
-      <div style={{ fontSize: '.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--brand-orange)', borderBottom: '2px solid var(--brand-orange)', paddingBottom: '.4rem', marginBottom: '1rem' }}>
+      <div style={{ fontSize: '.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#d97706', borderBottom: '2px solid #d97706', paddingBottom: '.4rem', marginBottom: '1rem' }}>
         {title}
       </div>
       {children}
@@ -49,15 +49,38 @@ export default function FormularioPublico() {
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
 
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{ width: 60, height: 60, background: '#F58220', borderRadius: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '1.5rem' }}>🏫</span>
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+          <img
+            src="/images/logo_azul.png"
+            alt="Cidade Viva Education"
+            style={{ height: 56, objectFit: 'contain', marginBottom: '1.5rem' }}
+          />
+          {/* Badge */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '.4rem',
+            background: '#fff7ed', border: '1px solid #fed7aa',
+            borderRadius: 9999, padding: '.3rem .9rem', marginBottom: '1rem',
+            fontSize: '.7rem', fontWeight: 700, color: '#c2410c',
+            textTransform: 'uppercase', letterSpacing: '.08em',
+            fontFamily: 'var(--font-montserrat, sans-serif)',
+          }}>
+            ✦ Gratuito · Sem necessidade de login
           </div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#003366', marginBottom: '.3rem' }}>
-            Formulário de Pré-Cadastro Escolar
+          <h1 style={{
+            fontFamily: 'var(--font-cormorant, "Georgia", serif)',
+            fontSize: 'clamp(1.8rem, 4vw, 2.6rem)',
+            fontWeight: 700, color: '#0f172a', lineHeight: 1.15,
+            marginBottom: '.75rem',
+          }}>
+            Inicie sua parceria com o<br />
+            <span style={{ color: '#d97706' }}>Currículo Paideia</span>
           </h1>
-          <p style={{ color: '#718096', fontSize: '.9rem' }}>
-            Cidade Viva Education — Preencha os dados da sua escola para iniciar a parceria
+          <p style={{
+            color: '#475569', fontSize: '.95rem', lineHeight: 1.6,
+            maxWidth: 520, margin: '0 auto',
+            fontFamily: 'var(--font-inter, sans-serif)',
+          }}>
+            Preencha o formulário abaixo para que nossa equipe comercial entre em contato e apresente nossa proposta educacional personalizada para sua escola.
           </p>
         </div>
 
@@ -167,7 +190,7 @@ export default function FormularioPublico() {
             </Section>
 
             <button type="submit"
-              style={{ width: '100%', padding: '.85rem', background: '#F58220', color: '#fff', fontWeight: 700, fontSize: '1rem', border: 'none', borderRadius: 10, cursor: 'pointer' }}>
+              style={{ width: '100%', padding: '.85rem', background: '#d97706', color: '#fff', fontWeight: 700, fontSize: '1rem', border: 'none', borderRadius: 9999, cursor: 'pointer', fontFamily: 'var(--font-montserrat, sans-serif)', letterSpacing: '.02em', boxShadow: '0 4px 14px rgba(217,119,6,.35)' }}>
               Enviar Formulário
             </button>
           </div>

@@ -456,11 +456,10 @@ export default function LoginPage() {
                 Links Úteis
               </div>
               {[
-                { label: 'Site Cidade Viva Education', href: 'https://cidadeviva.education' },
-                { label: 'Plataforma Educacional', href: 'https://plataforma.cidadeviva.education' },
-                { label: 'Sistema Prover', href: 'https://sis.sistemaprover.com.br/login/' },
+                { label: 'Cidade Viva Education', href: 'https://cidadeviva.org/' },
+                { label: 'Plataforma Educacional', href: 'https://hub.cidadeviva.education/hub/login.php?curso_id=0' },
+                { label: 'FICV — Faculdade Internacional', href: 'https://ficv.edu.br/' },
                 { label: 'Formulário de Pré-Cadastro', href: '/formulario' },
-                { label: 'Vendas Oikos', href: 'https://lp.cidadeviva.education/wordpress/adquirir-oikos/' },
               ].map(item => (
                 <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" style={{
                   display: 'block', color: 'rgba(255,255,255,.4)', fontSize: '.78rem',
