@@ -167,45 +167,67 @@ export default function LoginPage() {
             </div>
 
             {/* Destaque formulário público */}
+            {/* Bloco para escolas parceiras */}
             <div style={{
-              background: 'rgba(217,119,6,.12)',
-              border: '1px solid rgba(217,119,6,.3)',
-              borderRadius: 12, padding: '1.25rem 1.5rem',
+              background: 'linear-gradient(135deg, rgba(217,119,6,.18) 0%, rgba(217,119,6,.08) 100%)',
+              border: '1px solid rgba(217,119,6,.35)',
+              borderLeft: '4px solid #d97706',
+              borderRadius: 14, padding: '1.35rem 1.5rem',
               backdropFilter: 'blur(8px)',
-              maxWidth: 480,
+              maxWidth: 500,
+              boxShadow: '0 8px 32px rgba(217,119,6,.12)',
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                {/* Ícone */}
                 <div style={{
-                  width: 44, height: 44, borderRadius: 10, flexShrink: 0,
-                  background: '#d97706',
+                  width: 46, height: 46, borderRadius: 12, flexShrink: 0,
+                  background: 'linear-gradient(135deg, #d97706, #b45309)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 4px 12px rgba(217,119,6,.4)',
                 }}>
-                  <ClipboardList size={20} color="#fff" />
+                  <ClipboardList size={21} color="#fff" />
                 </div>
-                <div>
+
+                <div style={{ flex: 1 }}>
+                  {/* Eyebrow label */}
                   <div style={{
-                    fontWeight: 700, color: '#fbbf24', fontSize: '.85rem',
+                    fontSize: '.6rem', fontWeight: 800, letterSpacing: '.1em',
+                    textTransform: 'uppercase', color: '#fbbf24',
                     marginBottom: '.3rem',
                     fontFamily: 'var(--font-montserrat, sans-serif)',
                   }}>
-                    É uma escola parceira?
+                    ✦ Para Escolas Parceiras
                   </div>
-                  <p style={{ fontSize: '.8rem', color: 'rgba(255,255,255,.65)', lineHeight: 1.5, marginBottom: '.75rem', fontFamily: 'var(--font-inter, sans-serif)' }}>
-                    Preencha o formulário de pré-cadastro para iniciar sua jornada com o Currículo Paideia. <strong style={{ color: '#fff' }}>Não é necessário fazer login.</strong>
+
+                  {/* Título */}
+                  <div style={{
+                    fontFamily: 'var(--font-cormorant, serif)',
+                    fontSize: '1.1rem', fontWeight: 700, color: '#fff',
+                    lineHeight: 1.2, marginBottom: '.5rem',
+                  }}>
+                    Quer adotar o Currículo Paideia?
+                  </div>
+
+                  {/* Descrição */}
+                  <p style={{
+                    fontSize: '.78rem', color: 'rgba(255,255,255,.7)',
+                    lineHeight: 1.6, marginBottom: '.9rem',
+                    fontFamily: 'var(--font-inter, sans-serif)',
+                  }}>
+                    Preencha nosso formulário de pré-cadastro e nossa equipe comercial entrará em contato para apresentar a proposta personalizada para sua escola.
                   </p>
+
+                  {/* CTA */}
                   <a href="/formulario" style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '.4rem',
+                    display: 'inline-flex', alignItems: 'center', gap: '.45rem',
                     background: '#d97706', color: '#fff',
-                    padding: '.5rem 1.25rem', borderRadius: 9999,
+                    padding: '.55rem 1.25rem', borderRadius: 9999,
                     fontSize: '.8rem', fontWeight: 700, textDecoration: 'none',
-                    boxShadow: '0 4px 14px rgba(217,119,6,.4)',
-                    transition: 'all .2s',
+                    boxShadow: '0 4px 16px rgba(217,119,6,.45)',
                     fontFamily: 'var(--font-montserrat, sans-serif)',
-                  }}
-                    onMouseEnter={e => { e.currentTarget.style.background = '#b45309'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = '#d97706'; e.currentTarget.style.transform = 'translateY(0)' }}
-                  >
-                    Acessar Formulário de Pré-Cadastro <ArrowRight size={14} />
+                    letterSpacing: '.01em',
+                  }}>
+                    Acessar Formulário de Pré-Cadastro <ArrowRight size={13} />
                   </a>
                 </div>
               </div>
@@ -359,7 +381,7 @@ export default function LoginPage() {
               onMouseLeave={e => { e.currentTarget.style.background = 'rgba(217,119,6,.08)'; e.currentTarget.style.borderColor = 'rgba(217,119,6,.25)' }}
             >
               <ClipboardList size={15} style={{ flexShrink: 0 }} />
-              <span>Escola? Preencha o formulário de pré-cadastro →</span>
+              <span>Quero ser escola parceira — Pré-Cadastro →</span>
             </a>
           </div>
         </div>
