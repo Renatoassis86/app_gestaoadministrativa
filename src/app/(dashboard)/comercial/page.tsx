@@ -2,10 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
 import { formatDate } from '@/lib/utils'
-import {
-  Plus, AlertTriangle, School, Flame, TrendingUp, Activity,
-  CheckCircle2, ArrowRight, Clock
-} from 'lucide-react'
+import { Plus, AlertTriangle, CheckCircle2, ArrowRight, Clock, Activity } from 'lucide-react'
 import { LABEL } from '@/types/database'
 import StatCard from '@/components/ui/StatCard'
 import Badge, { ClassificacaoBadge, PrioridadeBadge } from '@/components/ui/Badge'
@@ -101,7 +98,7 @@ export default async function ComercialDashboard() {
       label: 'Total de Escolas',
       value: totalEscolas ?? 0,
       sub: 'parceiros ativos',
-      icon: School,
+      icon: 'school' as const,
       variant: 'blue' as const,
       href: '/comercial/escolas',
     },
@@ -109,7 +106,7 @@ export default async function ComercialDashboard() {
       label: 'Leads Quentes',
       value: leadsQuentes ?? 0,
       sub: 'alta probabilidade',
-      icon: Flame,
+      icon: 'flame' as const,
       variant: 'danger' as const,
       href: '/comercial/leads',
     },
@@ -117,14 +114,14 @@ export default async function ComercialDashboard() {
       label: 'Leads Mornos',
       value: leadsMornos ?? 0,
       sub: 'em negociação ativa',
-      icon: TrendingUp,
+      icon: 'trending-up' as const,
       variant: 'warning' as const,
     },
     {
       label: 'Registros (30 dias)',
       value: registrosMes ?? 0,
       sub: 'interações recentes',
-      icon: Activity,
+      icon: 'activity' as const,
       variant: 'teal' as const,
       href: '/comercial/registros',
     },
