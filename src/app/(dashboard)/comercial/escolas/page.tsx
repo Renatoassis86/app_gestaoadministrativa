@@ -1,26 +1,34 @@
 import { createClient } from '@/lib/supabase/server'
 import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
-import { formatCurrency, formatDate } from '@/lib/utils'
-import { Plus, School, LayoutGrid, List } from 'lucide-react'
-import { ClassificacaoBadge } from '@/components/ui/Badge'
-import EscolaCard from '@/components/ui/EscolaCard'
-import Progress from '@/components/ui/Progress'
+import { formatCurrency, formatDate, diasDesdeData } from '@/lib/utils'
+import { Plus, Search, MapPin, Users, TrendingUp, Phone, Mail, ChevronRight } from 'lucide-react'
+import { LABEL } from '@/types/database'
 
-interface Props { searchParams: Promise<{ q?: string; estado?: string; page?: string; view?: string }> }
+interface Props {
+  searchParams: Promise<{ q?: string; estado?: string; page?: string; view?: string; classif?: string }>
+}
+
+const CLASSIF_COR: Record<string, { bg: string; text: string; dot: string; border: string }> = {
+  quente: { bg: '#fef2f2', text: '#dc2626', dot: '#dc2626', border: '#fca5a5' },
+  morno:  { bg: '#fffbeb', text: '#d97706', dot: '#f59e0b', border: '#fcd34d' },
+  frio:   { bg: '#eff6ff', text: '#2563eb', dot: '#60a5fa', border: '#93c5fd' },
+}
 
 export default async function EscolasPage({ searchParams }: Props) {
   const params  = await searchParams
   const q       = params.q       ?? ''
   const estado  = params.estado  ?? ''
+  const classif = params.classif ?? ''
+  const view    = params.view    ?? 'table'
   const page    = parseInt(params.page ?? '1')
-  const view    = params.view    ?? 'table'   // 'table' | 'grid'
-  const perPage = 25
+  const perPage = 20
   const from    = (page - 1) * perPage
   const to      = from + perPage - 1
 
   const supabase = await createClient()
 
+  // Query principal
   let query = supabase
     .from('escolas_resumo')
     .select('*', { count: 'exact' })
@@ -28,231 +36,516 @@ export default async function EscolasPage({ searchParams }: Props) {
     .range(from, to)
     .order('nome')
 
-  if (q)      query = query.ilike('nome', `%${q}%`)
-  if (estado) query = query.eq('estado', estado)
+  if (q)       query = query.ilike('nome', `%${q}%`)
+  if (estado)  query = query.eq('estado', estado)
+  if (classif) query = query.eq('classificacao_atual', classif)
 
   const { data: escolas, count } = await query
 
-  const { data: estadosRaw } = await supabase
-    .from('escolas')
-    .select('estado')
-    .eq('ativa', true)
-    .not('estado', 'is', null)
-
-  const listaEstados = [...new Set(estadosRaw?.map((e: any) => e.estado).filter(Boolean))].sort() as string[]
-  const totalPages   = Math.ceil((count ?? 0) / perPage)
-
-  // KPIs rápidos
+  // KPIs e estados em paralelo
   const [
-    { count: totalQ },
-    { count: totalM },
-    { count: totalF },
+    { count: nQ },
+    { count: nM },
+    { count: nF },
+    { data: estadosRaw },
   ] = await Promise.all([
-    supabase.from('registros').select('escola_id', { count: 'exact', head: true }).eq('classificacao', 'quente'),
-    supabase.from('registros').select('escola_id', { count: 'exact', head: true }).eq('classificacao', 'morno'),
-    supabase.from('registros').select('escola_id', { count: 'exact', head: true }).eq('classificacao', 'frio'),
+    supabase.from('escolas_resumo').select('*', { count: 'exact', head: true }).eq('ativa', true).eq('classificacao_atual', 'quente'),
+    supabase.from('escolas_resumo').select('*', { count: 'exact', head: true }).eq('ativa', true).eq('classificacao_atual', 'morno'),
+    supabase.from('escolas_resumo').select('*', { count: 'exact', head: true }).eq('ativa', true).eq('classificacao_atual', 'frio'),
+    supabase.from('escolas').select('estado').eq('ativa', true).not('estado', 'is', null),
   ])
-  const totalLeads = (totalQ ?? 0) + (totalM ?? 0) + (totalF ?? 0) || 1
+
+  const estados   = [...new Set(estadosRaw?.map((e: any) => e.estado).filter(Boolean))].sort() as string[]
+  const totalPages = Math.ceil((count ?? 0) / perPage)
+  const totalEscolas = (nQ ?? 0) + (nM ?? 0) + (nF ?? 0)
+
+  const kpis = [
+    { label: 'Quentes',  value: nQ ?? 0, classif: 'quente', emoji: '🔥', pct: totalEscolas ? Math.round(((nQ ?? 0) / totalEscolas) * 100) : 0 },
+    { label: 'Mornos',   value: nM ?? 0, classif: 'morno',  emoji: '🌤', pct: totalEscolas ? Math.round(((nM ?? 0) / totalEscolas) * 100) : 0 },
+    { label: 'Frios',    value: nF ?? 0, classif: 'frio',   emoji: '❄️', pct: totalEscolas ? Math.round(((nF ?? 0) / totalEscolas) * 100) : 0 },
+  ]
 
   return (
     <div>
       <PageHeader
         title="Escolas / Parceiros"
-        subtitle={`${count ?? 0} escola${(count ?? 0) !== 1 ? 's' : ''} cadastrada${(count ?? 0) !== 1 ? 's' : ''}`}
-        breadcrumbs={[{ label: 'Escolas' }]}
+        subtitle={`${count ?? 0} resultado${(count ?? 0) !== 1 ? 's' : ''}`}
         actions={
-          <Link href="/comercial/escolas/nova" className="btn btn-primary btn-sm">
+          <Link href="/comercial/escolas/nova" style={{
+            display: 'inline-flex', alignItems: 'center', gap: '.4rem',
+            background: '#d97706', color: '#fff', padding: '.45rem 1rem',
+            borderRadius: 9999, fontSize: '.82rem', fontWeight: 700,
+            textDecoration: 'none', boxShadow: '0 4px 12px rgba(217,119,6,.3)',
+            fontFamily: 'var(--font-montserrat,sans-serif)',
+          }}>
             <Plus size={14} /> Nova Escola
           </Link>
         }
       />
 
-      <div className="p-6 space-y-5">
+      <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
-        {/* ── Mini KPIs de classificação ─────────────────────── */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { label: 'Quentes', count: totalQ ?? 0, variant: 'quente' as const, color: 'bg-red-500' },
-            { label: 'Mornos',  count: totalM ?? 0, variant: 'morno'  as const, color: 'bg-amber-500' },
-            { label: 'Frios',   count: totalF ?? 0, variant: 'frio'   as const, color: 'bg-blue-400' },
-          ].map(item => (
-            <div key={item.label} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{item.label}</span>
-                <ClassificacaoBadge value={item.variant} />
-              </div>
-              <div className="text-2xl font-extrabold text-slate-900 tabular-nums mb-2">{item.count}</div>
-              <Progress
-                value={item.count}
-                max={totalLeads}
-                size="xs"
-                variant={item.variant === 'quente' ? 'danger' : item.variant === 'morno' ? 'warning' : 'blue'}
-              />
-            </div>
-          ))}
+        {/* ── KPI pills clicáveis ─────────────────────────────── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem' }}>
+          {kpis.map(k => {
+            const cor = CLASSIF_COR[k.classif]
+            const isActive = classif === k.classif
+            return (
+              <Link
+                key={k.classif}
+                href={`/comercial/escolas?classif=${isActive ? '' : k.classif}&q=${q}&estado=${estado}&view=${view}`}
+                style={{
+                  display: 'block', textDecoration: 'none',
+                  background: isActive ? cor.bg : '#fff',
+                  border: `1.5px solid ${isActive ? cor.border : '#e2e8f0'}`,
+                  borderRadius: 14, padding: '1.1rem 1.25rem',
+                  boxShadow: isActive ? `0 4px 20px ${cor.dot}20` : '0 1px 3px rgba(0,0,0,.05)',
+                  transition: 'all .2s',
+                  position: 'relative', overflow: 'hidden',
+                }}
+              >
+                {/* Barra de accent */}
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+                  background: cor.dot, borderRadius: '14px 14px 0 0',
+                }} />
+
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: '.4rem',
+                      marginBottom: '.4rem',
+                    }}>
+                      <div style={{
+                        width: 8, height: 8, borderRadius: '50%', background: cor.dot,
+                        boxShadow: `0 0 0 3px ${cor.dot}25`,
+                      }} />
+                      <span style={{
+                        fontSize: '.68rem', fontWeight: 700, textTransform: 'uppercase',
+                        letterSpacing: '.07em', color: cor.text,
+                        fontFamily: 'var(--font-montserrat,sans-serif)',
+                      }}>
+                        {k.label}
+                      </span>
+                    </div>
+                    <div style={{
+                      fontFamily: 'var(--font-cormorant,serif)',
+                      fontSize: '2rem', fontWeight: 800, lineHeight: 1,
+                      color: isActive ? cor.text : '#0f172a',
+                    }}>
+                      {k.value}
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '1.6rem', lineHeight: 1, marginBottom: '.25rem' }}>{k.emoji}</div>
+                    <div style={{
+                      fontSize: '.72rem', fontWeight: 700, color: cor.text,
+                      fontFamily: 'var(--font-montserrat,sans-serif)',
+                    }}>
+                      {k.pct}%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Barra de progresso */}
+                <div style={{ marginTop: '.85rem', height: 4, background: '#f1f5f9', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%', borderRadius: 2,
+                    background: cor.dot,
+                    width: `${k.pct}%`,
+                    transition: 'width .6s ease',
+                  }} />
+                </div>
+
+                {isActive && (
+                  <div style={{
+                    position: 'absolute', top: '.6rem', right: '.6rem',
+                    background: cor.dot, color: '#fff',
+                    fontSize: '.55rem', fontWeight: 800, padding: '.1rem .35rem',
+                    borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)',
+                    textTransform: 'uppercase', letterSpacing: '.05em',
+                  }}>
+                    Filtrado
+                  </div>
+                )}
+              </Link>
+            )
+          })}
         </div>
 
-        {/* ── Toolbar de filtros ─────────────────────────────── */}
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
-          <form className="flex items-center gap-3 flex-wrap">
-            {/* Search */}
-            <div className="relative flex-1 min-w-[220px] max-w-sm">
-              <School size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-              <input
-                name="q"
-                defaultValue={q}
-                placeholder="Buscar escola, cidade…"
-                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all"
-              />
-            </div>
+        {/* ── Toolbar ─────────────────────────────────────────── */}
+        <form style={{
+          background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12,
+          padding: '.85rem 1.1rem', boxShadow: '0 1px 3px rgba(0,0,0,.04)',
+          display: 'flex', alignItems: 'center', gap: '.75rem', flexWrap: 'wrap',
+        }}>
+          <input type="hidden" name="view" value={view} />
+          {classif && <input type="hidden" name="classif" value={classif} />}
 
-            {/* Estado */}
-            <select
-              name="estado"
-              defaultValue={estado}
-              className="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-amber-400 transition-all"
-            >
-              <option value="">Todos os estados</option>
-              {listaEstados.map(uf => <option key={uf} value={uf}>{uf}</option>)}
-            </select>
+          {/* Search */}
+          <div style={{ position: 'relative', flex: 1, minWidth: 220, maxWidth: 360 }}>
+            <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+            <input name="q" defaultValue={q} placeholder="Buscar escola, cidade, contato…"
+              style={{
+                width: '100%', paddingLeft: 32, paddingRight: 12,
+                paddingTop: 8, paddingBottom: 8,
+                fontSize: '.82rem', border: '1.5px solid #e2e8f0', borderRadius: 8,
+                outline: 'none', color: '#0f172a', background: '#f8fafc',
+                fontFamily: 'var(--font-inter,sans-serif)',
+                transition: 'border-color .15s',
+              }}
+              onFocus={(e: any) => e.target.style.borderColor = '#d97706'}
+              onBlur={(e: any) => e.target.style.borderColor = '#e2e8f0'}
+            />
+          </div>
 
-            {/* View mode */}
-            <input type="hidden" name="view" value={view} />
+          {/* Estado */}
+          <select name="estado" defaultValue={estado} style={{
+            padding: '8px 12px', fontSize: '.82rem',
+            border: '1.5px solid #e2e8f0', borderRadius: 8,
+            background: '#f8fafc', color: '#0f172a', outline: 'none',
+            fontFamily: 'var(--font-inter,sans-serif)', cursor: 'pointer',
+          }}>
+            <option value="">Todos os estados</option>
+            {estados.map(uf => <option key={uf} value={uf}>{uf}</option>)}
+          </select>
 
-            <button type="submit" className="btn btn-secondary btn-sm">Filtrar</button>
-            {(q || estado) && (
-              <Link href={`/comercial/escolas?view=${view}`} className="btn btn-ghost btn-sm">Limpar</Link>
-            )}
+          <button type="submit" style={{
+            background: '#0f172a', color: '#fff', padding: '8px 16px',
+            borderRadius: 8, border: 'none', cursor: 'pointer',
+            fontSize: '.82rem', fontWeight: 700,
+            fontFamily: 'var(--font-montserrat,sans-serif)',
+          }}>
+            Filtrar
+          </button>
 
-            {/* View toggle */}
-            <div className="ml-auto flex items-center gap-1 bg-slate-100 rounded-lg p-1">
-              <Link
-                href={`/comercial/escolas?q=${q}&estado=${estado}&page=${page}&view=table`}
-                className={`p-1.5 rounded-md transition-all ${view === 'table' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                <List size={15} />
+          {(q || estado || classif) && (
+            <Link href="/comercial/escolas" style={{
+              fontSize: '.78rem', color: '#94a3b8', textDecoration: 'none',
+              fontFamily: 'var(--font-inter,sans-serif)',
+            }}>
+              Limpar filtros
+            </Link>
+          )}
+
+          {/* View toggle */}
+          <div style={{
+            marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 2,
+            background: '#f1f5f9', borderRadius: 8, padding: 3,
+          }}>
+            {[
+              { v: 'table', icon: '☰', label: 'Lista' },
+              { v: 'grid',  icon: '⊞', label: 'Cards' },
+            ].map(t => (
+              <Link key={t.v}
+                href={`/comercial/escolas?q=${q}&estado=${estado}&classif=${classif}&page=${page}&view=${t.v}`}
+                title={t.label}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: 30, height: 28, borderRadius: 6,
+                  fontSize: '.85rem', textDecoration: 'none',
+                  background: view === t.v ? '#fff' : 'transparent',
+                  color: view === t.v ? '#0f172a' : '#94a3b8',
+                  boxShadow: view === t.v ? '0 1px 3px rgba(0,0,0,.1)' : 'none',
+                  transition: 'all .15s',
+                }}>
+                {t.icon}
               </Link>
-              <Link
-                href={`/comercial/escolas?q=${q}&estado=${estado}&page=${page}&view=grid`}
-                className={`p-1.5 rounded-md transition-all ${view === 'grid' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                <LayoutGrid size={15} />
-              </Link>
-            </div>
-          </form>
-        </div>
+            ))}
+          </div>
+        </form>
 
-        {/* ── Conteúdo ──────────────────────────────────────── */}
+        {/* ── Conteúdo ─────────────────────────────────────────── */}
         {escolas && escolas.length > 0 ? (
 
           view === 'grid' ? (
-            /* Grid de cards */
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {escolas.map((e: any) => (
-                <EscolaCard
-                  key={e.id}
-                  id={e.id}
-                  nome={e.nome}
-                  cidade={e.cidade}
-                  estado={e.estado}
-                  perfil_pedagogico={e.perfil_pedagogico}
-                  total_alunos={e.total_alunos}
-                  potencial_financeiro={e.potencial_financeiro}
-                  classificacao={e.classificacao_atual}
-                  probabilidade={e.probabilidade_atual}
-                  ultimo_contato={e.ultimo_contato}
-                  responsavel_nome={e.responsavel_nome}
-                  href={`/comercial/escolas/${e.id}`}
-                  variant="grid"
-                />
-              ))}
+            /* ── Grid de cards ─────────────────────────────────── */
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px,1fr))', gap: '1rem' }}>
+              {escolas.map((e: any) => {
+                const cor = CLASSIF_COR[e.classificacao_atual ?? 'frio']
+                const diasSemContato = diasDesdeData(e.ultimo_contato)
+                return (
+                  <Link key={e.id} href={`/comercial/escolas/${e.id}`} style={{
+                    textDecoration: 'none', display: 'block',
+                    background: '#fff', border: '1px solid #e2e8f0',
+                    borderTop: `3px solid ${cor.dot}`,
+                    borderRadius: 14,
+                    boxShadow: '0 2px 8px rgba(15,23,42,.05)',
+                    transition: 'all .2s', overflow: 'hidden',
+                  }}
+                    onMouseEnter={(el: any) => { el.currentTarget.style.boxShadow = '0 8px 24px rgba(15,23,42,.1)'; el.currentTarget.style.transform = 'translateY(-2px)' }}
+                    onMouseLeave={(el: any) => { el.currentTarget.style.boxShadow = '0 2px 8px rgba(15,23,42,.05)'; el.currentTarget.style.transform = 'translateY(0)' }}
+                  >
+                    <div style={{ padding: '1.1rem 1.25rem' }}>
+                      {/* Header */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '.85rem' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{
+                            fontFamily: 'var(--font-montserrat,sans-serif)',
+                            fontWeight: 700, fontSize: '.9rem', color: '#0f172a',
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            marginBottom: '.2rem',
+                          }}>
+                            {e.nome}
+                          </div>
+                          <div style={{
+                            display: 'flex', alignItems: 'center', gap: '.25rem',
+                            fontSize: '.72rem', color: '#64748b',
+                            fontFamily: 'var(--font-inter,sans-serif)',
+                          }}>
+                            <MapPin size={11} />
+                            {e.cidade}{e.estado ? `, ${e.estado}` : ''}
+                          </div>
+                        </div>
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '.25rem',
+                          background: cor.bg, color: cor.text,
+                          border: `1px solid ${cor.border}`,
+                          padding: '.2rem .55rem', borderRadius: 99,
+                          fontSize: '.62rem', fontWeight: 700,
+                          fontFamily: 'var(--font-montserrat,sans-serif)',
+                          textTransform: 'uppercase', letterSpacing: '.05em',
+                          flexShrink: 0, marginLeft: '.5rem',
+                        }}>
+                          <div style={{ width: 6, height: 6, borderRadius: '50%', background: cor.dot }} />
+                          {e.classificacao_atual === 'quente' ? 'Quente' : e.classificacao_atual === 'morno' ? 'Morno' : 'Frio'}
+                        </div>
+                      </div>
+
+                      {/* Badges de perfil */}
+                      <div style={{ display: 'flex', gap: '.35rem', marginBottom: '.9rem', flexWrap: 'wrap' }}>
+                        {e.escola_paideia && (
+                          <span style={{ fontSize: '.6rem', fontWeight: 700, background: '#ccfbf1', color: '#134e4a', padding: '.15rem .5rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                            Paideia
+                          </span>
+                        )}
+                        {e.perfil_pedagogico && (
+                          <span style={{ fontSize: '.6rem', background: '#f1f5f9', color: '#475569', padding: '.15rem .5rem', borderRadius: 99, fontFamily: 'var(--font-inter,sans-serif)' }}>
+                            {LABEL.perfil_pedagogico?.[e.perfil_pedagogico] ?? e.perfil_pedagogico}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Métricas */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.5rem', marginBottom: '.9rem' }}>
+                        <div style={{ background: '#f8fafc', borderRadius: 8, padding: '.5rem .75rem' }}>
+                          <div style={{ fontSize: '.6rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.05em', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 700 }}>Alunos</div>
+                          <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>{e.total_alunos ?? 0}</div>
+                        </div>
+                        <div style={{ background: '#fffbeb', borderRadius: 8, padding: '.5rem .75rem', border: '1px solid #fef3c7' }}>
+                          <div style={{ fontSize: '.6rem', color: '#92400e', textTransform: 'uppercase', letterSpacing: '.05em', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 700 }}>Potencial</div>
+                          <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1rem', fontWeight: 800, color: '#d97706', lineHeight: 1.2 }}>{formatCurrency(e.potencial_financeiro ?? 0)}</div>
+                        </div>
+                      </div>
+
+                      {/* Probabilidade */}
+                      {e.probabilidade_atual != null && (
+                        <div style={{ marginBottom: '.75rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '.3rem' }}>
+                            <span style={{ fontSize: '.65rem', color: '#94a3b8', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Probabilidade de fechamento</span>
+                            <span style={{ fontSize: '.68rem', fontWeight: 800, color: cor.text, fontFamily: 'var(--font-montserrat,sans-serif)' }}>{e.probabilidade_atual}%</span>
+                          </div>
+                          <div style={{ height: 4, background: '#f1f5f9', borderRadius: 2, overflow: 'hidden' }}>
+                            <div style={{ height: '100%', borderRadius: 2, background: cor.dot, width: `${e.probabilidade_atual}%` }} />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Footer */}
+                      <div style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        paddingTop: '.75rem', borderTop: '1px solid #f1f5f9',
+                      }}>
+                        <div style={{ fontSize: '.68rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                          {e.ultimo_contato
+                            ? diasSemContato != null && diasSemContato > 14
+                              ? <span style={{ color: '#dc2626', fontWeight: 600 }}>⚠ {diasSemContato}d sem contato</span>
+                              : `Contato: ${formatDate(e.ultimo_contato)}`
+                            : 'Sem interações'
+                          }
+                        </div>
+                        <ChevronRight size={14} style={{ color: '#cbd5e1' }} />
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
           ) : (
-            /* Tabela */
-            <div className="card overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="data-table">
+            /* ── Tabela premium ─────────────────────────────────── */
+            <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden', boxShadow: '0 2px 8px rgba(15,23,42,.05)' }}>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr>
-                      <th>Escola</th>
-                      <th>Localidade</th>
-                      <th>Contato</th>
-                      <th style={{ textAlign: 'right' }}>Alunos</th>
-                      <th style={{ textAlign: 'right' }}>Potencial</th>
-                      <th>Lead</th>
-                      <th>Último contato</th>
-                      <th style={{ width: 100 }}></th>
+                    <tr style={{ background: '#0f172a' }}>
+                      {['Escola', 'Localidade', 'Contato', 'Alunos', 'Potencial', 'Status', 'Último contato', ''].map(col => (
+                        <th key={col} style={{
+                          padding: '.7rem 1rem', textAlign: col === 'Alunos' || col === 'Potencial' ? 'right' : 'left',
+                          fontSize: '.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em',
+                          color: 'rgba(255,255,255,.65)', whiteSpace: 'nowrap',
+                          fontFamily: 'var(--font-montserrat,sans-serif)', borderBottom: 'none',
+                        }}>{col}</th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {escolas.map((e: any) => (
-                      <tr key={e.id}>
-                        <td>
-                          <div className="flex flex-col">
-                            <Link
-                              href={`/comercial/escolas/${e.id}`}
-                              className="font-semibold text-blue-900 hover:text-amber-700 transition-colors text-sm no-underline"
-                            >
-                              {e.nome}
-                            </Link>
-                            {e.escola_paideia && (
-                              <span className="badge badge-teal" style={{ fontSize: '.58rem', width: 'fit-content', marginTop: 2 }}>Paideia</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="text-sm text-slate-600">
-                          {e.cidade}{e.estado ? `, ${e.estado}` : ''}
-                        </td>
-                        <td>
-                          {e.contato_nome ? (
-                            <div>
-                              <div className="text-sm font-medium text-slate-800">{e.contato_nome}</div>
-                              <div className="text-xs text-slate-400">{e.contato_cargo}</div>
+                    {escolas.map((e: any, idx: number) => {
+                      const cor = CLASSIF_COR[e.classificacao_atual ?? 'frio']
+                      const diasSemContato = diasDesdeData(e.ultimo_contato)
+                      const atrasado = diasSemContato != null && diasSemContato > 14
+                      return (
+                        <tr key={e.id} style={{
+                          borderBottom: '1px solid #f1f5f9',
+                          background: idx % 2 === 0 ? '#fff' : '#fafafa',
+                          transition: 'background .12s',
+                        }}
+                          onMouseEnter={(el: any) => el.currentTarget.style.background = '#fffbeb'}
+                          onMouseLeave={(el: any) => el.currentTarget.style.background = idx % 2 === 0 ? '#fff' : '#fafafa'}
+                        >
+                          {/* Nome */}
+                          <td style={{ padding: '.85rem 1rem', verticalAlign: 'middle' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '.15rem' }}>
+                              <Link href={`/comercial/escolas/${e.id}`} style={{
+                                fontWeight: 700, fontSize: '.875rem', color: '#0f172a',
+                                textDecoration: 'none', fontFamily: 'var(--font-montserrat,sans-serif)',
+                                transition: 'color .15s',
+                              }}
+                                onMouseEnter={(el: any) => el.target.style.color = '#d97706'}
+                                onMouseLeave={(el: any) => el.target.style.color = '#0f172a'}
+                              >
+                                {e.nome}
+                              </Link>
+                              {e.escola_paideia && (
+                                <span style={{ fontSize: '.58rem', fontWeight: 700, background: '#ccfbf1', color: '#134e4a', padding: '.1rem .4rem', borderRadius: 99, width: 'fit-content', fontFamily: 'var(--font-montserrat,sans-serif)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                                  Paideia
+                                </span>
+                              )}
                             </div>
-                          ) : <span className="text-slate-300">—</span>}
-                        </td>
-                        <td className="text-sm text-right font-medium text-slate-700">
-                          {e.total_alunos ?? 0}
-                        </td>
-                        <td className="text-sm text-right font-semibold text-emerald-700">
-                          {formatCurrency(e.potencial_financeiro ?? 0)}
-                        </td>
-                        <td>
-                          <ClassificacaoBadge value={e.classificacao_atual ?? 'frio'} />
-                        </td>
-                        <td className="text-xs text-slate-500">
-                          {formatDate(e.ultimo_contato)}
-                        </td>
-                        <td>
-                          <div className="flex gap-1.5">
-                            <Link href={`/comercial/registros/novo?escola=${e.id}`} className="btn btn-outline btn-sm" title="Novo registro">
-                              +
-                            </Link>
-                            <Link href={`/comercial/escolas/${e.id}/editar`} className="btn btn-ghost btn-sm">
-                              Editar
-                            </Link>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+
+                          {/* Localidade */}
+                          <td style={{ padding: '.85rem 1rem', verticalAlign: 'middle' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '.3rem', fontSize: '.82rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                              <MapPin size={12} style={{ color: '#94a3b8', flexShrink: 0 }} />
+                              {e.cidade}{e.estado ? `, ${e.estado}` : '—'}
+                            </div>
+                          </td>
+
+                          {/* Contato */}
+                          <td style={{ padding: '.85rem 1rem', verticalAlign: 'middle' }}>
+                            {e.contato_nome ? (
+                              <div>
+                                <div style={{ fontSize: '.82rem', fontWeight: 600, color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)' }}>{e.contato_nome}</div>
+                                <div style={{ fontSize: '.7rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>{e.contato_cargo}</div>
+                              </div>
+                            ) : <span style={{ color: '#cbd5e1' }}>—</span>}
+                          </td>
+
+                          {/* Alunos */}
+                          <td style={{ padding: '.85rem 1rem', textAlign: 'right', verticalAlign: 'middle' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '.3rem' }}>
+                              <Users size={12} style={{ color: '#94a3b8' }} />
+                              <span style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
+                                {e.total_alunos ?? 0}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Potencial */}
+                          <td style={{ padding: '.85rem 1rem', textAlign: 'right', verticalAlign: 'middle' }}>
+                            <span style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1rem', fontWeight: 700, color: '#16a34a' }}>
+                              {formatCurrency(e.potencial_financeiro ?? 0)}
+                            </span>
+                          </td>
+
+                          {/* Status */}
+                          <td style={{ padding: '.85rem 1rem', verticalAlign: 'middle' }}>
+                            <div style={{
+                              display: 'inline-flex', alignItems: 'center', gap: '.3rem',
+                              background: cor.bg, color: cor.text,
+                              border: `1px solid ${cor.border}`,
+                              padding: '.25rem .65rem', borderRadius: 99,
+                              fontSize: '.65rem', fontWeight: 700,
+                              fontFamily: 'var(--font-montserrat,sans-serif)',
+                              textTransform: 'uppercase', letterSpacing: '.05em',
+                            }}>
+                              <div style={{ width: 6, height: 6, borderRadius: '50%', background: cor.dot }} />
+                              {e.classificacao_atual === 'quente' ? 'Quente' : e.classificacao_atual === 'morno' ? 'Morno' : 'Frio'}
+                            </div>
+                          </td>
+
+                          {/* Último contato */}
+                          <td style={{ padding: '.85rem 1rem', verticalAlign: 'middle' }}>
+                            <span style={{
+                              fontSize: '.75rem', fontWeight: atrasado ? 700 : 400,
+                              color: atrasado ? '#dc2626' : '#94a3b8',
+                              fontFamily: 'var(--font-inter,sans-serif)',
+                            }}>
+                              {e.ultimo_contato
+                                ? atrasado ? `⚠ ${diasSemContato}d atrás` : formatDate(e.ultimo_contato)
+                                : '—'}
+                            </span>
+                          </td>
+
+                          {/* Ações */}
+                          <td style={{ padding: '.85rem 1rem', verticalAlign: 'middle' }}>
+                            <div style={{ display: 'flex', gap: '.35rem', justifyContent: 'flex-end' }}>
+                              <Link href={`/comercial/registros/novo?escola=${e.id}`} style={{
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                width: 28, height: 28, borderRadius: 7,
+                                background: '#d97706', color: '#fff', textDecoration: 'none',
+                                fontSize: '1rem', fontWeight: 700,
+                                transition: 'background .15s',
+                              }} title="Novo registro"
+                                onMouseEnter={(el: any) => el.currentTarget.style.background = '#b45309'}
+                                onMouseLeave={(el: any) => el.currentTarget.style.background = '#d97706'}
+                              >
+                                +
+                              </Link>
+                              <Link href={`/comercial/escolas/${e.id}`} style={{
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                width: 28, height: 28, borderRadius: 7,
+                                background: '#f1f5f9', color: '#475569', textDecoration: 'none',
+                                fontSize: '.7rem', fontWeight: 700,
+                                transition: 'all .15s',
+                              }} title="Ver ficha"
+                                onMouseEnter={(el: any) => { el.currentTarget.style.background = '#0f172a'; el.currentTarget.style.color = '#fff' }}
+                                onMouseLeave={(el: any) => { el.currentTarget.style.background = '#f1f5f9'; el.currentTarget.style.color = '#475569' }}
+                              >
+                                →
+                              </Link>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
 
               {/* Paginação */}
               {totalPages > 1 && (
-                <div className="card-footer flex items-center justify-between">
-                  <span className="text-xs text-slate-500">
-                    Página <strong>{page}</strong> de <strong>{totalPages}</strong> — <strong>{count}</strong> escolas
+                <div style={{
+                  padding: '.85rem 1.25rem',
+                  borderTop: '1px solid #f1f5f9',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  background: '#fafafa',
+                }}>
+                  <span style={{ fontSize: '.75rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                    Página <strong style={{ color: '#0f172a' }}>{page}</strong> de <strong style={{ color: '#0f172a' }}>{totalPages}</strong>
+                    {' '}— <strong style={{ color: '#0f172a' }}>{count}</strong> escolas no total
                   </span>
-                  <div className="flex gap-1.5">
+                  <div style={{ display: 'flex', gap: '.5rem' }}>
                     {page > 1 && (
-                      <Link href={`?page=${page - 1}&q=${q}&estado=${estado}&view=${view}`} className="btn btn-ghost btn-sm">
+                      <Link href={`?page=${page - 1}&q=${q}&estado=${estado}&classif=${classif}&view=${view}`}
+                        style={{ padding: '6px 14px', borderRadius: 7, border: '1px solid #e2e8f0', background: '#fff', fontSize: '.78rem', color: '#475569', textDecoration: 'none', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
                         ← Anterior
                       </Link>
                     )}
                     {page < totalPages && (
-                      <Link href={`?page=${page + 1}&q=${q}&estado=${estado}&view=${view}`} className="btn btn-primary btn-sm">
+                      <Link href={`?page=${page + 1}&q=${q}&estado=${estado}&classif=${classif}&view=${view}`}
+                        style={{ padding: '6px 14px', borderRadius: 7, background: '#d97706', color: '#fff', fontSize: '.78rem', fontWeight: 700, textDecoration: 'none', fontFamily: 'var(--font-montserrat,sans-serif)', boxShadow: '0 2px 8px rgba(217,119,6,.25)' }}>
                         Próxima →
                       </Link>
                     )}
@@ -261,17 +554,30 @@ export default async function EscolasPage({ searchParams }: Props) {
               )}
             </div>
           )
-
         ) : (
-          <div className="card">
-            <div className="empty-state py-20">
-              <School size={48} />
-              <h3>Nenhuma escola encontrada</h3>
-              <p className="text-sm mt-1">{q ? `Nenhum resultado para "${q}"` : 'Cadastre a primeira escola para começar.'}</p>
-              <Link href="/comercial/escolas/nova" className="btn btn-primary btn-sm" style={{ marginTop: '1rem' }}>
-                <Plus size={14} /> Nova Escola
-              </Link>
-            </div>
+          /* Empty state */
+          <div style={{
+            background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14,
+            padding: '4rem 2rem', textAlign: 'center',
+            boxShadow: '0 2px 8px rgba(15,23,42,.05)',
+          }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏫</div>
+            <h3 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.3rem', color: '#0f172a', marginBottom: '.4rem' }}>
+              {q ? `Nenhum resultado para "${q}"` : 'Nenhuma escola cadastrada'}
+            </h3>
+            <p style={{ fontSize: '.85rem', color: '#94a3b8', marginBottom: '1.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
+              {q ? 'Tente ajustar os filtros ou cadastre uma nova escola.' : 'Comece cadastrando a primeira escola parceira.'}
+            </p>
+            <Link href="/comercial/escolas/nova" style={{
+              display: 'inline-flex', alignItems: 'center', gap: '.4rem',
+              background: '#d97706', color: '#fff', padding: '.55rem 1.25rem',
+              borderRadius: 9999, textDecoration: 'none',
+              fontSize: '.85rem', fontWeight: 700,
+              fontFamily: 'var(--font-montserrat,sans-serif)',
+              boxShadow: '0 4px 14px rgba(217,119,6,.3)',
+            }}>
+              <Plus size={14} /> Nova Escola
+            </Link>
           </div>
         )}
 

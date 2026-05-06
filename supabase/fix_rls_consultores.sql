@@ -17,6 +17,7 @@ drop policy if exists "Selecionar escolas" on escolas;
 create policy "Selecionar escolas" on escolas for select using (
   can_view_all()
 );
+drop policy if exists "Inserir escolas" on escolas;
 create policy "Inserir escolas" on escolas for insert with check (auth.uid() is not null);
 
 drop policy if exists "Atualizar escolas" on escolas;
