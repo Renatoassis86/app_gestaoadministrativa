@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import { LABEL } from '@/types/database'
 import { Plus } from 'lucide-react'
+import { EscolaSelector } from '@/components/ui/EscolaSelector'
 
 interface Props { searchParams: Promise<{ escola?: string }> }
 
@@ -42,18 +43,14 @@ export default async function JornadaPage({ searchParams }: Props) {
         {/* Seletor */}
         <div className="card mb-6">
           <div className="card-body" style={{ padding: '.85rem 1.25rem' }}>
-            <form style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
-              <label className="form-label" style={{ margin: 0, whiteSpace: 'nowrap' }}>Selecionar Escola:</label>
-              <select name="escola" className="form-control" style={{ maxWidth: 420 }}
-                defaultValue={escolaId} onChange={(e) => { if(typeof window !== 'undefined') window.location.href = `?escola=${e.target.value}` }}>
-                <option value="">— Escolha uma escola —</option>
-                {escolas?.map((e: any) => (
-                  <option key={e.id} value={e.id}>{e.nome}{e.estado ? ` (${e.estado})` : ''}</option>
-                ))}
-              </select>
-              <button type="submit" className="btn btn-secondary btn-sm">Carregar</button>
-              {escola && <Link href={`/comercial/escolas/${escolaId}`} className="btn btn-ghost btn-sm">Ver Ficha</Link>}
-            </form>
+            <EscolaSelector
+              escolas={escolas ?? []}
+              escolaId={escolaId}
+              basePath="/comercial/jornada"
+              extraButton={escola ? (
+                <Link href={`/comercial/escolas/${escolaId}`} className="btn btn-ghost btn-sm">Ver Ficha</Link>
+              ) : undefined}
+            />
           </div>
         </div>
 
@@ -197,12 +194,6 @@ export default async function JornadaPage({ searchParams }: Props) {
         )}
       </div>
 
-      <script dangerouslySetInnerHTML={{ __html: `
-        const sel = document.querySelector('select[name="escola"]');
-        if (sel) sel.addEventListener('change', function() {
-          if (this.value) window.location.href = '?escola=' + this.value;
-        });
-      ` }} />
     </div>
   )
 }

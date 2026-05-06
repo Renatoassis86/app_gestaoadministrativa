@@ -3,6 +3,7 @@ import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import { LABEL } from '@/types/database'
+import { EscolaSelector } from '@/components/ui/EscolaSelector'
 
 interface Props { searchParams: Promise<{ escola?: string }> }
 
@@ -93,23 +94,17 @@ export default async function JornadaVisualPage({ searchParams }: Props) {
         {/* Seletor de escola */}
         <div className="card" style={{ marginBottom: '1.5rem' }}>
           <div className="card-body" style={{ padding: '.85rem 1.25rem' }}>
-            <form style={{ display: 'flex', alignItems: 'center', gap: '.75rem', flexWrap: 'wrap' }}>
-              <label style={{ fontSize: '.82rem', fontWeight: 700, color: 'var(--text-m)', whiteSpace: 'nowrap', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
-                Selecionar Escola:
-              </label>
-              <select name="escola" defaultValue={escolaId} className="form-control" style={{ maxWidth: 420 }}>
-                <option value="">— Escolha uma escola para visualizar sua jornada —</option>
-                {escolas?.map((e: any) => (
-                  <option key={e.id} value={e.id}>{e.nome}{e.estado ? ` (${e.estado})` : ''}</option>
-                ))}
-              </select>
-              <button type="submit" className="btn btn-secondary btn-sm">Visualizar</button>
-              {escolaId && (
-                <Link href="/comercial/registros/novo?escola={escolaId}" className="btn btn-primary btn-sm">
+            <EscolaSelector
+              escolas={escolas ?? []}
+              escolaId={escolaId}
+              basePath="/comercial/jornada-visual"
+              placeholder="— Escolha uma escola para visualizar sua jornada —"
+              extraButton={escolaId ? (
+                <Link href={`/comercial/registros/novo?escola=${escolaId}`} className="btn btn-primary btn-sm">
                   + Nova Interação
                 </Link>
-              )}
-            </form>
+              ) : undefined}
+            />
           </div>
         </div>
 
@@ -582,13 +577,6 @@ export default async function JornadaVisualPage({ searchParams }: Props) {
         select[name="escola"]:focus { border-color: #d97706; box-shadow: 0 0 0 3px rgba(217,119,6,.12); outline: none; }
       `}</style>
 
-      {/* Auto-submit ao mudar select */}
-      <script dangerouslySetInnerHTML={{ __html: `
-        const sel = document.querySelector('select[name="escola"]');
-        if (sel) sel.addEventListener('change', function() {
-          if (this.value) this.closest('form').submit();
-        });
-      `}} />
     </div>
   )
 }

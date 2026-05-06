@@ -3,6 +3,7 @@ import { upsertContrato } from '@/lib/actions'
 import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils'
+import { EscolaSelector } from '@/components/ui/EscolaSelector'
 
 interface Props { searchParams: Promise<{ escola?: string }> }
 
@@ -52,14 +53,12 @@ export default async function ContratosPage({ searchParams }: Props) {
         {/* Seletor */}
         <div className="card mb-4">
           <div className="card-body" style={{ padding: '.85rem 1.25rem' }}>
-            <form style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
-              <label className="form-label" style={{ margin: 0, whiteSpace: 'nowrap' }}>Selecionar Escola:</label>
-              <select name="escola" className="form-control" style={{ maxWidth: 400 }} defaultValue={escolaId}>
-                <option value="">— Selecione —</option>
-                {escolas?.map((e: any) => <option key={e.id} value={e.id}>{e.nome}{e.estado ? ` (${e.estado})` : ''}</option>)}
-              </select>
-              <button type="submit" className="btn btn-secondary btn-sm">Carregar</button>
-            </form>
+            <EscolaSelector
+              escolas={escolas ?? []}
+              escolaId={escolaId}
+              basePath="/comercial/contratos"
+              placeholder="— Selecione uma escola —"
+            />
           </div>
         </div>
 
@@ -244,12 +243,6 @@ export default async function ContratosPage({ searchParams }: Props) {
 
       </div>
 
-      <script dangerouslySetInnerHTML={{ __html: `
-        const sel = document.querySelector('select[name="escola"]');
-        if (sel) sel.addEventListener('change', function() {
-          if (this.value) window.location.href = '?escola=' + this.value;
-        });
-      ` }} />
     </div>
   )
 }

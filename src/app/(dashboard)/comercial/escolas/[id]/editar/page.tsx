@@ -4,6 +4,7 @@ import { upsertEscola } from '@/lib/actions'
 import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
 import { PERFIL_OPTIONS, ORIGEM_OPTIONS, CARGO_CONTATO_OPTIONS } from '@/types/database'
+import { CheckboxPaideia } from '@/components/ui/CheckboxPaideia'
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -52,16 +53,7 @@ export default async function EscolaEditar({ params }: Props) {
                     {PERFIL_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', paddingTop: '1.5rem' }}>
-                  <input type="hidden" name="escola_paideia" id="paideia_hidden" value={e.escola_paideia ? 'true' : 'false'} />
-                  <input type="checkbox" id="paideia_cb" defaultChecked={e.escola_paideia}
-                    onChange={() => {
-                      const h = document.getElementById('paideia_hidden') as HTMLInputElement
-                      const cb = document.getElementById('paideia_cb') as HTMLInputElement
-                      if (h && cb) h.value = cb.checked ? 'true' : 'false'
-                    }} />
-                  <label htmlFor="paideia_cb" className="form-label" style={{ margin: 0, cursor: 'pointer' }}>A escola é Paideia?</label>
-                </div>
+                <CheckboxPaideia defaultChecked={e.escola_paideia ?? false} />
               </div>
             </div>
           </div>

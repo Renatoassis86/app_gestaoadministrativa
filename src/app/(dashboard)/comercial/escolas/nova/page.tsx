@@ -3,8 +3,9 @@ import { upsertEscola } from '@/lib/actions'
 import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
 import {
-  PERFIL_OPTIONS, ORIGEM_OPTIONS, CARGO_CONTATO_OPTIONS, RESPONSAVEIS_OPTIONS
+  PERFIL_OPTIONS, ORIGEM_OPTIONS, CARGO_CONTATO_OPTIONS
 } from '@/types/database'
+import { CheckboxPaideia } from '@/components/ui/CheckboxPaideia'
 
 export default async function EscolaNova() {
   const supabase = await createClient()
@@ -36,13 +37,7 @@ export default async function EscolaNova() {
                     {PERFIL_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', paddingTop: '1.5rem' }}>
-                  <input type="checkbox" name="escola_paideia_cb" id="escola_paideia_cb" />
-                  <input type="hidden" name="escola_paideia" id="escola_paideia_hidden" value="false" />
-                  <label htmlFor="escola_paideia_cb" className="form-label" style={{ margin: 0, cursor: 'pointer' }}>
-                    A escola é Paideia?
-                  </label>
-                </div>
+                <CheckboxPaideia defaultChecked={false} />
               </div>
             </div>
           </div>
@@ -171,12 +166,6 @@ export default async function EscolaNova() {
         </form>
       </div>
 
-      {/* Fix checkbox → hidden input */}
-      <script dangerouslySetInnerHTML={{ __html: `
-        document.getElementById('escola_paideia_cb').addEventListener('change', function() {
-          document.getElementById('escola_paideia_hidden').value = this.checked ? 'true' : 'false';
-        });
-      `}} />
     </div>
   )
 }
