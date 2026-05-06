@@ -11,7 +11,7 @@ import {
   Kanban, Calculator, LogOut, Settings,
   Package, FlaskConical, BarChart2, Download,
   Bot, DollarSign, Table2, Info, FileSignature, ClipboardList,
-  ExternalLink, ChevronRight
+  ExternalLink, GitBranch
 } from 'lucide-react'
 
 interface SidebarProps { profile: Profile | null }
@@ -26,10 +26,11 @@ const NAV_CRM = [
 ]
 
 const NAV_PROCESS = [
-  { href: '/comercial/jornada',   label: 'Jornada Relac.',   icon: Activity        },
-  { href: '/comercial/contratos', label: 'Jornada Contrat.', icon: FileSignature   },
-  { href: '/comercial/pipeline',  label: 'Pipeline',         icon: Kanban          },
-  { href: '/comercial/tabela',    label: 'Tabela Geral',     icon: Table2          },
+  { href: '/comercial/jornada-visual', label: 'Jornada Visual',    icon: GitBranch   },
+  { href: '/comercial/jornada',        label: 'Jornada Relac.',    icon: Activity    },
+  { href: '/comercial/contratos',      label: 'Jornada Contrat.',  icon: FileSignature },
+  { href: '/comercial/pipeline',       label: 'Pipeline',          icon: Kanban      },
+  { href: '/comercial/tabela',         label: 'Tabela Geral',      icon: Table2      },
 ]
 
 const NAV_TOOLS = [
