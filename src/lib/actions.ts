@@ -214,8 +214,8 @@ export async function upsertContrato(formData: FormData) {
     await supabase.from('contratos').insert(payload)
   }
 
-  revalidatePath(`/comercial/escolas/${escola_id}`)
-  redirect(`/comercial/escolas/${escola_id}?tab=contrato`)
+  revalidatePath('/comercial/contratos')
+  redirect(`/comercial/contratos?escola=${escola_id}`)
 }
 
 // ─── Formulário público (sem auth) ────────────────────────────────────────────
