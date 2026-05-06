@@ -144,7 +144,7 @@ export default async function JornadaVisualPage({ searchParams }: Props) {
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '.65rem', color: 'rgba(255,255,255,.4)', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.2rem' }}>Status</div>
                     <span className={`badge badge-${escola.classificacao_atual}`} style={{ fontSize: '.75rem' }}>
-                      {escola.classificacao_atual === 'quente' ? '🔥 Quente' : escola.classificacao_atual === 'morno' ? '🌤 Morno' : '❄️ Frio'}
+                      {escola.classificacao_atual === 'quente' ? 'Quente' : escola.classificacao_atual === 'morno' ? 'Morno' : 'Frio'}
                     </span>
                   </div>
                 )}
@@ -356,7 +356,7 @@ export default async function JornadaVisualPage({ searchParams }: Props) {
                               {/* Métricas do canto */}
                               <div style={{ display: 'flex', gap: '.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
                                 <span className={`badge badge-${r.classificacao}`} style={{ fontSize: '.65rem' }}>
-                                  {r.classificacao === 'quente' ? '🔥 Quente' : r.classificacao === 'morno' ? '🌤 Morno' : '❄️ Frio'}
+                                  {r.classificacao === 'quente' ? 'Quente' : r.classificacao === 'morno' ? 'Morno' : 'Frio'}
                                 </span>
                                 <span style={{
                                   fontSize: '.68rem', fontWeight: 800, fontFamily: 'var(--font-montserrat,sans-serif)',

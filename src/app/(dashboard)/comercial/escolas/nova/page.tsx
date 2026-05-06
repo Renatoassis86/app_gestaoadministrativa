@@ -83,7 +83,7 @@ export default async function EscolaNova() {
           {/* ── 1. IDENTIFICAÇÃO ───────────────────────────────── */}
           <div style={card}>
             <div style={cardHeader()}>
-              <div style={dot()}>🏫</div>
+              <div style={dot()}><svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='#fff' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/></svg></div>
               <div style={sectionTitle}>Identificação</div>
             </div>
             <div style={cardBody}>
@@ -112,7 +112,7 @@ export default async function EscolaNova() {
           {/* ── 2. ENDEREÇO ────────────────────────────────────── */}
           <div style={card}>
             <div style={cardHeader('#0ea5e9')}>
-              <div style={dot('#0ea5e9')}>📍</div>
+              <div style={dot('#0ea5e9')}><svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='#fff' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round'><path d='M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z'/><circle cx='12' cy='10' r='3'/></svg></div>
               <div style={sectionTitle}>Endereço</div>
             </div>
             <div style={cardBody}>
@@ -156,7 +156,7 @@ export default async function EscolaNova() {
           {/* ── 3. CONTATO ─────────────────────────────────────── */}
           <div style={card}>
             <div style={cardHeader('#8b5cf6')}>
-              <div style={dot('#8b5cf6')}>📞</div>
+              <div style={dot('#8b5cf6')}><svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='#fff' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round'><path d='M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.56 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.73a16 16 0 0 0 6.29 6.29l1.62-1.34a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z'/></svg></div>
               <div style={sectionTitle}>Contato</div>
             </div>
             <div style={cardBody}>
@@ -197,7 +197,7 @@ export default async function EscolaNova() {
           {/* ── 4. ALUNOS POR TURMA ────────────────────────────── */}
           <div style={card}>
             <div style={cardHeader('#16a34a')}>
-              <div style={dot('#16a34a')}>🎓</div>
+              <div style={dot('#16a34a')}><svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='#fff' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round'><path d='M22 10v6M2 10l10-5 10 5-10 5z'/><path d='M6 12v5c3 3 9 3 12 0v-5'/></svg></div>
               <div>
                 <div style={sectionTitle}>Quantidade de Alunos por Turma</div>
                 <div style={{ fontSize: '.68rem', color: '#94a3b8', marginTop: '.1rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
@@ -284,7 +284,7 @@ export default async function EscolaNova() {
           {/* ── 5. GESTÃO COMERCIAL ────────────────────────────── */}
           <div style={card}>
             <div style={cardHeader('#d97706')}>
-              <div style={dot()}>📊</div>
+              <div style={dot()}><svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='#fff' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round'><line x1='18' y1='20' x2='18' y2='10'/><line x1='12' y1='20' x2='12' y2='4'/><line x1='6' y1='20' x2='6' y2='14'/></svg></div>
               <div style={sectionTitle}>Gestão Comercial</div>
             </div>
             <div style={cardBody}>

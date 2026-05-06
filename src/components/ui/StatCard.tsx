@@ -97,9 +97,9 @@ export function StatCard({ label, value, sub, icon, trend, trendLabel, variant =
             {IconComp && (
               <div style={{
                 width: 34, height: 34, borderRadius: 8, flexShrink: 0,
-                background: v.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <IconComp size={17} className={`text-[${v.iconColor}]`} />
+                <IconComp size={17} className="text-slate-500" />
               </div>
             )}
           </div>

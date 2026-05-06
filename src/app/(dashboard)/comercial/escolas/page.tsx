@@ -60,10 +60,23 @@ export default async function EscolasPage({ searchParams }: Props) {
   const totalPages = Math.ceil((count ?? 0) / perPage)
   const totalEscolas = (nQ ?? 0) + (nM ?? 0) + (nF ?? 0)
 
+  // SVGs monocromáticos para os KPIs (sem emojis)
+  const kpiIcon = (classif: string, color: string) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+      fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      {classif === 'quente'
+        ? <><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><polyline points="12 6 12 12 16 14"/></>
+        : classif === 'morno'
+        ? <><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>
+        : <><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>
+      }
+    </svg>
+  )
+
   const kpis = [
-    { label: 'Quentes',  value: nQ ?? 0, classif: 'quente', emoji: '🔥', pct: totalEscolas ? Math.round(((nQ ?? 0) / totalEscolas) * 100) : 0 },
-    { label: 'Mornos',   value: nM ?? 0, classif: 'morno',  emoji: '🌤', pct: totalEscolas ? Math.round(((nM ?? 0) / totalEscolas) * 100) : 0 },
-    { label: 'Frios',    value: nF ?? 0, classif: 'frio',   emoji: '❄️', pct: totalEscolas ? Math.round(((nF ?? 0) / totalEscolas) * 100) : 0 },
+    { label: 'Quentes',  value: nQ ?? 0, classif: 'quente', pct: totalEscolas ? Math.round(((nQ ?? 0) / totalEscolas) * 100) : 0 },
+    { label: 'Mornos',   value: nM ?? 0, classif: 'morno',  pct: totalEscolas ? Math.round(((nM ?? 0) / totalEscolas) * 100) : 0 },
+    { label: 'Frios',    value: nF ?? 0, classif: 'frio',   pct: totalEscolas ? Math.round(((nF ?? 0) / totalEscolas) * 100) : 0 },
   ]
 
   return (
@@ -139,7 +152,9 @@ export default async function EscolasPage({ searchParams }: Props) {
                   </div>
 
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '1.6rem', lineHeight: 1, marginBottom: '.25rem' }}>{k.emoji}</div>
+                    <div style={{ marginBottom: '.25rem', opacity: isActive ? 1 : .45 }}>
+                      {kpiIcon(k.classif, cor.dot)}
+                    </div>
                     <div style={{
                       fontSize: '.72rem', fontWeight: 700, color: cor.text,
                       fontFamily: 'var(--font-montserrat,sans-serif)',

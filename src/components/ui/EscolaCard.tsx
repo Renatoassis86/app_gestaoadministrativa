@@ -71,7 +71,7 @@ export default function EscolaCard({
         'hover:border-amber-300 hover:shadow-sm transition-all duration-150 no-underline'
       )}>
         <div className="w-9 h-9 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
-          <Building2 size={16} className="text-slate-400" />
+          <Building2 size={16} style={{ color: "#94a3b8" }} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold text-slate-900 truncate">{nome}</div>
@@ -84,7 +84,7 @@ export default function EscolaCard({
             {classifCfg.label}
           </Badge>
         )}
-        <ArrowRight size={14} className="text-slate-300 group-hover:text-amber-500 transition-colors flex-shrink-0" />
+        <ArrowRight size={14} style={{ color: "#94a3b8", flexShrink: 0 }} />
       </a>
     )
   }
@@ -143,13 +143,13 @@ export default function EscolaCard({
         <div className="grid grid-cols-2 gap-2">
           {total_alunos !== undefined && (
             <div className="flex items-center gap-1.5 text-[0.72rem] text-slate-600">
-              <Users size={12} className="text-slate-400 flex-shrink-0" />
+              <Users size={12} style={{ color: "#94a3b8", flexShrink: 0 }} />
               <span><strong className="text-slate-800">{total_alunos}</strong> alunos</span>
             </div>
           )}
           {potencial_financeiro !== undefined && potencial_financeiro > 0 && (
             <div className="flex items-center gap-1.5 text-[0.72rem] text-slate-600">
-              <DollarSign size={12} className="text-slate-400 flex-shrink-0" />
+              <DollarSign size={12} style={{ color: "#94a3b8", flexShrink: 0 }} />
               <span className="font-semibold text-emerald-700">{formatCurrency(potencial_financeiro)}</span>
             </div>
           )}

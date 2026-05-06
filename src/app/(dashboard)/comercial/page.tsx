@@ -173,7 +173,7 @@ export default async function ComercialDashboard() {
         {(tarefasVencidas?.length ?? 0) > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle size={16} className="text-red-500 flex-shrink-0" />
+              <AlertTriangle size={16} style={{ color: "#64748b", flexShrink: 0 }} />
               <h3 className="text-sm font-bold text-red-800">
                 {tarefasVencidas!.length} tarefa{tarefasVencidas!.length > 1 ? 's' : ''} vencida{tarefasVencidas!.length > 1 ? 's' : ''}
               </h3>
@@ -206,7 +206,7 @@ export default async function ComercialDashboard() {
         {(tarefasHoje?.length ?? 0) > 0 && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-3">
-              <Clock size={15} className="text-amber-600 flex-shrink-0" />
+              <Clock size={15} style={{ color: "#64748b", flexShrink: 0 }} />
               <h3 className="text-sm font-bold text-amber-900">
                 {tarefasHoje!.length} tarefa{tarefasHoje!.length > 1 ? 's' : ''} para hoje
               </h3>
@@ -218,7 +218,7 @@ export default async function ComercialDashboard() {
                   href={`/comercial/escolas/${t.escola_id}`}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-amber-200 rounded-lg text-xs font-medium text-slate-700 hover:border-amber-400 transition-all no-underline"
                 >
-                  <CheckCircle2 size={12} className="text-amber-500" />
+                  <CheckCircle2 size={12} style={{ color: "#64748b" }} />
                   {t.titulo}
                 </Link>
               ))}
@@ -324,7 +324,7 @@ export default async function ComercialDashboard() {
                 </div>
               ) : (
                 <div className="empty-state" style={{ padding: '2.5rem 1rem' }}>
-                  <CheckCircle2 size={36} className="text-emerald-400 mx-auto mb-3" />
+                  <CheckCircle2 size={36} style={{ color: "#94a3b8", display: "block", margin: "0 auto .75rem" }} />
                   <p className="text-sm text-emerald-700 font-semibold">Tudo em dia!</p>
                   <p className="text-xs text-slate-400 mt-1">Todas as escolas foram contatadas recentemente.</p>
                 </div>
