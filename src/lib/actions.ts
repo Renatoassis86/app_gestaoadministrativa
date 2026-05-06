@@ -49,10 +49,46 @@ export async function upsertEscola(formData: FormData) {
     contato_nome:       formData.get('contato_nome') as string || null,
     contato_cargo:      formData.get('contato_cargo') as string || null,
     diretor_nome:       formData.get('diretor_nome') as string || null,
-    qtd_infantil:       parseInt(formData.get('qtd_infantil') as string) || 0,
-    qtd_fund1:          parseInt(formData.get('qtd_fund1') as string) || 0,
-    qtd_fund2:          parseInt(formData.get('qtd_fund2') as string) || 0,
-    qtd_medio:          parseInt(formData.get('qtd_medio') as string) || 0,
+    // Totais por segmento (calculados a partir das turmas)
+    qtd_infantil: parseInt(formData.get('qtd_infantil') as string) || 0,
+
+    // Fund I — turmas individuais (1º ao 5º ano)
+    qtd_fund1_ano1: parseInt(formData.get('qtd_fund1_ano1') as string) || 0,
+    qtd_fund1_ano2: parseInt(formData.get('qtd_fund1_ano2') as string) || 0,
+    qtd_fund1_ano3: parseInt(formData.get('qtd_fund1_ano3') as string) || 0,
+    qtd_fund1_ano4: parseInt(formData.get('qtd_fund1_ano4') as string) || 0,
+    qtd_fund1_ano5: parseInt(formData.get('qtd_fund1_ano5') as string) || 0,
+
+    // Fund II — turmas individuais (6º ao 9º ano)
+    qtd_fund2_ano6: parseInt(formData.get('qtd_fund2_ano6') as string) || 0,
+    qtd_fund2_ano7: parseInt(formData.get('qtd_fund2_ano7') as string) || 0,
+    qtd_fund2_ano8: parseInt(formData.get('qtd_fund2_ano8') as string) || 0,
+    qtd_fund2_ano9: parseInt(formData.get('qtd_fund2_ano9') as string) || 0,
+
+    // Ensino Médio — turmas individuais (1ª à 3ª série)
+    qtd_medio_1s: parseInt(formData.get('qtd_medio_1s') as string) || 0,
+    qtd_medio_2s: parseInt(formData.get('qtd_medio_2s') as string) || 0,
+    qtd_medio_3s: parseInt(formData.get('qtd_medio_3s') as string) || 0,
+
+    // Totais legado (soma automática para compatibilidade com queries existentes)
+    get qtd_fund1() {
+      return (parseInt(formData.get('qtd_fund1_ano1') as string) || 0)
+           + (parseInt(formData.get('qtd_fund1_ano2') as string) || 0)
+           + (parseInt(formData.get('qtd_fund1_ano3') as string) || 0)
+           + (parseInt(formData.get('qtd_fund1_ano4') as string) || 0)
+           + (parseInt(formData.get('qtd_fund1_ano5') as string) || 0)
+    },
+    get qtd_fund2() {
+      return (parseInt(formData.get('qtd_fund2_ano6') as string) || 0)
+           + (parseInt(formData.get('qtd_fund2_ano7') as string) || 0)
+           + (parseInt(formData.get('qtd_fund2_ano8') as string) || 0)
+           + (parseInt(formData.get('qtd_fund2_ano9') as string) || 0)
+    },
+    get qtd_medio() {
+      return (parseInt(formData.get('qtd_medio_1s') as string) || 0)
+           + (parseInt(formData.get('qtd_medio_2s') as string) || 0)
+           + (parseInt(formData.get('qtd_medio_3s') as string) || 0)
+    },
     origem_lead:        formData.get('origem_lead') as string || null,
     responsavel_id:     formData.get('responsavel_id') as string || null,
     observacoes:        formData.get('observacoes') as string || null,
