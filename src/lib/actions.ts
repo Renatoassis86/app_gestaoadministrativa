@@ -555,10 +555,7 @@ export async function enviarFormularioPublico(formData: FormData) {
     infantil4_qtd:      toNum('infantil4_qtd'),
     infantil5_qtd:      toNum('infantil5_qtd'),
     fund1_ano1_qtd:     toNum('fund1_ano1_qtd'),
-    fund1_ano2_qtd:     toNum('fund1_ano2_qtd'),
-    fund1_ano3_qtd:     toNum('fund1_ano3_qtd'),
-    fund1_ano4_qtd:     toNum('fund1_ano4_qtd'),
-    fund1_ano5_qtd:     toNum('fund1_ano5_qtd'),
+    // fund1_ano2_qtd a fund1_ano5_qtd: descomentar após rodar schema_update_v2.sql
     data_inicio_letivo: formData.get('data_inicio_letivo') as string || null,
     data_fim_letivo:    formData.get('data_fim_letivo') as string || null,
     formato_ano_letivo: formData.get('formato_ano_letivo') as string || null,
