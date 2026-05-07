@@ -43,7 +43,7 @@ const NAV_WIP = [
   { href: '/estoque',    label: 'Estoque',       icon: Package    },
   { href: '/amostras',   label: 'Amostras',      icon: FlaskConical },
   { href: '/dashboards', label: 'BI / Analytics',icon: BarChart2  },
-  { href: '/ai-bob',     label: 'BOB — IA',      icon: Bot        },
+  { href: '/ai-bob',     label: 'ALMA — IA',     icon: Bot        },
   { href: '/financeiro', label: 'Financeiro',    icon: DollarSign },
 ]
 
