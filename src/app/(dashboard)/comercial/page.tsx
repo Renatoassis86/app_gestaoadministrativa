@@ -1,44 +1,49 @@
 import { createClient } from '@/lib/supabase/server'
 import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
-import { formatDate } from '@/lib/utils'
-import { Plus, AlertTriangle, CheckCircle2, ArrowRight, Clock, Activity } from 'lucide-react'
+import { formatDate, formatCurrency, diasDesdeData } from '@/lib/utils'
+import { Plus, AlertTriangle, ArrowRight, Clock } from 'lucide-react'
 import { LABEL } from '@/types/database'
-import StatCard from '@/components/ui/StatCard'
-import Badge, { ClassificacaoBadge, PrioridadeBadge } from '@/components/ui/Badge'
-import EscolaCard from '@/components/ui/EscolaCard'
-import {
-  RegistrosAreaChart,
-  ClassificacaoPieChart,
-  MeioContatoBarChart,
-} from '@/components/dashboard/DashboardCharts'
+
+// ── Estilos reutilizáveis ─────────────────────────────────────────────────────
+const card: React.CSSProperties = {
+  background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16,
+  overflow: 'hidden', boxShadow: '0 2px 8px rgba(15,23,42,.05)',
+}
+
+const CLASSIF_STYLE: Record<string, { bg: string; text: string; border: string; dot: string; topBar: string }> = {
+  quente: { bg: '#fef2f2', text: '#dc2626', border: '#fca5a5', dot: '#dc2626', topBar: '#dc2626' },
+  morno:  { bg: '#fffbeb', text: '#d97706', border: '#fcd34d', dot: '#f59e0b', topBar: '#d97706' },
+  frio:   { bg: '#eff6ff', text: '#2563eb', border: '#93c5fd', dot: '#60a5fa', topBar: '#2563eb' },
+}
+
+const MEIO_LABEL: Record<string, string> = {
+  presencial: 'Presencial', whatsapp: 'WhatsApp', email: 'E-mail',
+  telefone: 'Telefone', videoconf: 'Videoconf', outro: 'Outro',
+}
 
 export default async function ComercialDashboard() {
-  const supabase = await createClient()
-
-  const hoje      = new Date().toISOString().split('T')[0]
-  const trintaDias = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
-  const seissMeses = new Date(Date.now() - 180 * 86400000).toISOString().split('T')[0]
+  const supabase    = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const hoje        = new Date().toISOString().split('T')[0]
+  const trintaDias  = new Date(Date.now() - 30  * 86400000).toISOString().split('T')[0]
 
   const [
     { count: totalEscolas },
     { count: leadsQuentes },
     { count: leadsMornos },
-    { count: leadsFrios },
     { count: registrosMes },
     { data: registrosRecentes },
     { data: tarefasVencidas },
     { data: escolasSemContato },
-    { data: registros6meses },
     { data: tarefasHoje },
   ] = await Promise.all([
     supabase.from('escolas').select('*', { count: 'exact', head: true }).eq('ativa', true),
     supabase.from('registros').select('escola_id', { count: 'exact', head: true }).eq('classificacao', 'quente'),
     supabase.from('registros').select('escola_id', { count: 'exact', head: true }).eq('classificacao', 'morno'),
-    supabase.from('registros').select('escola_id', { count: 'exact', head: true }).eq('classificacao', 'frio'),
     supabase.from('registros').select('*', { count: 'exact', head: true }).gte('data_contato', trintaDias),
     supabase.from('registros')
-      .select('*, escola:escolas(nome,id)')
+      .select('*, escola:escolas(nome,id,cidade,estado)')
       .order('data_contato', { ascending: false })
       .limit(8),
     supabase.from('tarefas')
@@ -51,10 +56,6 @@ export default async function ComercialDashboard() {
       .eq('ativa', true)
       .order('updated_at', { ascending: true })
       .limit(6),
-    supabase.from('registros')
-      .select('data_contato, meio_contato, classificacao')
-      .gte('data_contato', seissMeses)
-      .order('data_contato', { ascending: true }),
     supabase.from('tarefas')
       .select('*, escola:escolas(nome,id)')
       .eq('status', 'pendente')
@@ -62,69 +63,14 @@ export default async function ComercialDashboard() {
       .limit(3),
   ])
 
-  // ── Preparar dados para os gráficos ─────────────────────────────────────────
-
-  // Registros por mês (últimos 6 meses)
-  const registrosPorMes: Record<string, { total: number; quentes: number; mornos: number }> = {}
-  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
-  ;(registros6meses ?? []).forEach((r: any) => {
-    const [, m] = r.data_contato.split('-')
-    const key = meses[parseInt(m, 10) - 1]
-    if (!registrosPorMes[key]) registrosPorMes[key] = { total: 0, quentes: 0, mornos: 0 }
-    registrosPorMes[key].total++
-    if (r.classificacao === 'quente') registrosPorMes[key].quentes++
-    if (r.classificacao === 'morno')  registrosPorMes[key].mornos++
-  })
-  const areaData = Object.entries(registrosPorMes).map(([mes, v]) => ({ mes, ...v }))
-
-  // Distribuição de classificação
-  const pieData = [
-    { name: 'Quentes', value: leadsQuentes ?? 0, color: '#ef4444' },
-    { name: 'Mornos',  value: leadsMornos  ?? 0, color: '#f59e0b' },
-    { name: 'Frios',   value: leadsFrios   ?? 0, color: '#3b82f6' },
-  ].filter(d => d.value > 0)
-  const totalLeads = (leadsQuentes ?? 0) + (leadsMornos ?? 0) + (leadsFrios ?? 0)
-
-  // Distribuição de meios de contato
-  const meioCount: Record<string, number> = {}
-  ;(registros6meses ?? []).forEach((r: any) => {
-    meioCount[r.meio_contato] = (meioCount[r.meio_contato] ?? 0) + 1
-  })
-  const meioData = Object.entries(meioCount).map(([meio, count]) => ({ meio, count }))
-    .sort((a, b) => b.count - a.count)
+  const nVencidas = tarefasVencidas?.length ?? 0
+  const nHoje     = tarefasHoje?.length ?? 0
 
   const kpis = [
-    {
-      label: 'Total de Escolas',
-      value: totalEscolas ?? 0,
-      sub: 'parceiros ativos',
-      icon: 'school' as const,
-      variant: 'blue' as const,
-      href: '/comercial/escolas',
-    },
-    {
-      label: 'Leads Quentes',
-      value: leadsQuentes ?? 0,
-      sub: 'alta probabilidade',
-      icon: 'flame' as const,
-      variant: 'danger' as const,
-      href: '/comercial/leads',
-    },
-    {
-      label: 'Leads Mornos',
-      value: leadsMornos ?? 0,
-      sub: 'em negociação ativa',
-      icon: 'trending-up' as const,
-      variant: 'warning' as const,
-    },
-    {
-      label: 'Registros (30 dias)',
-      value: registrosMes ?? 0,
-      sub: 'interações recentes',
-      icon: 'activity' as const,
-      variant: 'teal' as const,
-      href: '/comercial/registros',
-    },
+    { label: 'Total de Escolas',   value: totalEscolas ?? 0, sub: 'parceiros ativos',     cor: '#2563eb', bg: '#eff6ff', border: '#93c5fd', href: '/comercial/escolas' },
+    { label: 'Leads Quentes',      value: leadsQuentes ?? 0, sub: 'alta probabilidade',    cor: '#dc2626', bg: '#fef2f2', border: '#fca5a5', href: '/comercial/leads' },
+    { label: 'Leads Mornos',       value: leadsMornos  ?? 0, sub: 'em negociação ativa',   cor: '#d97706', bg: '#fffbeb', border: '#fcd34d', href: '/comercial/leads' },
+    { label: 'Registros (30 dias)',value: registrosMes ?? 0, sub: 'interações recentes',   cor: '#0d9488', bg: '#f0fdfa', border: '#99f6e4', href: '/comercial/registros' },
   ]
 
   return (
@@ -133,92 +79,82 @@ export default async function ComercialDashboard() {
         title="Dashboard Comercial"
         subtitle={`Atualizado hoje, ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })}`}
         badge={
-          (tarefasVencidas?.length ?? 0) > 0 ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.68rem] font-bold bg-red-50 text-red-700 border border-red-200">
-              <AlertTriangle size={11} />
-              {tarefasVencidas!.length} vencida{tarefasVencidas!.length > 1 ? 's' : ''}
+          nVencidas > 0 ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '.3rem', padding: '.2rem .65rem', borderRadius: 9999, fontSize: '.65rem', fontWeight: 700, background: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+              <AlertTriangle size={10} /> {nVencidas} vencida{nVencidas > 1 ? 's' : ''}
             </span>
           ) : undefined
         }
         actions={
-          <div className="flex gap-2">
-            <Link href="/comercial/registros/novo" className="btn btn-primary btn-sm">
-              <Plus size={14} /> Novo Registro
+          <div style={{ display: 'flex', gap: '.5rem' }}>
+            <Link href="/comercial/registros/novo" style={{ display: 'inline-flex', alignItems: 'center', gap: '.35rem', padding: '.45rem 1rem', borderRadius: 9999, background: '#d97706', color: '#fff', textDecoration: 'none', fontSize: '.78rem', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)', boxShadow: '0 4px 12px rgba(217,119,6,.3)' }}>
+              <Plus size={13} /> Novo Registro
             </Link>
-            <Link href="/comercial/escolas/nova" className="btn btn-ghost btn-sm">
-              <Plus size={14} /> Escola
+            <Link href="/comercial/escolas/nova" style={{ display: 'inline-flex', alignItems: 'center', gap: '.35rem', padding: '.45rem 1rem', borderRadius: 9999, border: '1.5px solid #e2e8f0', background: '#fff', color: '#475569', textDecoration: 'none', fontSize: '.78rem', fontWeight: 600, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+              <Plus size={13} /> Escola
             </Link>
           </div>
         }
       />
 
-      <div className="p-6 space-y-6">
+      <div style={{ padding: '1.75rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
         {/* ── KPI Cards ──────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
           {kpis.map(k => (
-            <StatCard
-              key={k.label}
-              label={k.label}
-              value={k.value}
-              sub={k.sub}
-              icon={k.icon}
-              variant={k.variant}
-              href={k.href}
-            />
+            <Link key={k.label} href={k.href} style={{ textDecoration: 'none', display: 'block', background: k.bg, border: `1.5px solid ${k.border}`, borderTop: `3px solid ${k.cor}`, borderRadius: 14, padding: '1.1rem 1.25rem', boxShadow: '0 1px 4px rgba(15,23,42,.04)', transition: 'box-shadow .2s, transform .2s' }}
+              onMouseEnter={(e: any) => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(15,23,42,.1)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+              onMouseLeave={(e: any) => { e.currentTarget.style.boxShadow = '0 1px 4px rgba(15,23,42,.04)'; e.currentTarget.style.transform = 'translateY(0)' }}
+            >
+              <div style={{ fontSize: '.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: k.cor, fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.4rem' }}>{k.label}</div>
+              <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '2.2rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '.3rem' }}>{k.value}</div>
+              <div style={{ fontSize: '.72rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>{k.sub}</div>
+            </Link>
           ))}
         </div>
 
-        {/* ── Alertas urgentes ──────────────────────────────────── */}
-        {(tarefasVencidas?.length ?? 0) > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle size={16} style={{ color: "#64748b", flexShrink: 0 }} />
-              <h3 className="text-sm font-bold text-red-800">
-                {tarefasVencidas!.length} tarefa{tarefasVencidas!.length > 1 ? 's' : ''} vencida{tarefasVencidas!.length > 1 ? 's' : ''}
-              </h3>
-              <Link href="/comercial/jornada" className="ml-auto text-xs text-red-600 font-semibold hover:underline flex items-center gap-1">
-                Ver todas <ArrowRight size={12} />
+        {/* ── Alertas ───────────────────────────────────────────── */}
+        {nVencidas > 0 && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderLeft: '4px solid #dc2626', borderRadius: 14, padding: '1rem 1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', marginBottom: '.85rem' }}>
+              <AlertTriangle size={16} style={{ color: '#dc2626', flexShrink: 0 }} />
+              <span style={{ fontWeight: 700, fontSize: '.875rem', color: '#991b1b', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                {nVencidas} tarefa{nVencidas > 1 ? 's' : ''} vencida{nVencidas > 1 ? 's' : ''}
+              </span>
+              <Link href="/comercial/jornada" style={{ marginLeft: 'auto', fontSize: '.72rem', color: '#dc2626', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-montserrat,sans-serif)', display: 'flex', alignItems: 'center', gap: '.25rem' }}>
+                Ver todas <ArrowRight size={11} />
               </Link>
             </div>
-            <div className="grid gap-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '.4rem' }}>
               {tarefasVencidas!.map((t: any) => (
-                <Link
-                  key={t.id}
-                  href={`/comercial/escolas/${t.escola_id}`}
-                  className="flex items-center gap-3 bg-white border border-red-200 rounded-lg px-3 py-2 hover:border-red-300 hover:shadow-sm transition-all no-underline"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-slate-900 truncate">{t.titulo}</div>
-                    <div className="text-xs text-slate-500">
-                      {t.escola?.nome}
-                      {t.vencimento && <span className="text-red-500"> · {formatDate(t.vencimento)}</span>}
+                <Link key={t.id} href={`/comercial/escolas/${t.escola_id}`} style={{ display: 'flex', alignItems: 'center', gap: '.85rem', background: '#fff', border: '1px solid #fca5a5', borderRadius: 10, padding: '.65rem 1rem', textDecoration: 'none', transition: 'box-shadow .15s' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '.82rem', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-montserrat,sans-serif)' }}>{t.titulo}</div>
+                    <div style={{ fontSize: '.7rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                      {(t.escola as any)?.nome}
+                      {t.vencimento && <span style={{ color: '#dc2626', marginLeft: '.35rem' }}>· {formatDate(t.vencimento)}</span>}
                     </div>
                   </div>
-                  <PrioridadeBadge value={t.prioridade} />
+                  <span style={{ fontSize: '.62rem', fontWeight: 700, background: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5', padding: '.15rem .55rem', borderRadius: 99, textTransform: 'uppercase', fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap' }}>
+                    {t.prioridade}
+                  </span>
                 </Link>
               ))}
             </div>
           </div>
         )}
 
-        {/* ── Tarefas de hoje ───────────────────────────────────── */}
-        {(tarefasHoje?.length ?? 0) > 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Clock size={15} style={{ color: "#64748b", flexShrink: 0 }} />
-              <h3 className="text-sm font-bold text-amber-900">
-                {tarefasHoje!.length} tarefa{tarefasHoje!.length > 1 ? 's' : ''} para hoje
-              </h3>
+        {nHoje > 0 && (
+          <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderLeft: '4px solid #d97706', borderRadius: 14, padding: '1rem 1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', marginBottom: '.85rem' }}>
+              <Clock size={15} style={{ color: '#d97706', flexShrink: 0 }} />
+              <span style={{ fontWeight: 700, fontSize: '.875rem', color: '#92400e', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                {nHoje} tarefa{nHoje > 1 ? 's' : ''} para hoje
+              </span>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
               {tarefasHoje!.map((t: any) => (
-                <Link
-                  key={t.id}
-                  href={`/comercial/escolas/${t.escola_id}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-amber-200 rounded-lg text-xs font-medium text-slate-700 hover:border-amber-400 transition-all no-underline"
-                >
-                  <CheckCircle2 size={12} style={{ color: "#64748b" }} />
+                <Link key={t.id} href={`/comercial/escolas/${t.escola_id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '.4rem', padding: '.5rem 1rem', background: '#fff', border: '1px solid #fcd34d', borderRadius: 10, fontSize: '.78rem', color: '#0f172a', textDecoration: 'none', fontFamily: 'var(--font-inter,sans-serif)', fontWeight: 500 }}>
                   {t.titulo}
                 </Link>
               ))}
@@ -226,111 +162,131 @@ export default async function ComercialDashboard() {
           </div>
         )}
 
-        {/* ── Gráficos ─────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {areaData.length > 0 && <RegistrosAreaChart data={areaData} />}
-          {pieData.length > 0  && <ClassificacaoPieChart data={pieData} total={totalLeads} />}
-          {meioData.length > 0 && <MeioContatoBarChart data={meioData} />}
-        </div>
+        {/* ── Conteúdo principal: 2 colunas ─────────────────────── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
 
-        {/* ── Grid principal ────────────────────────────────────── */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-
-          {/* Últimas interações */}
-          <div className="card">
-            <div className="card-header">
-              <span className="card-title">Últimas Interações</span>
-              <Link href="/comercial/registros" className="btn btn-ghost btn-sm">
-                Ver todas <ArrowRight size={12} />
+          {/* Últimas Interações */}
+          <div style={card}>
+            <div style={{ background: '#0f172a', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>Últimas Interações</div>
+              <Link href="/comercial/registros" style={{ fontSize: '.72rem', color: '#d97706', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '.25rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                Ver todas <ArrowRight size={11} />
               </Link>
             </div>
-            <div className="overflow-x-auto">
-              {registrosRecentes && registrosRecentes.length > 0 ? (
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Escola</th>
-                      <th>Data</th>
-                      <th>Canal</th>
-                      <th>Lead</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {registrosRecentes.map((r: any) => (
-                      <tr key={r.id}>
-                        <td>
-                          <Link
-                            href={`/comercial/escolas/${r.escola_id}`}
-                            className="font-semibold text-blue-800 hover:text-amber-700 transition-colors text-sm no-underline"
-                          >
-                            {r.escola?.nome?.substring(0, 26) ?? '—'}
-                          </Link>
-                        </td>
-                        <td>
-                          <span className="text-xs text-slate-500 whitespace-nowrap">
-                            {formatDate(r.data_contato)}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="text-xs text-slate-600">
-                            {LABEL.meio_contato?.[r.meio_contato] ?? r.meio_contato}
-                          </span>
-                        </td>
-                        <td>
-                          <ClassificacaoBadge value={r.classificacao} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="empty-state">
-                  <Activity size={36} />
-                  <h3>Sem registros ainda</h3>
-                  <Link href="/comercial/registros/novo" className="btn btn-primary btn-sm" style={{ marginTop: '.75rem' }}>
-                    Criar primeiro registro
-                  </Link>
-                </div>
-              )}
-            </div>
+
+            {registrosRecentes && registrosRecentes.length > 0 ? (
+              <div style={{ padding: '.75rem' }}>
+                {registrosRecentes.map((r: any, idx: number) => {
+                  const cs      = CLASSIF_STYLE[r.classificacao ?? 'frio'] ?? CLASSIF_STYLE.frio
+                  const escola  = (r.escola as any)
+                  return (
+                    <Link key={r.id} href={`/comercial/escolas/${r.escola_id}`}
+                      style={{ display: 'flex', alignItems: 'center', gap: '.85rem', padding: '.65rem .85rem', borderRadius: 10, textDecoration: 'none', marginBottom: idx < registrosRecentes.length - 1 ? '.3rem' : 0, background: idx % 2 === 0 ? '#fafafa' : '#fff', border: '1px solid transparent', transition: 'border-color .15s' }}
+                      onMouseEnter={(e: any) => e.currentTarget.style.borderColor = '#e2e8f0'}
+                      onMouseLeave={(e: any) => e.currentTarget.style.borderColor = 'transparent'}
+                    >
+                      {/* Dot classificação */}
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: cs.dot, flexShrink: 0 }} />
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: '.82rem', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                          {escola?.nome ?? '—'}
+                        </div>
+                        <div style={{ fontSize: '.68rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {r.resumo?.substring(0, 50) ?? '—'}
+                        </div>
+                      </div>
+                      {/* Meta */}
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ fontSize: '.68rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>{formatDate(r.data_contato)}</div>
+                        <div style={{ fontSize: '.62rem', fontWeight: 700, color: cs.text, background: cs.bg, border: `1px solid ${cs.border}`, padding: '.05rem .4rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)', marginTop: '.15rem' }}>
+                          {MEIO_LABEL[r.meio_contato] ?? r.meio_contato}
+                        </div>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', margin: '0 auto .75rem' }}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem', color: '#0f172a', marginBottom: '.35rem' }}>Sem registros ainda</div>
+                <Link href="/comercial/registros/novo" style={{ display: 'inline-flex', alignItems: 'center', gap: '.3rem', background: '#d97706', color: '#fff', padding: '.45rem 1rem', borderRadius: 9999, textDecoration: 'none', fontSize: '.78rem', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)', marginTop: '.35rem' }}>
+                  <Plus size={13} /> Criar primeiro registro
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Escolas sem contato recente */}
-          <div className="card">
-            <div className="card-header">
-              <span className="card-title">Precisam de Atenção</span>
-              <span className="badge badge-orange text-xs">{escolasSemContato?.length ?? 0} escolas</span>
+          <div style={card}>
+            <div style={{ background: '#0f172a', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>Precisam de Atenção</div>
+              <span style={{ fontSize: '.68rem', fontWeight: 700, background: 'rgba(217,119,6,.2)', color: '#d97706', border: '1px solid rgba(217,119,6,.3)', padding: '.15rem .6rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                {escolasSemContato?.length ?? 0} escolas
+              </span>
             </div>
-            <div className="card-body">
-              {escolasSemContato && escolasSemContato.length > 0 ? (
-                <div className="flex flex-col gap-2">
-                  {escolasSemContato.map((e: any) => (
-                    <EscolaCard
-                      key={e.id}
-                      id={e.id}
-                      nome={e.nome}
-                      cidade={e.cidade}
-                      estado={e.estado}
-                      href={`/comercial/escolas/${e.id}`}
-                      variant="compact"
-                    />
-                  ))}
-                  <Link
-                    href="/comercial/escolas"
-                    className="flex items-center justify-center gap-1.5 text-xs font-semibold text-amber-600 hover:text-amber-700 py-2 border border-dashed border-amber-200 rounded-lg hover:border-amber-300 transition-all no-underline mt-1"
-                  >
-                    Ver todas as escolas <ArrowRight size={12} />
-                  </Link>
-                </div>
-              ) : (
-                <div className="empty-state" style={{ padding: '2.5rem 1rem' }}>
-                  <CheckCircle2 size={36} style={{ color: "#94a3b8", display: "block", margin: "0 auto .75rem" }} />
-                  <p className="text-sm text-emerald-700 font-semibold">Tudo em dia!</p>
-                  <p className="text-xs text-slate-400 mt-1">Todas as escolas foram contatadas recentemente.</p>
-                </div>
-              )}
-            </div>
+
+            {escolasSemContato && escolasSemContato.length > 0 ? (
+              <div style={{ padding: '.75rem' }}>
+                {escolasSemContato.map((e: any, idx: number) => {
+                  const dias = diasDesdeData(e.updated_at)
+                  return (
+                    <Link key={e.id} href={`/comercial/escolas/${e.id}`}
+                      style={{ display: 'flex', alignItems: 'center', gap: '.85rem', padding: '.65rem .85rem', borderRadius: 10, textDecoration: 'none', marginBottom: idx < escolasSemContato.length - 1 ? '.3rem' : 0, background: idx % 2 === 0 ? '#fafafa' : '#fff', border: '1px solid transparent', transition: 'border-color .15s' }}
+                      onMouseEnter={(e2: any) => e2.currentTarget.style.borderColor = '#e2e8f0'}
+                      onMouseLeave={(e2: any) => e2.currentTarget.style.borderColor = 'transparent'}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: '.82rem', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-montserrat,sans-serif)' }}>{e.nome}</div>
+                        <div style={{ fontSize: '.68rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                          {e.cidade}{e.estado ? `, ${e.estado}` : ''}
+                        </div>
+                      </div>
+                      {dias != null && (
+                        <span style={{ fontSize: '.65rem', fontWeight: 700, background: dias > 30 ? '#fef2f2' : '#fffbeb', color: dias > 30 ? '#dc2626' : '#d97706', border: `1px solid ${dias > 30 ? '#fca5a5' : '#fcd34d'}`, padding: '.15rem .55rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap' }}>
+                          {dias}d sem contato
+                        </span>
+                      )}
+                      <Link href={`/comercial/registros/novo?escola=${e.id}`} onClick={ev => ev.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 7, background: '#d97706', color: '#fff', textDecoration: 'none', fontSize: '1rem', fontWeight: 700, flexShrink: 0 }} title="Registrar contato">
+                        +
+                      </Link>
+                    </Link>
+                  )
+                })}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#86efac" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', margin: '0 auto .75rem' }}><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem', color: '#16a34a', marginBottom: '.2rem' }}>Tudo em dia!</div>
+                <div style={{ fontSize: '.78rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>Todas as escolas foram contatadas recentemente.</div>
+              </div>
+            )}
           </div>
+
+        </div>
+
+        {/* ── Acesso rápido aos módulos ─────────────────────────── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
+          {[
+            { label: 'Nova Escola',       href: '/comercial/escolas/nova',    cor: '#d97706', desc: 'Cadastrar parceiro' },
+            { label: 'Novo Registro',     href: '/comercial/registros/novo',  cor: '#0d9488', desc: 'Registrar interação' },
+            { label: 'Ver Pipeline',      href: '/comercial/pipeline',        cor: '#7c3aed', desc: 'Kanban de negociações' },
+            { label: 'Jornada Visual',    href: '/comercial/jornada-visual',  cor: '#2563eb', desc: 'Infográfico do processo' },
+          ].map(item => (
+            <Link key={item.label} href={item.href} style={{
+              display: 'block', background: '#fff', border: '1px solid #e2e8f0',
+              borderLeft: `4px solid ${item.cor}`, borderRadius: 12,
+              padding: '.85rem 1.1rem', textDecoration: 'none',
+              boxShadow: '0 1px 4px rgba(15,23,42,.04)', transition: 'box-shadow .2s, transform .2s',
+            }}
+              onMouseEnter={(e: any) => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(15,23,42,.1)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+              onMouseLeave={(e: any) => { e.currentTarget.style.boxShadow = '0 1px 4px rgba(15,23,42,.04)'; e.currentTarget.style.transform = 'translateY(0)' }}
+            >
+              <div style={{ fontWeight: 700, fontSize: '.82rem', color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.15rem' }}>{item.label}</div>
+              <div style={{ fontSize: '.72rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>{item.desc}</div>
+            </Link>
+          ))}
         </div>
 
       </div>
