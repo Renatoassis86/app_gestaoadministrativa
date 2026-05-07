@@ -103,8 +103,6 @@ export default async function ComercialDashboard() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
           {kpis.map(k => (
             <Link key={k.label} href={k.href} style={{ textDecoration: 'none', display: 'block', background: k.bg, border: `1.5px solid ${k.border}`, borderTop: `3px solid ${k.cor}`, borderRadius: 14, padding: '1.1rem 1.25rem', boxShadow: '0 1px 4px rgba(15,23,42,.04)', transition: 'box-shadow .2s, transform .2s' }}
-              onMouseEnter={(e: any) => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(15,23,42,.1)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-              onMouseLeave={(e: any) => { e.currentTarget.style.boxShadow = '0 1px 4px rgba(15,23,42,.04)'; e.currentTarget.style.transform = 'translateY(0)' }}
             >
               <div style={{ fontSize: '.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: k.cor, fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.4rem' }}>{k.label}</div>
               <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '2.2rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '.3rem' }}>{k.value}</div>
@@ -182,8 +180,6 @@ export default async function ComercialDashboard() {
                   return (
                     <Link key={r.id} href={`/comercial/escolas/${r.escola_id}`}
                       style={{ display: 'flex', alignItems: 'center', gap: '.85rem', padding: '.65rem .85rem', borderRadius: 10, textDecoration: 'none', marginBottom: idx < registrosRecentes.length - 1 ? '.3rem' : 0, background: idx % 2 === 0 ? '#fafafa' : '#fff', border: '1px solid transparent', transition: 'border-color .15s' }}
-                      onMouseEnter={(e: any) => e.currentTarget.style.borderColor = '#e2e8f0'}
-                      onMouseLeave={(e: any) => e.currentTarget.style.borderColor = 'transparent'}
                     >
                       {/* Dot classificação */}
                       <div style={{ width: 8, height: 8, borderRadius: '50%', background: cs.dot, flexShrink: 0 }} />
@@ -234,8 +230,6 @@ export default async function ComercialDashboard() {
                   return (
                     <Link key={e.id} href={`/comercial/escolas/${e.id}`}
                       style={{ display: 'flex', alignItems: 'center', gap: '.85rem', padding: '.65rem .85rem', borderRadius: 10, textDecoration: 'none', marginBottom: idx < escolasSemContato.length - 1 ? '.3rem' : 0, background: idx % 2 === 0 ? '#fafafa' : '#fff', border: '1px solid transparent', transition: 'border-color .15s' }}
-                      onMouseEnter={(e2: any) => e2.currentTarget.style.borderColor = '#e2e8f0'}
-                      onMouseLeave={(e2: any) => e2.currentTarget.style.borderColor = 'transparent'}
                     >
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: 700, fontSize: '.82rem', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-montserrat,sans-serif)' }}>{e.nome}</div>
@@ -280,8 +274,6 @@ export default async function ComercialDashboard() {
               padding: '.85rem 1.1rem', textDecoration: 'none',
               boxShadow: '0 1px 4px rgba(15,23,42,.04)', transition: 'box-shadow .2s, transform .2s',
             }}
-              onMouseEnter={(e: any) => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(15,23,42,.1)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-              onMouseLeave={(e: any) => { e.currentTarget.style.boxShadow = '0 1px 4px rgba(15,23,42,.04)'; e.currentTarget.style.transform = 'translateY(0)' }}
             >
               <div style={{ fontWeight: 700, fontSize: '.82rem', color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.15rem' }}>{item.label}</div>
               <div style={{ fontSize: '.72rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>{item.desc}</div>
