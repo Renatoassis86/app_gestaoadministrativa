@@ -656,18 +656,78 @@ export async function enviarFormularioPublico(formData: FormData) {
 
 // ─── Usuários (gerente only) ─────────────────────────────────────────────────
 
-export async function upsertProfile(formData: FormData) {
+/**
+ * Cria um novo usuário no Supabase Auth + perfil no banco.
+ * Usa a service role (admin client) para criar a conta.
+ */
+export async function criarUsuario(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  if (!user) return { success: false, error: 'Não autenticado' }
 
-  const { data: me } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
+  const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (me?.role !== 'gerente') return { success: false, error: 'Apenas gerentes podem criar usuários' }
 
-  if (me?.role !== 'gerente') throw new Error('Sem permissão')
+  const email    = formData.get('email') as string
+  const fullName = formData.get('full_name') as string
+  const role     = formData.get('role') as string || 'consultor'
+  const isActive = formData.get('is_active') !== 'false'
+  const phone    = formData.get('phone') as string || null
+  const password = formData.get('password') as string || 'Senha@2026'   // senha temporária
+
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const admin = createAdminClient()
+
+  // 1. Verificar se já existe no Auth
+  const { data: lista } = await admin.auth.admin.listUsers()
+  const jaExiste = lista?.users?.find(u => u.email === email)
+
+  let userId: string
+
+  if (jaExiste) {
+    userId = jaExiste.id
+    // Atualizar metadata se necessário
+    await admin.auth.admin.updateUserById(userId, {
+      user_metadata: { full_name: fullName },
+    })
+  } else {
+    // Criar novo usuário no Auth
+    const { data: authData, error: authErr } = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: fullName },
+    })
+    if (authErr) return { success: false, error: authErr.message }
+    userId = authData.user.id
+  }
+
+  // 2. Criar/atualizar perfil
+  const { error: profileErr } = await admin.from('profiles').upsert({
+    id:        userId,
+    email,
+    full_name: fullName,
+    role,
+    is_active: isActive,
+    phone,
+  }, { onConflict: 'id' })
+
+  if (profileErr) return { success: false, error: profileErr.message }
+
+  revalidatePath('/adminpanel')
+  return { success: true, id: userId }
+}
+
+/**
+ * Atualiza perfil de usuário existente.
+ */
+export async function upsertProfile(formData: FormData): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Não autenticado' }
+
+  const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (me?.role !== 'gerente') return { success: false, error: 'Sem permissão' }
 
   const email    = formData.get('email') as string
   const fullName = formData.get('full_name') as string
@@ -675,11 +735,20 @@ export async function upsertProfile(formData: FormData) {
   const isActive = formData.get('is_active') === 'true'
   const phone    = formData.get('phone') as string || null
 
+  // Verificar se o profile existe
+  const { data: existing } = await supabase.from('profiles').select('id').eq('email', email).single()
+
+  if (!existing) {
+    // Profile não existe — redirecionar para criarUsuario
+    return { success: false, error: `Usuário com e-mail "${email}" não existe. Use "Criar Novo Usuário".` }
+  }
+
   const { error } = await supabase
     .from('profiles')
     .update({ full_name: fullName, role, is_active: isActive, phone })
     .eq('email', email)
 
-  if (error) throw new Error(error.message)
+  if (error) return { success: false, error: error.message }
   revalidatePath('/adminpanel')
+  return { success: true }
 }
