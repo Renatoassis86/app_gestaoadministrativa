@@ -87,10 +87,10 @@ export default async function RegistroNovo({ searchParams }: Props) {
               <div style={{ ...g3, marginBottom: '1.25rem' }}>
                 <div style={{ gridColumn: 'span 2' }}>
                   <label style={lbl}>Escola <span style={{ color: '#d97706' }}>*</span></label>
-                  <select name="escola_id" style={inp} required>
+                  <select name="escola_id" style={inp} required defaultValue={escolaId}>
                     <option value="">Selecione a escola...</option>
                     {escolas?.map((e: any) => (
-                      <option key={e.id} value={e.id} selected={e.id === escolaId}>{e.nome}</option>
+                      <option key={e.id} value={e.id}>{e.nome}</option>
                     ))}
                   </select>
                 </div>
@@ -135,9 +135,9 @@ export default async function RegistroNovo({ searchParams }: Props) {
               <div style={g3}>
                 <div>
                   <label style={lbl}>Responsável pelo Contato</label>
-                  <select name="responsavel_id" style={inp}>
+                  <select name="responsavel_id" style={inp} defaultValue={user?.id ?? ''}>
                     {profiles?.map((p: any) => (
-                      <option key={p.id} value={p.id} selected={p.id === user?.id}>{p.full_name}</option>
+                      <option key={p.id} value={p.id}>{p.full_name}</option>
                     ))}
                   </select>
                 </div>

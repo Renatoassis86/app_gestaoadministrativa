@@ -116,7 +116,7 @@ export default async function RegistroEditar({ params }: Props) {
                 <div>
                   <label style={lbl}>Responsável</label>
                   <select name="responsavel_id" style={inp} defaultValue={r.responsavel_id ?? ''}>
-                    {profiles?.map((p: any) => <option key={p.id} value={p.id} selected={p.id === (r.responsavel_id ?? user?.id)}>{p.full_name}</option>)}
+                    {profiles?.map((p: any) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
                   </select>
                 </div>
                 <div>
