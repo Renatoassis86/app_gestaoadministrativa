@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { criarTarefa, criarNota, concluirTarefa } from '@/lib/actions'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import { LABEL } from '@/types/database'
+import { RegistroActions, EditButton } from '@/components/ui/ActionButtons'
 
 interface Props {
   escolaId: string

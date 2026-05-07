@@ -112,6 +112,28 @@ export async function upsertEscola(formData: FormData) {
   }
 }
 
+// ─── Deletar Escola ────────────────────────────────────────────────────────────
+
+export async function deletarEscola(id: string): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Não autenticado' }
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (!['gerente', 'supervisor'].includes(profile?.role ?? '')) {
+    return { success: false, error: 'Sem permissão para excluir escolas' }
+  }
+
+  // Soft delete: marca como inativa em vez de deletar
+  const { error } = await supabase.from('escolas').update({ ativa: false, updated_by: user.id }).eq('id', id)
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/comercial/escolas')
+  revalidatePath('/comercial/leads')
+  revalidatePath('/comercial')
+  return { success: true, id }
+}
+
 // ─── Registro ──────────────────────────────────────────────────────────────────
 
 export async function upsertRegistro(formData: FormData) {

@@ -36,7 +36,6 @@ const NAV_PROCESS = [
 const NAV_TOOLS = [
   { href: '/calculadora',         label: 'Calculadora',      icon: Calculator      },
   { href: '/exports',             label: 'Downloads',        icon: Download        },
-  { href: '/sobre',               label: 'Sobre',            icon: Info            },
 ]
 
 const NAV_WIP = [
@@ -219,6 +218,10 @@ export default function Sidebar({ profile }: SidebarProps) {
 
       {/* ── Nav ───────────────────────────────────────────────── */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '.5rem 0 1rem' }}>
+
+        {/* ── Sobre — primeira aba ──────────────────────────────── */}
+        <NavItem href="/sobre" label="A Plataforma" icon={Info} active={isActive('/sobre')} />
+        <NavDivider />
 
         <SectionLabel>CRM</SectionLabel>
         {NAV_CRM.map(item => (
