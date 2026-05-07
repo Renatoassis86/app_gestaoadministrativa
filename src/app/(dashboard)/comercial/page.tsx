@@ -115,7 +115,7 @@ export default async function ComercialDashboard() {
         {nVencidas > 0 && (
           <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderLeft: '4px solid #dc2626', borderRadius: 14, padding: '1rem 1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', marginBottom: '.85rem' }}>
-              <AlertTriangle size={16} style={{ color: '#dc2626', flexShrink: 0 }} />
+              <AlertTriangle size={16} style={{ color: '#64748b', flexShrink: 0 }} />
               <span style={{ fontWeight: 700, fontSize: '.875rem', color: '#991b1b', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
                 {nVencidas} tarefa{nVencidas > 1 ? 's' : ''} vencida{nVencidas > 1 ? 's' : ''}
               </span>
@@ -145,7 +145,7 @@ export default async function ComercialDashboard() {
         {nHoje > 0 && (
           <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderLeft: '4px solid #d97706', borderRadius: 14, padding: '1rem 1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', marginBottom: '.85rem' }}>
-              <Clock size={15} style={{ color: '#d97706', flexShrink: 0 }} />
+              <Clock size={15} style={{ color: '#64748b', flexShrink: 0 }} />
               <span style={{ fontWeight: 700, fontSize: '.875rem', color: '#92400e', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
                 {nHoje} tarefa{nHoje > 1 ? 's' : ''} para hoje
               </span>
@@ -251,7 +251,7 @@ export default async function ComercialDashboard() {
               </div>
             ) : (
               <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#86efac" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', margin: '0 auto .75rem' }}><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', margin: '0 auto .75rem' }}><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                 <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem', color: '#16a34a', marginBottom: '.2rem' }}>Tudo em dia!</div>
                 <div style={{ fontSize: '.78rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>Todas as escolas foram contatadas recentemente.</div>
               </div>

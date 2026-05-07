@@ -25,7 +25,7 @@ export default async function AdminpanelPage() {
         {/* Aviso acesso restrito */}
         {!isGerente && (
           <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 14, padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: '.85rem', marginBottom: '1.5rem' }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             <div>
               <div style={{ fontWeight: 700, fontSize: '.85rem', color: '#991b1b', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Acesso restrito</div>
               <div style={{ fontSize: '.78rem', color: '#dc2626', fontFamily: 'var(--font-inter,sans-serif)' }}>Somente gerentes podem criar e editar usuários.</div>
