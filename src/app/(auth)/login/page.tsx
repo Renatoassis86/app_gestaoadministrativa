@@ -178,7 +178,7 @@ export default function LoginPage() {
                     marginBottom: '.3rem',
                     fontFamily: 'var(--font-montserrat, sans-serif)',
                   }}>
-                    ✦ Para Escolas Parceiras
+                    ✦ Sua escola quer ser parceira CVE?
                   </div>
 
                   {/* Título */}
@@ -187,7 +187,7 @@ export default function LoginPage() {
                     fontSize: '1.1rem', fontWeight: 700, color: '#fff',
                     lineHeight: 1.2, marginBottom: '.5rem',
                   }}>
-                    Quer adotar o Currículo Paideia?
+                    Conheça o Currículo Paideia
                   </div>
 
                   {/* Descrição */}
@@ -196,7 +196,7 @@ export default function LoginPage() {
                     lineHeight: 1.6, marginBottom: '.9rem',
                     fontFamily: 'var(--font-inter, sans-serif)',
                   }}>
-                    Preencha nosso formulário de pré-cadastro e nossa equipe comercial entrará em contato para apresentar a proposta personalizada para sua escola.
+                    Preencha o formulário de pré-cadastro e nossa equipe comercial entrará em contato com uma proposta personalizada para a sua escola.
                   </p>
 
                   {/* CTA */}
