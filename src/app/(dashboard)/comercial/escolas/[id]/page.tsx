@@ -2,10 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
-import { criarTarefa, criarNota, concluirTarefa } from '@/lib/actions'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { LABEL } from '@/types/database'
-import { EscolaDetailClient } from './EscolaDetailClient'
+import { EscolaDetailClient } from '@/components/comercial/EscolaDetailClient'
 
 interface Props { params: Promise<{ id: string }> }
 
