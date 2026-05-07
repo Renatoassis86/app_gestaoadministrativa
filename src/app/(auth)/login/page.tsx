@@ -143,30 +143,12 @@ export default function LoginPage() {
 
             <p style={{
               fontSize: '1rem', color: 'rgba(255,255,255,.7)',
-              lineHeight: 1.7, marginBottom: '2.5rem', maxWidth: 480,
+              lineHeight: 1.7, marginBottom: '1.5rem', maxWidth: 480,
               fontFamily: 'var(--font-inter, sans-serif)',
             }}>
               Ferramenta exclusiva para a equipe interna da Cidade Viva Education. Gerencie escolas parceiras, registre interações, acompanhe negociações e monitore indicadores comerciais em tempo real.
             </p>
 
-            {/* Stats */}
-            <div style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap', marginBottom: '3rem' }}>
-              {[
-                ['11', 'módulos integrados'],
-                ['360°', 'visão do parceiro'],
-                ['Real-time', 'analytics comercial'],
-              ].map(([val, sub]) => (
-                <div key={val}>
-                  <div style={{
-                    fontFamily: 'var(--font-cormorant, serif)',
-                    fontSize: '1.6rem', fontWeight: 700, color: '#f59e0b', lineHeight: 1,
-                  }}>{val}</div>
-                  <div style={{ fontSize: '.72rem', color: 'rgba(255,255,255,.45)', marginTop: '.2rem', fontFamily: 'var(--font-montserrat, sans-serif)', letterSpacing: '.03em' }}>{sub}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Destaque formulário público */}
             {/* Bloco para escolas parceiras */}
             <div style={{
               background: 'linear-gradient(135deg, rgba(217,119,6,.18) 0%, rgba(217,119,6,.08) 100%)',
