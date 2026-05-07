@@ -169,8 +169,12 @@ export default function Sidebar({ profile }: SidebarProps) {
   const router   = useRouter()
   const supabase = createClient()
 
-  const isActive = (href: string) =>
-    href === '/comercial' ? pathname === '/comercial' : pathname.startsWith(href)
+  const isActive = (href: string) => {
+    if (href === '/comercial') return pathname === '/comercial'
+    // Garante que '/comercial/jornada' não ative '/comercial/jornada-visual'
+    // A rota deve ser exata OU o pathname deve continuar com '/' após o href
+    return pathname === href || pathname.startsWith(href + '/')
+  }
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
