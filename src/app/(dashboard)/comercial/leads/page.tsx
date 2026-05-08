@@ -121,7 +121,7 @@ export default async function LeadsPage({ searchParams }: Props) {
         {/* Filtros */}
         <form style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1rem 1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', boxShadow: '0 1px 4px rgba(0,0,0,.04)' }}>
           <div style={{ position: 'relative', flex: 1, minWidth: 220, maxWidth: 360 }}>
-            <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+            <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#475569', pointerEvents: 'none' }} />
             <input name="q" defaultValue={q} placeholder="Buscar escola, cidade..."
               style={{ width: '100%', paddingLeft: 32, paddingRight: 12, paddingTop: 9, paddingBottom: 9, fontSize: '.82rem', border: '1.5px solid #e2e8f0', borderRadius: 8, outline: 'none', color: '#0f172a', background: '#f8fafc', fontFamily: 'var(--font-inter,sans-serif)', boxSizing: 'border-box' }} />
           </div>
@@ -134,7 +134,7 @@ export default async function LeadsPage({ searchParams }: Props) {
             Filtrar
           </button>
           {(q || estado || classif) && (
-            <Link href="/comercial/leads" style={{ fontSize: '.78rem', color: '#94a3b8', textDecoration: 'none', fontFamily: 'var(--font-inter,sans-serif)' }}>Limpar</Link>
+            <Link href="/comercial/leads" style={{ fontSize: '.78rem', color: '#475569', textDecoration: 'none', fontFamily: 'var(--font-inter,sans-serif)' }}>Limpar</Link>
           )}
         </form>
 
@@ -174,7 +174,7 @@ export default async function LeadsPage({ searchParams }: Props) {
                     {/* Métricas */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.75rem', marginBottom: '1rem' }}>
                       <div style={{ background: '#f8fafc', borderRadius: 8, padding: '.65rem .85rem' }}>
-                        <div style={{ fontSize: '.6rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.05em', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 700, marginBottom: '.2rem' }}>Alunos</div>
+                        <div style={{ fontSize: '.6rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '.05em', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 700, marginBottom: '.2rem' }}>Alunos</div>
                         <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>{e.total_alunos ?? 0}</div>
                       </div>
                       <div style={{ background: '#fffbeb', borderRadius: 8, padding: '.65rem .85rem', border: '1px solid #fef3c7' }}>
@@ -187,7 +187,7 @@ export default async function LeadsPage({ searchParams }: Props) {
                     {e.probabilidade_atual != null && (
                       <div style={{ marginBottom: '1rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '.3rem' }}>
-                          <span style={{ fontSize: '.65rem', color: '#94a3b8', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Probabilidade</span>
+                          <span style={{ fontSize: '.65rem', color: '#475569', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Probabilidade</span>
                           <span style={{ fontSize: '.68rem', fontWeight: 800, color: cor.text, fontFamily: 'var(--font-montserrat,sans-serif)' }}>{e.probabilidade_atual}%</span>
                         </div>
                         <div style={{ height: 4, background: '#f1f5f9', borderRadius: 2, overflow: 'hidden' }}>
@@ -225,7 +225,7 @@ export default async function LeadsPage({ searchParams }: Props) {
             <h3 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.3rem', color: '#0f172a', marginBottom: '.4rem' }}>
               {q ? `Nenhum resultado para "${q}"` : 'Nenhum lead encontrado'}
             </h3>
-            <p style={{ fontSize: '.85rem', color: '#94a3b8', marginBottom: '1.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
+            <p style={{ fontSize: '.85rem', color: '#475569', marginBottom: '1.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
               Cadastre escolas para começar a gerenciar seus leads.
             </p>
             <Link href="/comercial/escolas/nova" style={{ display: 'inline-flex', alignItems: 'center', gap: '.4rem', background: '#d97706', color: '#fff', padding: '.55rem 1.25rem', borderRadius: 9999, textDecoration: 'none', fontSize: '.85rem', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)' }}>

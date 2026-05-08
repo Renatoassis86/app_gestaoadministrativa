@@ -37,11 +37,11 @@
   --border:       #e2e8f0;
   --border-d:     #cbd5e1;
 
-  /* Text hierarchy */
+  /* Text hierarchy — ajustado para melhor legibilidade */
   --text:         #0f172a;
-  --text-m:       #334155;
-  --text-s:       #64748b;
-  --text-xs:      #94a3b8;
+  --text-m:       #1e293b;
+  --text-s:       #475569;
+  --text-xs:      #64748b;
 
   /* Semantic colors */
   --success:      #16a34a;
@@ -91,6 +91,20 @@ body {
 
 /* Tabular numbers para dados/KPIs */
 .tabular-nums { font-variant-numeric: tabular-nums; }
+
+/* Legibilidade — garante contraste mínimo nos textos secundários em fundo claro */
+.p-6 p, .p-6 span, .p-6 div,
+[style*="padding"] p,
+[style*="padding"] label {
+  color: inherit;
+}
+
+/* Força mínimo de contraste nos textos de dados em cards brancos */
+.card-body p,
+.card-body span,
+.card-body div {
+  color: inherit;
+}
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; height: 5px; }

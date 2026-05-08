@@ -268,7 +268,7 @@ export default async function EscolasPage({ searchParams }: Props) {
                       {/* Métricas */}
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.5rem', marginBottom: '.9rem' }}>
                         <div style={{ background: '#f8fafc', borderRadius: 8, padding: '.5rem .75rem' }}>
-                          <div style={{ fontSize: '.6rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.05em', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 700 }}>Alunos</div>
+                          <div style={{ fontSize: '.6rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '.05em', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 700 }}>Alunos</div>
                           <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>{e.total_alunos ?? 0}</div>
                         </div>
                         <div style={{ background: '#fffbeb', borderRadius: 8, padding: '.5rem .75rem', border: '1px solid #fef3c7' }}>
@@ -281,7 +281,7 @@ export default async function EscolasPage({ searchParams }: Props) {
                       {e.probabilidade_atual != null && (
                         <div style={{ marginBottom: '.75rem' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '.3rem' }}>
-                            <span style={{ fontSize: '.65rem', color: '#94a3b8', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Probabilidade de fechamento</span>
+                            <span style={{ fontSize: '.65rem', color: '#475569', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Probabilidade de fechamento</span>
                             <span style={{ fontSize: '.68rem', fontWeight: 800, color: cor.text, fontFamily: 'var(--font-montserrat,sans-serif)' }}>{e.probabilidade_atual}%</span>
                           </div>
                           <div style={{ height: 4, background: '#f1f5f9', borderRadius: 2, overflow: 'hidden' }}>
@@ -295,7 +295,7 @@ export default async function EscolasPage({ searchParams }: Props) {
                         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                         paddingTop: '.75rem', borderTop: '1px solid #f1f5f9',
                       }}>
-                        <div style={{ fontSize: '.68rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                        <div style={{ fontSize: '.68rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)' }}>
                           {e.ultimo_contato
                             ? diasSemContato != null && diasSemContato > 14
                               ? <span style={{ color: '#dc2626', fontWeight: 600 }}>⚠ {diasSemContato}d sem contato</span>
@@ -361,7 +361,7 @@ export default async function EscolasPage({ searchParams }: Props) {
                           {/* Localidade */}
                           <td style={{ padding: '.85rem 1rem', verticalAlign: 'middle' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '.3rem', fontSize: '.82rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                              <MapPin size={12} style={{ color: '#94a3b8', flexShrink: 0 }} />
+                              <MapPin size={12} style={{ color: '#475569', flexShrink: 0 }} />
                               {e.cidade}{e.estado ? `, ${e.estado}` : '—'}
                             </div>
                           </td>
@@ -371,7 +371,7 @@ export default async function EscolasPage({ searchParams }: Props) {
                             {e.contato_nome ? (
                               <div>
                                 <div style={{ fontSize: '.82rem', fontWeight: 600, color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)' }}>{e.contato_nome}</div>
-                                <div style={{ fontSize: '.7rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>{e.contato_cargo}</div>
+                                <div style={{ fontSize: '.7rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)' }}>{e.contato_cargo}</div>
                               </div>
                             ) : <span style={{ color: '#cbd5e1' }}>—</span>}
                           </td>
@@ -379,7 +379,7 @@ export default async function EscolasPage({ searchParams }: Props) {
                           {/* Alunos */}
                           <td style={{ padding: '.85rem 1rem', textAlign: 'right', verticalAlign: 'middle' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '.3rem' }}>
-                              <Users size={12} style={{ color: '#94a3b8' }} />
+                              <Users size={12} style={{ color: '#475569' }} />
                               <span style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
                                 {e.total_alunos ?? 0}
                               </span>
@@ -462,7 +462,7 @@ export default async function EscolasPage({ searchParams }: Props) {
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   background: '#fafafa',
                 }}>
-                  <span style={{ fontSize: '.75rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                  <span style={{ fontSize: '.75rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)' }}>
                     Página <strong style={{ color: '#0f172a' }}>{page}</strong> de <strong style={{ color: '#0f172a' }}>{totalPages}</strong>
                     {' '}— <strong style={{ color: '#0f172a' }}>{count}</strong> escolas no total
                   </span>
@@ -491,11 +491,16 @@ export default async function EscolasPage({ searchParams }: Props) {
             padding: '4rem 2rem', textAlign: 'center',
             boxShadow: '0 2px 8px rgba(15,23,42,.05)',
           }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏫</div>
+            <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+            </div>
             <h3 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.3rem', color: '#0f172a', marginBottom: '.4rem' }}>
               {q ? `Nenhum resultado para "${q}"` : 'Nenhuma escola cadastrada'}
             </h3>
-            <p style={{ fontSize: '.85rem', color: '#94a3b8', marginBottom: '1.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
+            <p style={{ fontSize: '.85rem', color: '#475569', marginBottom: '1.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
               {q ? 'Tente ajustar os filtros ou cadastre uma nova escola.' : 'Comece cadastrando a primeira escola parceira.'}
             </p>
             <Link href="/comercial/escolas/nova" style={{

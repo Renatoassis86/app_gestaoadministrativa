@@ -37,6 +37,8 @@ export default async function ComercialDashboard() {
     { data: tarefasVencidas },
     { data: escolasSemContato },
     { data: tarefasHoje },
+    { data: todasEscolas },
+    { data: escolasComRegistro },
   ] = await Promise.all([
     supabase.from('escolas').select('*', { count: 'exact', head: true }).eq('ativa', true),
     supabase.from('registros').select('escola_id', { count: 'exact', head: true }).eq('classificacao', 'quente'),
@@ -61,10 +63,22 @@ export default async function ComercialDashboard() {
       .eq('status', 'pendente')
       .eq('vencimento', hoje)
       .limit(3),
+    // Todas as escolas ativas para calcular quais não têm registro
+    supabase.from('escolas')
+      .select('id, nome, cidade, estado, created_at, responsavel_id, responsavel:profiles(full_name)')
+      .eq('ativa', true)
+      .order('created_at', { ascending: false }),
+    // Escolas que já têm pelo menos 1 registro
+    supabase.from('registros')
+      .select('escola_id'),
   ])
 
   const nVencidas = tarefasVencidas?.length ?? 0
   const nHoje     = tarefasHoje?.length ?? 0
+
+  // Escolas sem nenhum registro de interação (negociação não iniciada)
+  const idsComRegistro = new Set(escolasComRegistro?.map(r => r.escola_id) ?? [])
+  const escolasSemNegociacao = (todasEscolas ?? []).filter((e: any) => !idsComRegistro.has(e.id))
 
   const kpis = [
     { label: 'Total de Escolas',   value: totalEscolas ?? 0, sub: 'parceiros ativos',     cor: '#2563eb', bg: '#eff6ff', border: '#93c5fd', href: '/comercial/escolas' },
@@ -242,7 +256,7 @@ export default async function ComercialDashboard() {
                           {dias}d sem contato
                         </span>
                       )}
-                      <Link href={`/comercial/registros/novo?escola=${e.id}`} onClick={ev => ev.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 7, background: '#d97706', color: '#fff', textDecoration: 'none', fontSize: '1rem', fontWeight: 700, flexShrink: 0 }} title="Registrar contato">
+                      <Link href={`/comercial/registros/novo?escola=${e.id}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 7, background: '#d97706', color: '#fff', textDecoration: 'none', fontSize: '1rem', fontWeight: 700, flexShrink: 0 }} title="Registrar contato">
                         +
                       </Link>
                     </Link>
@@ -259,6 +273,75 @@ export default async function ComercialDashboard() {
           </div>
 
         </div>
+
+        {/* ── Escolas aguardando início de negociação ───────────── */}
+        {escolasSemNegociacao.length > 0 && (
+          <div style={card}>
+            <div style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '.65rem' }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div>
+                  <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>
+                    Aguardando Início de Negociação
+                  </div>
+                  <div style={{ fontSize: '.68rem', color: 'rgba(255,255,255,.6)', fontFamily: 'var(--font-inter,sans-serif)', marginTop: '.1rem' }}>
+                    Escolas cadastradas que ainda não receberam nenhum contato registrado
+                  </div>
+                </div>
+              </div>
+              <span style={{ fontSize: '.68rem', fontWeight: 700, background: 'rgba(255,255,255,.15)', color: '#fff', border: '1px solid rgba(255,255,255,.25)', padding: '.2rem .65rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap' }}>
+                {escolasSemNegociacao.length} escola{escolasSemNegociacao.length > 1 ? 's' : ''}
+              </span>
+            </div>
+
+            <div style={{ padding: '.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '.5rem' }}>
+              {escolasSemNegociacao.slice(0, 12).map((e: any) => {
+                const diasCadastro = Math.floor((Date.now() - new Date(e.created_at).getTime()) / 86400000)
+                return (
+                  <div key={e.id} style={{
+                    display: 'flex', alignItems: 'center', gap: '.75rem',
+                    padding: '.7rem .9rem', background: '#faf5ff',
+                    border: '1px solid #e9d5ff', borderLeft: '3px solid #7c3aed',
+                    borderRadius: 10, transition: 'box-shadow .15s',
+                  }}>
+                    {/* Avatar inicial */}
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '.75rem', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)', flexShrink: 0 }}>
+                      {e.nome[0].toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: '.82rem', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                        {e.nome}
+                      </div>
+                      <div style={{ fontSize: '.65rem', color: '#7c3aed', fontFamily: 'var(--font-inter,sans-serif)', marginTop: '.1rem' }}>
+                        {e.cidade}{e.estado ? `, ${e.estado}` : ''}
+                        {e.responsavel?.full_name && (
+                          <span style={{ color: '#94a3b8', marginLeft: '.3rem' }}>· {e.responsavel.full_name}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '.3rem', flexShrink: 0 }}>
+                      <span style={{ fontSize: '.58rem', fontWeight: 700, background: '#ede9fe', color: '#7c3aed', padding: '.1rem .4rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap' }}>
+                        {diasCadastro === 0 ? 'Hoje' : `${diasCadastro}d cadastrada`}
+                      </span>
+                      <Link href={`/comercial/registros/novo?escola=${e.id}`}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '.2rem', fontSize: '.65rem', fontWeight: 700, color: '#fff', background: '#7c3aed', padding: '.2rem .55rem', borderRadius: 99, textDecoration: 'none', fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Iniciar contato
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })}
+              {escolasSemNegociacao.length > 12 && (
+                <Link href="/comercial/escolas" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '.7rem', background: '#f5f3ff', border: '1px dashed #c4b5fd', borderRadius: 10, textDecoration: 'none', fontSize: '.75rem', fontWeight: 600, color: '#7c3aed', fontFamily: 'var(--font-montserrat,sans-serif)', gap: '.3rem' }}>
+                  <ArrowRight size={13} /> Ver mais {escolasSemNegociacao.length - 12} escolas
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ── Acesso rápido aos módulos ─────────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>

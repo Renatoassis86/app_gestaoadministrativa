@@ -4,6 +4,7 @@ import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils'
 import { EscolaSelector } from '@/components/ui/EscolaSelector'
+import { ContratoUpload } from '@/components/comercial/ContratoUpload'
 
 interface Props { searchParams: Promise<{ escola?: string }> }
 
@@ -80,16 +81,20 @@ export default async function ContratosPage({ searchParams }: Props) {
   ])
 
   let escola: any = null, contrato: any = null, ultimo_enc: string = ''
+  let arquivosEscola: any[] = []
 
   if (escolaId) {
-    const [{ data: e }, { data: c }, { data: reg }] = await Promise.all([
+    const [{ data: e }, { data: c }, { data: reg }, { data: arqs }] = await Promise.all([
       supabase.from('escolas').select('*').eq('id', escolaId).single(),
       supabase.from('contratos').select('*').eq('escola_id', escolaId).single(),
       supabase.from('registros').select('encaminhamentos, prontidao')
         .eq('escola_id', escolaId).order('data_contato', { ascending: false }).limit(1).single(),
+      supabase.from('contratos_arquivos').select('id, nome, path, created_at, tamanho')
+        .eq('escola_id', escolaId).order('created_at', { ascending: false }),
     ])
     escola = e; contrato = c
     ultimo_enc = reg?.encaminhamentos?.join(', ') ?? reg?.prontidao ?? ''
+    arquivosEscola = arqs ?? []
   }
 
   const c = contrato as any
@@ -143,7 +148,7 @@ export default async function ContratosPage({ searchParams }: Props) {
                   <div style={{ height: 10, background: '#f1f5f9', borderRadius: 5, overflow: 'hidden', marginBottom: '.35rem' }}>
                     <div style={{ height: '100%', borderRadius: 5, background: m.cor, width: `${m.pct}%`, transition: 'width .6s ease' }} />
                   </div>
-                  <div style={{ fontSize: '.7rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                  <div style={{ fontSize: '.7rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)' }}>
                     {String(m.atual)} de {String(m.meta)} atingidos
                   </div>
                 </div>
@@ -204,7 +209,7 @@ export default async function ContratosPage({ searchParams }: Props) {
                 </div>
                 <div>
                   <div style={secTitle}>Checklist de Progresso Contratual</div>
-                  <div style={{ fontSize: '.68rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)', marginTop: '.1rem' }}>Marque cada etapa conforme avança no processo</div>
+                  <div style={{ fontSize: '.68rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)', marginTop: '.1rem' }}>Marque cada etapa conforme avança no processo</div>
                 </div>
               </div>
               <div style={body}>
@@ -247,7 +252,7 @@ export default async function ContratosPage({ searchParams }: Props) {
                 </div>
                 <div>
                   <div style={secTitle}>Alunos e Valores por Segmento</div>
-                  <div style={{ fontSize: '.68rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)', marginTop: '.1rem' }}>Preencha a quantidade e o valor por aluno de cada segmento</div>
+                  <div style={{ fontSize: '.68rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)', marginTop: '.1rem' }}>Preencha a quantidade e o valor por aluno de cada segmento</div>
                 </div>
               </div>
               <div style={body}>
@@ -307,6 +312,38 @@ export default async function ContratosPage({ searchParams }: Props) {
           </form>
         )}
 
+        {/* ── Upload de Arquivos do Contrato ─────────────────── */}
+        {escola && (
+          <div style={card}>
+            <div style={secHdr('#0f172a')}>
+              <div style={{ ...dot('#0f172a'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                </svg>
+              </div>
+              <div>
+                <div style={secTitle}>Arquivos do Contrato — {escola.nome}</div>
+                <div style={{ fontSize: '.68rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)', marginTop: '.1rem' }}>
+                  Upload e gestão dos documentos contratuais desta escola
+                </div>
+              </div>
+            </div>
+            <div style={body}>
+              <ContratoUpload
+                escolaId={escolaId}
+                escolaNome={escola.nome}
+                arquivosExistentes={arquivosEscola.map((a: any) => ({
+                  id:        a.id,
+                  nome:      a.nome,
+                  url:       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/documentos-oficiais/${a.path}`,
+                  criado_em: a.created_at,
+                  tamanho:   a.tamanho,
+                }))}
+              />
+            </div>
+          </div>
+        )}
+
         {/* ── Acompanhamento Geral ──────────────────────────── */}
         <div style={card}>
           <div style={secHdr('#6366f1')}>
@@ -362,7 +399,7 @@ export default async function ContratosPage({ searchParams }: Props) {
                 </tbody>
               </table>
             ) : (
-              <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+              <div style={{ textAlign: 'center', padding: '3rem', color: '#475569' }}>
                 <div style={{ fontSize: '.875rem', fontFamily: 'var(--font-inter,sans-serif)' }}>Nenhum contrato registrado ainda.</div>
               </div>
             )}

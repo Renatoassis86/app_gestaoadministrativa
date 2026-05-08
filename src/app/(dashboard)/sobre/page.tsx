@@ -181,6 +181,373 @@ export default function SobrePage() {
           </div>
         </div>
 
+        {/* ══════════════════════════════════════════════════════════
+            PLATAFORMA PAIDEIA — DEMONSTRAÇÃO
+            ══════════════════════════════════════════════════════════ */}
+
+        {/* Divisor */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '2.5rem 0 2rem' }}>
+          <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, #e2e8f0)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', padding: '.4rem 1rem', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 9999 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#d97706' }} />
+            <span style={{ fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.1em', color: '#d97706', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+              Currículo Paideia
+            </span>
+          </div>
+          <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, #e2e8f0)' }} />
+        </div>
+
+        {/* ── Hero PAIDEIA ── */}
+        <div style={{
+          background: 'linear-gradient(135deg, #faf7f0 0%, #fff8e8 50%, #faf7f0 100%)',
+          border: '1px solid #fde68a', borderRadius: 20,
+          padding: '2.5rem', marginBottom: '1.5rem',
+          overflow: 'hidden', position: 'relative',
+        }}>
+          {/* Ornamentos de fundo */}
+          <div style={{ position: 'absolute', top: -30, right: -30, width: 160, height: 160, borderRadius: '50%', background: 'rgba(217,119,6,.06)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', bottom: -20, left: 40, width: 100, height: 100, borderRadius: '50%', background: 'rgba(217,119,6,.04)', pointerEvents: 'none' }} />
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+            {/* Texto */}
+            <div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '.4rem', background: 'rgba(217,119,6,.12)', border: '1px solid rgba(217,119,6,.3)', borderRadius: 9999, padding: '.3rem .85rem', marginBottom: '1rem' }}>
+                <span style={{ fontSize: '.62rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.1em', color: '#b45309', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                  ✦ Sistema de Ensino Cidade Viva Education
+                </span>
+              </div>
+              <h2 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 'clamp(1.6rem, 2.5vw, 2rem)', fontWeight: 700, color: '#0f172a', lineHeight: 1.15, marginBottom: '.85rem' }}>
+                Educando para<br />
+                <span style={{ color: '#d97706' }}>a eternidade</span>
+              </h2>
+              <p style={{ fontSize: '.875rem', color: '#475569', lineHeight: 1.75, fontFamily: 'var(--font-inter,sans-serif)', marginBottom: '1.25rem' }}>
+                O homem, criado à imagem e semelhança de Deus, não nasce pronto. É uma criatura em potência, chamada a realizar-se pela assimilação do Bom, do Belo e do Verdadeiro. É exatamente isso que uma verdadeira educação faz: conduz o homem à Grande Conversa.
+              </p>
+              <p style={{ fontSize: '.875rem', color: '#475569', lineHeight: 1.75, fontFamily: 'var(--font-inter,sans-serif)' }}>
+                Uma formação que capacita as pessoas a conhecerem a si mesmas, cultivar a sabedoria, fazer as perguntas certas — tornando-as livres para pensar e para ser quem Deus as criou para ser.
+              </p>
+            </div>
+
+            {/* Imagem ilustrativa — formato arredondado com gradiente */}
+            <div style={{ position: 'relative' }}>
+              <div style={{
+                width: '100%', aspectRatio: '4/3',
+                borderRadius: 20, overflow: 'hidden',
+                background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 16px 48px rgba(15,23,42,.2)',
+                position: 'relative',
+              }}>
+                {/* Ilustração SVG — livro aberto com luz */}
+                <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" style={{ width: '85%', height: '85%' }}>
+                  {/* Fundo estrelado */}
+                  {[...Array(20)].map((_, i) => (
+                    <circle key={i} cx={20 + (i * 19) % 360} cy={10 + (i * 13) % 80} r={i % 3 === 0 ? 1.5 : 1} fill="rgba(255,255,255,0.4)" />
+                  ))}
+                  {/* Raio de luz central */}
+                  <defs>
+                    <radialGradient id="luz" cx="50%" cy="60%" r="50%">
+                      <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+                      <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+                    </radialGradient>
+                    <radialGradient id="luzBranca" cx="50%" cy="40%" r="40%">
+                      <stop offset="0%" stopColor="#fff" stopOpacity="0.15" />
+                      <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+                    </radialGradient>
+                  </defs>
+                  <ellipse cx="200" cy="180" rx="160" ry="100" fill="url(#luz)" />
+                  <ellipse cx="200" cy="120" rx="80" ry="60" fill="url(#luzBranca)" />
+
+                  {/* Livro aberto */}
+                  <g transform="translate(100, 120)">
+                    {/* Página esquerda */}
+                    <path d="M0,0 Q50,-15 100,0 L100,80 Q50,65 0,80 Z" fill="#fff" opacity="0.95" />
+                    {/* Linhas de texto página esquerda */}
+                    {[15,25,35,45,55].map((y, i) => (
+                      <rect key={i} x={12} y={y} width={i % 2 === 0 ? 65 : 55} height={3} rx={1.5} fill="#e2e8f0" opacity="0.8" />
+                    ))}
+                    {/* Página direita */}
+                    <path d="M100,0 Q150,-15 200,0 L200,80 Q150,65 100,80 Z" fill="#fffbeb" opacity="0.95" />
+                    {/* Linhas de texto página direita */}
+                    {[15,25,35,45,55].map((y, i) => (
+                      <rect key={i} x={112} y={y} width={i % 2 === 0 ? 65 : 45} height={3} rx={1.5} fill="#fde68a" opacity="0.8" />
+                    ))}
+                    {/* Lombada */}
+                    <line x1="100" y1="0" x2="100" y2="80" stroke="#d97706" strokeWidth="2" opacity="0.6" />
+                    {/* Sombra do livro */}
+                    <ellipse cx="100" cy="82" rx="95" ry="8" fill="rgba(0,0,0,0.2)" />
+                  </g>
+
+                  {/* Cruz pequena no alto */}
+                  <g transform="translate(190, 55)" opacity="0.6">
+                    <rect x="8" y="0" width="4" height="20" rx="2" fill="#fbbf24" />
+                    <rect x="0" y="6" width="20" height="4" rx="2" fill="#fbbf24" />
+                  </g>
+
+                  {/* Texto inferior */}
+                  <text x="200" y="270" textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="11" fontFamily="Georgia, serif" fontStyle="italic">
+                    "A sabedoria é o principal; adquire, pois, a sabedoria"
+                  </text>
+                </svg>
+
+                {/* Badge flutuante */}
+                <div style={{ position: 'absolute', bottom: 16, left: 16, background: 'rgba(217,119,6,.9)', backdropFilter: 'blur(8px)', borderRadius: 99, padding: '.4rem .9rem', display: 'flex', alignItems: 'center', gap: '.35rem' }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />
+                  <span style={{ fontSize: '.6rem', fontWeight: 800, color: '#fff', fontFamily: 'var(--font-montserrat,sans-serif)', letterSpacing: '.06em', textTransform: 'uppercase' }}>Currículo Paideia</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Os 3 pilares — Cristão, Clássico, Bilíngue ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+          {[
+            {
+              icone: '✝',
+              titulo: 'Cristão',
+              ref: '2 Timóteo 3.15',
+              desc: 'Tem como fundamento a Bíblia, onde se encontra a referência para todo conhecimento, a fim de que o homem se torne apto para toda boa obra.',
+              cor: '#d97706', bg: '#fffbeb', border: '#fde68a',
+            },
+            {
+              icone: '◈',
+              titulo: 'Clássico',
+              ref: 'Trivium e Quadrivium',
+              desc: 'Recupera a tradição pedagógica ocidental: Gramática, Lógica e Retórica formam mentes capazes de pensar, argumentar e se expressar com excelência.',
+              cor: '#2563eb', bg: '#eff6ff', border: '#bfdbfe',
+            },
+            {
+              icone: '◎',
+              titulo: 'Bilíngue',
+              ref: 'Inglês integrado ao currículo',
+              desc: 'O idioma é aprendido de forma integrada ao conteúdo pedagógico, não como disciplina isolada, formando comunicadores fluentes e pensadores globais.',
+              cor: '#16a34a', bg: '#f0fdf4', border: '#86efac',
+            },
+          ].map(p => (
+            <div key={p.titulo} style={{ background: p.bg, border: `1.5px solid ${p.border}`, borderRadius: 16, padding: '1.5rem', borderTop: `3px solid ${p.cor}` }}>
+              <div style={{ width: 36, height: 36, borderRadius: 9, background: p.cor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '1rem', fontWeight: 700, marginBottom: '.85rem' }}>
+                {p.icone}
+              </div>
+              <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.08em', color: p.cor, marginBottom: '.3rem' }}>{p.titulo}</div>
+              <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1rem', fontWeight: 700, color: '#0f172a', marginBottom: '.5rem' }}>{p.ref}</div>
+              <p style={{ fontSize: '.78rem', color: '#475569', lineHeight: 1.65, fontFamily: 'var(--font-inter,sans-serif)' }}>{p.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* ── O que está na plataforma digital ── */}
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 20, overflow: 'hidden', marginBottom: '1.5rem', boxShadow: '0 2px 12px rgba(15,23,42,.06)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'center' }}>
+
+            {/* Lado esquerdo — Ilustração */}
+            <div style={{
+              background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+              padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              minHeight: 320,
+            }}>
+              <svg viewBox="0 0 320 280" xmlns="http://www.w3.org/2000/svg" style={{ width: '90%', maxWidth: 280 }}>
+                <defs>
+                  <linearGradient id="tela" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#1e3a5f" />
+                    <stop offset="100%" stopColor="#0f172a" />
+                  </linearGradient>
+                </defs>
+                {/* Monitor */}
+                <rect x="30" y="20" width="260" height="180" rx="12" fill="url(#tela)" stroke="#334155" strokeWidth="2" />
+                <rect x="40" y="30" width="240" height="160" rx="8" fill="#0f172a" />
+                {/* Interface da plataforma */}
+                {/* Header */}
+                <rect x="40" y="30" width="240" height="28" rx="8" fill="#1e3a5f" />
+                <circle cx="56" cy="44" r="5" fill="#d97706" opacity="0.8" />
+                <rect x="70" y="40" width="80" height="8" rx="4" fill="rgba(255,255,255,0.2)" />
+                {/* Cards de conteúdo */}
+                {[0,1,2].map(i => (
+                  <g key={i}>
+                    <rect x={52 + i*80} y={72} width={68} height={88} rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+                    <rect x={58 + i*80} y={80} width={56} height={36} rx="4" fill={['#d97706','#2563eb','#16a34a'][i]} opacity="0.3" />
+                    {[0,1,2].map(j => (
+                      <rect key={j} x={58 + i*80} y={122 + j*9} width={j===1?40:50} height={4} rx="2" fill="rgba(255,255,255,0.15)" />
+                    ))}
+                  </g>
+                ))}
+                {/* Suporte do monitor */}
+                <rect x="145" y="200" width="30" height="20" rx="2" fill="#334155" />
+                <rect x="110" y="218" width="100" height="8" rx="4" fill="#334155" />
+                {/* Badge de acesso demo */}
+                <rect x="60" y="240" width="200" height="28" rx="14" fill="#d97706" opacity="0.9" />
+                <text x="160" y="259" textAnchor="middle" fill="white" fontSize="9" fontFamily="Arial, sans-serif" fontWeight="bold">
+                  ACESSO DEMONSTRAÇÃO — 48H
+                </text>
+              </svg>
+            </div>
+
+            {/* Lado direito — O que está disponível */}
+            <div style={{ padding: '2rem 2rem 2rem 1.5rem' }}>
+              <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.1em', color: '#d97706', marginBottom: '.75rem' }}>
+                O que está disponível
+              </div>
+              <h3 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.1rem', lineHeight: 1.2 }}>
+                Plataforma de Demonstração<br />do Currículo Paideia
+              </h3>
+              {[
+                { icon: '📘', titulo: 'Material do Aluno', desc: 'Organização dos conteúdos, estrutura das aulas e atividades.' },
+                { icon: '📗', titulo: 'Material do Professor', desc: 'Planejamento, orientações pedagógicas e objetivos de aprendizagem.' },
+                { icon: '🎥', titulo: 'Vídeos de Formação Docente', desc: 'Proposta pedagógica, fundamentos e aplicação em sala de aula.' },
+                { icon: '💻', titulo: 'Ambiente Digital', desc: 'Navegação pela plataforma e estrutura do ecossistema digital.' },
+              ].map(item => (
+                <div key={item.titulo} style={{ display: 'flex', alignItems: 'flex-start', gap: '.75rem', padding: '.6rem 0', borderBottom: '1px solid #f1f5f9' }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 7, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '.85rem' }}>
+                    {item.icon}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '.78rem', color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.1rem' }}>{item.titulo}</div>
+                    <div style={{ fontSize: '.72rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)' }}>{item.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Card de acesso à demonstração ── */}
+        <div style={{
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #1e3a5f 100%)',
+          borderRadius: 20, padding: '2rem 2.5rem', marginBottom: '1.5rem',
+          border: '1px solid rgba(217,119,6,.2)',
+          boxShadow: '0 8px 32px rgba(15,23,42,.2)',
+          position: 'relative', overflow: 'hidden',
+        }}>
+          {/* Ornamentos */}
+          <div style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: '50%', background: 'rgba(217,119,6,.06)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', bottom: -30, left: 30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,.03)', pointerEvents: 'none' }} />
+
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem' }}>
+
+              {/* Texto esquerdo */}
+              <div style={{ flex: 1, minWidth: 300 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '.4rem', background: 'rgba(217,119,6,.2)', border: '1px solid rgba(217,119,6,.4)', borderRadius: 9999, padding: '.3rem .85rem', marginBottom: '1rem' }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#d97706', animation: 'pulse 2s infinite' }} />
+                  <span style={{ fontSize: '.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.1em', color: '#d97706', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                    Acesso Temporário — 48 Horas
+                  </span>
+                </div>
+                <h3 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.6rem', fontWeight: 700, color: '#fff', lineHeight: 1.15, marginBottom: '.75rem' }}>
+                  Acesso à Plataforma<br />de Demonstração
+                </h3>
+                <p style={{ fontSize: '.82rem', color: 'rgba(255,255,255,.6)', lineHeight: 1.7, fontFamily: 'var(--font-inter,sans-serif)', maxWidth: 460, marginBottom: '1.25rem' }}>
+                  Disponibilizamos um ambiente demonstrativo do PAIDEIA para que escolas e educadores possam conhecer, de forma prática, a proposta pedagógica, a organização dos conteúdos e a experiência digital do nosso currículo.
+                </p>
+                <p style={{ fontSize: '.78rem', color: 'rgba(255,255,255,.4)', lineHeight: 1.6, fontFamily: 'var(--font-inter,sans-serif)', maxWidth: 460 }}>
+                  Esta plataforma tem caráter demonstrativo e fica disponível por <strong style={{ color: 'rgba(255,255,255,.6)' }}>48 horas</strong>, com acesso restrito a uma amostra representativa do material. Para novas visualizações, será necessária nova solicitação.
+                </p>
+              </div>
+
+              {/* Card de credenciais */}
+              <div style={{ background: 'rgba(255,255,255,.07)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 16, padding: '1.5rem', minWidth: 280, flexShrink: 0 }}>
+                <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.62rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.1em', color: '#d97706', marginBottom: '1rem' }}>
+                  🔐 Dados de Acesso
+                </div>
+
+                {/* Link */}
+                <div style={{ marginBottom: '.85rem' }}>
+                  <div style={{ fontSize: '.6rem', fontWeight: 700, color: 'rgba(255,255,255,.35)', textTransform: 'uppercase', letterSpacing: '.07em', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.3rem' }}>Link</div>
+                  <a href="https://hub.cidadeviva.education/hub/login?t=professor" target="_blank" rel="noopener noreferrer" style={{ fontSize: '.72rem', color: '#d97706', fontFamily: 'var(--font-inter,sans-serif)', textDecoration: 'none', wordBreak: 'break-all' as const, display: 'flex', alignItems: 'center', gap: '.3rem' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    hub.cidadeviva.education/hub/login?t=professor
+                  </a>
+                  <div style={{ fontSize: '.6rem', color: 'rgba(255,255,255,.3)', fontFamily: 'var(--font-inter,sans-serif)', marginTop: '.2rem' }}>Sempre entrar como <strong style={{ color: 'rgba(255,255,255,.5)' }}>professor</strong></div>
+                </div>
+
+                {/* Linha divisória */}
+                <div style={{ height: 1, background: 'rgba(255,255,255,.08)', marginBottom: '.85rem' }} />
+
+                {/* Login */}
+                <div style={{ marginBottom: '.65rem' }}>
+                  <div style={{ fontSize: '.6rem', fontWeight: 700, color: 'rgba(255,255,255,.35)', textTransform: 'uppercase', letterSpacing: '.07em', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.25rem' }}>📧 Login</div>
+                  <div style={{ background: 'rgba(255,255,255,.06)', borderRadius: 8, padding: '.5rem .75rem', fontSize: '.72rem', color: '#fff', fontFamily: 'var(--font-inter,sans-serif)', letterSpacing: '.01em' }}>
+                    demonstracao.plataforma.paideia@cidadeviva.org
+                  </div>
+                </div>
+
+                {/* Senha */}
+                <div style={{ marginBottom: '1.1rem' }}>
+                  <div style={{ fontSize: '.6rem', fontWeight: 700, color: 'rgba(255,255,255,.35)', textTransform: 'uppercase', letterSpacing: '.07em', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.25rem' }}>🔑 Senha</div>
+                  <div style={{ background: 'rgba(255,255,255,.06)', borderRadius: 8, padding: '.5rem .75rem', fontSize: '.875rem', color: '#fbbf24', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 800, letterSpacing: '.1em' }}>
+                    12345678
+                  </div>
+                </div>
+
+                {/* Botão acessar */}
+                <a href="https://hub.cidadeviva.education/hub/login?t=professor" target="_blank" rel="noopener noreferrer" style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.45rem',
+                  background: 'linear-gradient(135deg, #d97706, #b45309)',
+                  color: '#fff', padding: '.7rem 1rem', borderRadius: 9999,
+                  textDecoration: 'none', fontWeight: 700, fontSize: '.78rem',
+                  fontFamily: 'var(--font-montserrat,sans-serif)',
+                  boxShadow: '0 4px 14px rgba(217,119,6,.4)',
+                }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                  Acessar Plataforma Demo
+                </a>
+              </div>
+            </div>
+
+            {/* Aviso de prazo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '.65rem', background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 10, padding: '.75rem 1rem', marginTop: '1.25rem' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span style={{ fontSize: '.72rem', color: 'rgba(255,255,255,.5)', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                Para novas visualizações ou acesso em outros momentos, será necessário realizar uma <strong style={{ color: 'rgba(255,255,255,.7)' }}>nova solicitação</strong> conforme o avanço da negociação. Nossa equipe estará à disposição.
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Mensagem pronta para WhatsApp/Email ── */}
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, overflow: 'hidden', marginBottom: '1.5rem', boxShadow: '0 2px 8px rgba(15,23,42,.04)' }}>
+          <div style={{ padding: '.9rem 1.5rem', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '.65rem' }}>
+              <div style={{ width: 28, height: 28, borderRadius: 7, background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div>
+                <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.72rem', fontWeight: 700, color: '#0f172a' }}>Mensagem pronta — WhatsApp / E-mail</div>
+                <div style={{ fontSize: '.62rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>Copie e envie para a escola ao disponibilizar o acesso demo</div>
+              </div>
+            </div>
+          </div>
+          <div style={{ padding: '1.25rem 1.5rem' }}>
+            <pre style={{
+              fontFamily: 'var(--font-inter,sans-serif)', fontSize: '.78rem',
+              color: '#1e293b', lineHeight: 1.75, whiteSpace: 'pre-wrap',
+              background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10,
+              padding: '1.25rem', margin: 0,
+            }}>{`🎓 *PLATAFORMA DE DEMONSTRAÇÃO – PAIDEIA*
+_(Acesso temporário por 48 horas)_
+
+Olá! Disponibilizamos um acesso demonstrativo ao nosso currículo para que você possa conhecer, na prática, a proposta pedagógica, a organização dos conteúdos e a experiência digital do PAIDEIA.
+
+🔗 *Link de acesso:*
+https://hub.cidadeviva.education/hub/login?t=professor
+_(sempre entre como *professor*)_
+
+🔐 *Dados de acesso:*
+📧 Login: demonstracao.plataforma.paideia@cidadeviva.org
+🔑 Senha: 12345678
+
+📌 *O que você encontrará na plataforma:*
+📘 Material do aluno — organização por ano/série e estrutura das aulas
+📗 Material do professor — planejamento, orientações e objetivos
+🎥 Vídeos de formação docente — fundamentos e aplicação prática
+💻 Ambiente digital — navegação e organização do ecossistema
+
+⏳ Este acesso ficará disponível por *48 horas*. Para novas visualizações, basta nos solicitar conforme avançarmos na conversa.
+
+Qualquer dúvida, estou à disposição! 🙏`}</pre>
+          </div>
+        </div>
+
         {/* ── Rodapé ───────────────────────────────────────────── */}
         <div style={{ textAlign: 'center', padding: '1rem', fontSize: '.72rem', color: '#94a3b8', fontFamily: 'var(--font-montserrat,sans-serif)', letterSpacing: '.03em' }}>
           Cidade Viva Education © {new Date().getFullYear()} · Central de Inteligência Analítica · Plataforma de uso exclusivo da equipe interna

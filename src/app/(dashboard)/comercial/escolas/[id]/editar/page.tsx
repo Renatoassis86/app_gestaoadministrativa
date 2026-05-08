@@ -115,16 +115,32 @@ export default async function EscolaEditar({ params }: Props) {
           </div>
 
           <div className="card mb-4">
-            <div className="card-header"><span className="card-title">Quantidade Estimada de Alunos</span></div>
+            <div className="card-header"><span className="card-title">Quantidade de Alunos por Segmento</span></div>
             <div className="card-body">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
-                {[['qtd_infantil','Infantil'],['qtd_fund1','Fundamental 1'],['qtd_fund2','Fundamental 2'],['qtd_medio','Ensino Médio']].map(([name, label]) => (
-                  <div key={name}>
-                    <label className="form-label">{label}</label>
-                    <input name={name} type="number" min="0" className="form-control" defaultValue={(e as any)[name] ?? 0} />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
+                {[
+                  { name: 'qtd_infantil', label: 'Ed. Infantil',   sub: 'Inf. 2 ao Inf. 5', cor: '#ea580c', bg: '#fff7ed', border: '#fed7aa' },
+                  { name: 'qtd_fund1',    label: 'Fund. I',        sub: '1º ao 5º Ano',     cor: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
+                  { name: 'qtd_fund2',    label: 'Fund. II',       sub: '6º ao 9º Ano',     cor: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
+                  { name: 'qtd_medio',    label: 'Ens. Médio',     sub: '1ª à 3ª Série',    cor: '#dc2626', bg: '#fef2f2', border: '#fca5a5' },
+                ].map(seg => (
+                  <div key={seg.name} style={{ background: seg.bg, border: `1.5px solid ${seg.border}`, borderRadius: 12, padding: '1rem', textAlign: 'center' }}>
+                    <label style={{ display: 'block', fontSize: '.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: seg.cor, marginBottom: '.5rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                      {seg.label}
+                    </label>
+                    <input name={seg.name} type="number" min="0"
+                      style={{ width: '100%', padding: '.6rem', textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.4rem', fontWeight: 800, border: '1.5px solid #e2e8f0', borderRadius: 8, outline: 'none', background: '#fff', boxSizing: 'border-box' as const, color: '#0f172a' }}
+                      defaultValue={(e as any)[seg.name] ?? 0} />
+                    <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.35rem', fontFamily: 'var(--font-inter,sans-serif)' }}>{seg.sub}</div>
                   </div>
                 ))}
               </div>
+              {/* Hidden fields para compatibilidade com a action */}
+              {(['qtd_fund1_ano1','qtd_fund1_ano2','qtd_fund1_ano3','qtd_fund1_ano4','qtd_fund1_ano5',
+                 'qtd_fund2_ano6','qtd_fund2_ano7','qtd_fund2_ano8','qtd_fund2_ano9',
+                 'qtd_medio_1s','qtd_medio_2s','qtd_medio_3s'] as const).map(f => (
+                <input key={f} type="hidden" name={f} value={(e as any)[f] ?? 0} />
+              ))}
             </div>
           </div>
 

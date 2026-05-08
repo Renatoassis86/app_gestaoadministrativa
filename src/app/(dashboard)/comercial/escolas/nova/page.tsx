@@ -194,90 +194,79 @@ export default async function EscolaNova() {
             </div>
           </div>
 
-          {/* ── 4. ALUNOS POR TURMA ────────────────────────────── */}
+          {/* ── 4. ALUNOS POR SEGMENTO ─────────────────────────── */}
           <div style={card}>
             <div style={cardHeader('#16a34a')}>
               <div style={dot('#16a34a')}><svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='#fff' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round'><path d='M22 10v6M2 10l10-5 10 5-10 5z'/><path d='M6 12v5c3 3 9 3 12 0v-5'/></svg></div>
               <div>
-                <div style={sectionTitle}>Quantidade de Alunos por Turma</div>
+                <div style={sectionTitle}>Quantidade de Alunos por Segmento</div>
                 <div style={{ fontSize: '.68rem', color: '#94a3b8', marginTop: '.1rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                  Preencha apenas as turmas que a escola possui. Deixe 0 para turmas inexistentes.
+                  Informe o total de alunos em cada segmento. Deixe 0 para segmentos inexistentes.
                 </div>
               </div>
             </div>
             <div style={cardBody}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1.5rem' }}>
 
-              {/* Educação Infantil */}
-              <div style={{ marginBottom: '1.75rem' }}>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: '.5rem',
-                  marginBottom: '1rem',
-                }}>
-                  <div style={{ width: 4, height: 18, background: '#f97316', borderRadius: 2 }} />
-                  <span style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#f97316' }}>
-                    Educação Infantil
-                  </span>
+                {/* Infantil */}
+                <div style={{ background: '#fff7ed', border: '1.5px solid #fed7aa', borderRadius: 12, padding: '1.1rem 1rem', textAlign: 'center' }}>
+                  <div style={{ width: 4, height: 16, background: '#f97316', borderRadius: 2, margin: '0 auto .6rem' }} />
+                  <label style={{ ...label, color: '#ea580c', textAlign: 'center', display: 'block', marginBottom: '.6rem', fontSize: '.68rem' }}>
+                    Ed. Infantil
+                  </label>
+                  <input name="qtd_infantil" type="number" min="0" defaultValue="0"
+                    style={{ ...input, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.4rem', fontWeight: 800, padding: '.6rem', background: '#fff' }} />
+                  <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.4rem', fontFamily: 'var(--font-inter,sans-serif)' }}>Inf. 2 ao Inf. 5</div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
-                  <TurmaField name="qtd_infantil" label="Infantil (geral)" />
+
+                {/* Fund I */}
+                <div style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: 12, padding: '1.1rem 1rem', textAlign: 'center' }}>
+                  <div style={{ width: 4, height: 16, background: '#2563eb', borderRadius: 2, margin: '0 auto .6rem' }} />
+                  <label style={{ ...label, color: '#2563eb', textAlign: 'center', display: 'block', marginBottom: '.6rem', fontSize: '.68rem' }}>
+                    Fund. I
+                  </label>
+                  <input name="qtd_fund1" type="number" min="0" defaultValue="0"
+                    style={{ ...input, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.4rem', fontWeight: 800, padding: '.6rem', background: '#fff' }} />
+                  <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.4rem', fontFamily: 'var(--font-inter,sans-serif)' }}>1º ao 5º Ano</div>
                 </div>
-                <div style={{ fontSize: '.68rem', color: '#94a3b8', marginTop: '.5rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                  * Total consolidado da Ed. Infantil (Inf. 2 ao Inf. 5 serão detalhados no formulário contratual)
+
+                {/* Fund II */}
+                <div style={{ background: '#f5f3ff', border: '1.5px solid #ddd6fe', borderRadius: 12, padding: '1.1rem 1rem', textAlign: 'center' }}>
+                  <div style={{ width: 4, height: 16, background: '#7c3aed', borderRadius: 2, margin: '0 auto .6rem' }} />
+                  <label style={{ ...label, color: '#7c3aed', textAlign: 'center', display: 'block', marginBottom: '.6rem', fontSize: '.68rem' }}>
+                    Fund. II
+                  </label>
+                  <input name="qtd_fund2" type="number" min="0" defaultValue="0"
+                    style={{ ...input, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.4rem', fontWeight: 800, padding: '.6rem', background: '#fff' }} />
+                  <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.4rem', fontFamily: 'var(--font-inter,sans-serif)' }}>6º ao 9º Ano</div>
                 </div>
+
+                {/* Médio */}
+                <div style={{ background: '#fef2f2', border: '1.5px solid #fca5a5', borderRadius: 12, padding: '1.1rem 1rem', textAlign: 'center' }}>
+                  <div style={{ width: 4, height: 16, background: '#dc2626', borderRadius: 2, margin: '0 auto .6rem' }} />
+                  <label style={{ ...label, color: '#dc2626', textAlign: 'center', display: 'block', marginBottom: '.6rem', fontSize: '.68rem' }}>
+                    Ens. Médio
+                  </label>
+                  <input name="qtd_medio" type="number" min="0" defaultValue="0"
+                    style={{ ...input, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.4rem', fontWeight: 800, padding: '.6rem', background: '#fff' }} />
+                  <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.4rem', fontFamily: 'var(--font-inter,sans-serif)' }}>1ª à 3ª Série</div>
+                </div>
+
               </div>
 
-              {/* Fundamental I */}
-              <div style={{ marginBottom: '1.75rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '1rem' }}>
-                  <div style={{ width: 4, height: 18, background: '#0ea5e9', borderRadius: 2 }} />
-                  <span style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#0ea5e9' }}>
-                    Ensino Fundamental I — 1º ao 5º Ano
-                  </span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '1rem' }}>
-                  <TurmaField name="qtd_fund1_ano1" label="1º Ano" />
-                  <TurmaField name="qtd_fund1_ano2" label="2º Ano" />
-                  <TurmaField name="qtd_fund1_ano3" label="3º Ano" />
-                  <TurmaField name="qtd_fund1_ano4" label="4º Ano" />
-                  <TurmaField name="qtd_fund1_ano5" label="5º Ano" />
-                </div>
-              </div>
-
-              {/* Fundamental II */}
-              <div style={{ marginBottom: '1.75rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '1rem' }}>
-                  <div style={{ width: 4, height: 18, background: '#8b5cf6', borderRadius: 2 }} />
-                  <span style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#8b5cf6' }}>
-                    Ensino Fundamental II — 6º ao 9º Ano
-                  </span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
-                  <TurmaField name="qtd_fund2_ano6" label="6º Ano" />
-                  <TurmaField name="qtd_fund2_ano7" label="7º Ano" />
-                  <TurmaField name="qtd_fund2_ano8" label="8º Ano" />
-                  <TurmaField name="qtd_fund2_ano9" label="9º Ano" />
-                </div>
-              </div>
-
-              {/* Ensino Médio */}
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '1rem' }}>
-                  <div style={{ width: 4, height: 18, background: '#dc2626', borderRadius: 2 }} />
-                  <span style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#dc2626' }}>
-                    Ensino Médio — 1ª à 3ª Série
-                  </span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem' }}>
-                  <TurmaField name="qtd_medio_1s" label="1ª Série" />
-                  <TurmaField name="qtd_medio_2s" label="2ª Série" />
-                  <TurmaField name="qtd_medio_3s" label="3ª Série" />
-                </div>
-              </div>
-
-              {/* Totais legado (hidden — calculados no backend) */}
-              <input type="hidden" name="qtd_fund1" value="0" />
-              <input type="hidden" name="qtd_fund2" value="0" />
-              <input type="hidden" name="qtd_medio" value="0" />
+              {/* Campos ocultos para manter compatibilidade com upsertEscola */}
+              <input type="hidden" name="qtd_fund1_ano1" value="0" />
+              <input type="hidden" name="qtd_fund1_ano2" value="0" />
+              <input type="hidden" name="qtd_fund1_ano3" value="0" />
+              <input type="hidden" name="qtd_fund1_ano4" value="0" />
+              <input type="hidden" name="qtd_fund1_ano5" value="0" />
+              <input type="hidden" name="qtd_fund2_ano6" value="0" />
+              <input type="hidden" name="qtd_fund2_ano7" value="0" />
+              <input type="hidden" name="qtd_fund2_ano8" value="0" />
+              <input type="hidden" name="qtd_fund2_ano9" value="0" />
+              <input type="hidden" name="qtd_medio_1s" value="0" />
+              <input type="hidden" name="qtd_medio_2s" value="0" />
+              <input type="hidden" name="qtd_medio_3s" value="0" />
             </div>
           </div>
 

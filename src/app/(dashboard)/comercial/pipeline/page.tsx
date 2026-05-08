@@ -3,6 +3,7 @@ import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils'
 import { STAGE_OPTIONS, LABEL } from '@/types/database'
+import { PipelineKanban } from '@/components/comercial/PipelineKanban'
 
 interface Props { searchParams: Promise<{ view?: string; responsavel?: string }> }
 
@@ -187,7 +188,7 @@ export default async function PipelinePage({ searchParams }: Props) {
                                     {formatCurrency(n.valor_estimado)}
                                   </div>
                                 )}
-                                <div style={{ fontSize: '.62rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                                <div style={{ fontSize: '.62rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)' }}>
                                   {n.probabilidade}% · {(n.escola as any)?.estado ?? ''}
                                 </div>
                               </Link>
@@ -202,7 +203,7 @@ export default async function PipelinePage({ searchParams }: Props) {
             })}
 
             {consultorStats.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '4rem', color: '#94a3b8' }}>
+              <div style={{ textAlign: 'center', padding: '4rem', color: '#475569' }}>
                 <div style={{ fontSize: '1rem', fontFamily: 'var(--font-inter,sans-serif)' }}>Nenhuma negociação cadastrada ainda.</div>
               </div>
             )}
@@ -210,48 +211,15 @@ export default async function PipelinePage({ searchParams }: Props) {
         )}
 
         {/* ══════════════════════════════════════════════════════
-            VIEW: KANBAN GERAL
+            VIEW: KANBAN GERAL — drag-and-drop
             ══════════════════════════════════════════════════════ */}
         {viewMode === 'kanban' && (
           <>
-            <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '.5rem', marginBottom: '1.5rem' }}>
-              {ACTIVE_STAGES.map(stage => {
-                const cards = byStage(stage.value)
-                const cor   = STAGE_COLORS[stage.value] ?? '#64748b'
-                return (
-                  <div key={stage.value} style={{ minWidth: 220, flexShrink: 0 }}>
-                    <div style={{ padding: '.65rem .9rem', borderRadius: '10px 10px 0 0', background: '#0f172a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
-                        {stage.label}
-                      </span>
-                      <span style={{ background: cor, color: '#fff', fontSize: '.62rem', fontWeight: 800, padding: '.1rem .45rem', borderRadius: 99 }}>
-                        {cards.length}
-                      </span>
-                    </div>
-                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '.75rem', minHeight: 120, display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
-                      {cards.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '1.5rem .5rem', fontSize: '.75rem', color: '#cbd5e1', fontFamily: 'var(--font-inter,sans-serif)' }}>Nenhuma negociação</div>
-                      ) : cards.map((n: any) => (
-                        <Link key={n.id} href={`/comercial/escolas/${n.escola_id}`}
-                          style={{ display: 'block', textDecoration: 'none', background: '#fff', border: '1px solid #e2e8f0', borderLeft: `3px solid ${cor}`, borderRadius: 8, padding: '.75rem', boxShadow: '0 1px 3px rgba(0,0,0,.05)', transition: 'box-shadow .15s' }}>
-                          <div style={{ fontWeight: 700, fontSize: '.82rem', color: '#0f172a', marginBottom: '.25rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
-                            {(n.escola as any)?.nome?.substring(0, 24) ?? '—'}
-                          </div>
-                          {n.valor_estimado && (
-                            <div style={{ fontWeight: 800, color: '#d97706', fontSize: '.85rem', marginBottom: '.2rem', fontFamily: 'var(--font-cormorant,serif)' }}>
-                              {formatCurrency(n.valor_estimado)}
-                            </div>
-                          )}
-                          <div style={{ fontSize: '.7rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                            {n.probabilidade}% · {(n.responsavel as any)?.full_name?.split(' ')[0] ?? '—'}
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+            <PipelineKanban
+              negociacoes={negsFiltradas as any}
+              stages={ACTIVE_STAGES.map(s => s.value)}
+              userId={user?.id ?? ''}
+            />
 
             {/* Ganhos e Perdidos */}
             {(ganhos.length > 0 || perdidos.length > 0) && (
@@ -276,7 +244,7 @@ export default async function PipelinePage({ searchParams }: Props) {
                           {n.valor_estimado && <span style={{ color: group.cor, fontWeight: 700, fontFamily: 'var(--font-cormorant,serif)', fontSize: '.95rem' }}>{formatCurrency(n.valor_estimado)}</span>}
                         </div>
                       )) : (
-                        <div style={{ fontSize: '.82rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>Nenhum registro</div>
+                        <div style={{ fontSize: '.82rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)' }}>Nenhum registro</div>
                       )}
                     </div>
                   </div>

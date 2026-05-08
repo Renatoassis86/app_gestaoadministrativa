@@ -11,7 +11,8 @@ import {
   Kanban, Calculator, LogOut, Settings,
   Package, FlaskConical, BarChart2, Download,
   Bot, DollarSign, Table2, Info, FileSignature, ClipboardList,
-  ExternalLink, GitBranch
+  ExternalLink, GitBranch, Target, CalendarDays, FileAudio,
+  Upload, TrendingUp, Database
 } from 'lucide-react'
 
 interface SidebarProps { profile: Profile | null }
@@ -21,7 +22,6 @@ interface SidebarProps { profile: Profile | null }
 const NAV_CRM = [
   { href: '/comercial',           label: 'Dashboard',        icon: LayoutDashboard },
   { href: '/comercial/escolas',   label: 'Escolas',          icon: School          },
-  { href: '/comercial/leads',     label: 'Leads',            icon: Users           },
   { href: '/comercial/registros', label: 'Registros',        icon: FileText        },
 ]
 
@@ -31,9 +31,15 @@ const NAV_PROCESS = [
   { href: '/comercial/contratos',      label: 'Jornada Contrat.',  icon: FileSignature },
   { href: '/comercial/pipeline',       label: 'Pipeline',          icon: Kanban      },
   { href: '/comercial/tabela',         label: 'Tabela Geral',      icon: Table2      },
+  { href: '/comercial/metas',          label: 'Metas 2027',        icon: Target      },
 ]
 
 const NAV_TOOLS = [
+  { href: '/agenda',              label: 'Agenda',           icon: CalendarDays    },
+  { href: '/transcricoes',        label: 'Transcrições',     icon: FileAudio       },
+  { href: '/leads-banco',         label: 'Banco de Leads',   icon: Database        },
+  { href: '/importacao',          label: 'Importar Dados',   icon: Upload          },
+  { href: '/pesquisa-mercado',    label: 'Pesquisa CIECC',   icon: TrendingUp      },
   { href: '/calculadora',         label: 'Calculadora',      icon: Calculator      },
   { href: '/exports',             label: 'Downloads',        icon: Download        },
 ]

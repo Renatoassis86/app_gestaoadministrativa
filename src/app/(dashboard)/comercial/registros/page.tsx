@@ -63,7 +63,7 @@ export default async function RegistrosPage({ searchParams }: Props) {
         {/* Filtros */}
         <form style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1rem 1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', boxShadow: '0 1px 4px rgba(0,0,0,.04)' }}>
           <div style={{ position: 'relative', flex: 1, minWidth: 220, maxWidth: 360 }}>
-            <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+            <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#475569', pointerEvents: 'none' }} />
             <input name="q" defaultValue={q} placeholder="Buscar no resumo..."
               style={{ width: '100%', paddingLeft: 32, paddingRight: 12, paddingTop: 9, paddingBottom: 9, fontSize: '.82rem', border: '1.5px solid #e2e8f0', borderRadius: 8, outline: 'none', color: '#0f172a', background: '#f8fafc', fontFamily: 'var(--font-inter,sans-serif)', boxSizing: 'border-box' }} />
           </div>
@@ -90,7 +90,7 @@ export default async function RegistrosPage({ searchParams }: Props) {
           <button type="submit" style={{ background: '#0f172a', color: '#fff', padding: '9px 18px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: '.82rem', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
             Buscar
           </button>
-          {(q || classif) && <Link href="/comercial/registros" style={{ fontSize: '.78rem', color: '#94a3b8', textDecoration: 'none' }}>Limpar</Link>}
+          {(q || classif) && <Link href="/comercial/registros" style={{ fontSize: '.78rem', color: '#475569', textDecoration: 'none' }}>Limpar</Link>}
         </form>
 
         {/* Tabela */}
@@ -116,7 +116,7 @@ export default async function RegistrosPage({ searchParams }: Props) {
                           <Link href={`/comercial/escolas/${r.escola_id}`} style={{ fontWeight: 700, fontSize: '.82rem', color: '#0f172a', textDecoration: 'none', fontFamily: 'var(--font-montserrat,sans-serif)', display: 'block', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {(r.escola as any)?.nome ?? '—'}
                           </Link>
-                          <div style={{ fontSize: '.68rem', color: '#94a3b8' }}>{(r.escola as any)?.cidade}{(r.escola as any)?.estado ? `, ${(r.escola as any).estado}` : ''}</div>
+                          <div style={{ fontSize: '.68rem', color: '#475569' }}>{(r.escola as any)?.cidade}{(r.escola as any)?.estado ? `, ${(r.escola as any).estado}` : ''}</div>
                         </td>
                         <td style={{ padding: '.85rem 1rem', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
                           <div style={{ fontSize: '.78rem', fontWeight: 600, color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)' }}>{formatDate(r.data_contato)}</div>
@@ -130,7 +130,7 @@ export default async function RegistrosPage({ searchParams }: Props) {
                           <div style={{ fontSize: '.82rem', color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-inter,sans-serif)' }}>
                             {r.resumo}
                           </div>
-                          {r.contato_nome && <div style={{ fontSize: '.68rem', color: '#94a3b8', marginTop: '.15rem' }}>{r.contato_nome}{r.contato_cargo ? ` (${r.contato_cargo})` : ''}</div>}
+                          {r.contato_nome && <div style={{ fontSize: '.68rem', color: '#475569', marginTop: '.15rem' }}>{r.contato_nome}{r.contato_cargo ? ` (${r.contato_cargo})` : ''}</div>}
                         </td>
                         <td style={{ padding: '.85rem 1rem', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
                           <span style={{ fontSize: '.7rem', color: '#475569', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 600 }}>
@@ -147,7 +147,7 @@ export default async function RegistrosPage({ searchParams }: Props) {
                             <span style={{ width: 5, height: 5, borderRadius: '50%', background: cor.dot, display: 'inline-block' }} />
                             {r.classificacao === 'quente' ? 'Quente' : r.classificacao === 'morno' ? 'Morno' : 'Frio'}
                           </div>
-                          <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.2rem', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 600 }}>
+                          <div style={{ fontSize: '.62rem', color: '#475569', marginTop: '.2rem', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 600 }}>
                             {r.probabilidade}%
                           </div>
                         </td>
@@ -182,7 +182,7 @@ export default async function RegistrosPage({ searchParams }: Props) {
           {/* Paginação */}
           {totalPages > 1 && (
             <div style={{ padding: '.85rem 1.5rem', borderTop: '1px solid #f1f5f9', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '.75rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>
+              <span style={{ fontSize: '.75rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)' }}>
                 Página <strong style={{ color: '#0f172a' }}>{page}</strong> de <strong style={{ color: '#0f172a' }}>{totalPages}</strong>
               </span>
               <div style={{ display: 'flex', gap: '.5rem' }}>
