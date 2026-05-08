@@ -269,7 +269,7 @@ export async function POST(request: NextRequest) {
   if (acao === 'importar') {
     if (colsSel.length === 0) return NextResponse.json({ error: 'Selecione ao menos uma coluna' }, { status: 400 })
 
-    let inseridos = 0, erros = 0
+    let inseridos = 0, atualizados = 0, erros = 0, ignorados = 0
     const BATCH = 150
 
     for (let i = 0; i < rawRows.length; i += BATCH) {
@@ -284,7 +284,6 @@ export async function POST(request: NextRequest) {
           const campoFixo = CAMPO_FIXO[col]
 
           if (campoFixo) {
-            // Campo mapeado → vai para coluna fixa
             let v = limparValor(val)
             if (campoFixo === 'tel_celular' || campoFixo === 'tel_fixo' || campoFixo === 'tel_comercial') {
               v = limparTel(val)
@@ -301,30 +300,71 @@ export async function POST(request: NextRequest) {
             }
             if (v !== null && v !== undefined) fixo[campoFixo] = v
           } else {
-            // Campo extra → vai para dados_extras JSONB
             const v = limparValor(val)
             if (v !== null) extra[col] = v
           }
         })
 
-        // Detectar modalidade a partir do lote
         if (fixo.lote) fixo.modalidade = detectarModalidade(fixo.lote)
-
         if (Object.keys(extra).length > 0) fixo.dados_extras = extra
 
         return fixo
       }).filter(r => Object.keys(r).length > 2)
 
+      if (registros.length === 0) continue
+
+      // Separar por estratégia de upsert:
+      // COM email → upsert por (email, fonte) — sobrescreve se exato
+      // SEM email mas com nome+escola → upsert por (nome, escola_nome, fonte)
+      // Sem nenhum identificador → ignora (não cria duplicata cega)
+      const comEmail    = registros.filter(r => r.email)
+      const semEmailCom = registros.filter(r => !r.email && r.nome && r.escola_nome)
+      const semIdent    = registros.filter(r => !r.email && !(r.nome && r.escola_nome))
+
+      ignorados += semIdent.length
+
       try {
-        await supabase.from('leads_universal').insert(registros)
-        inseridos += registros.length
+        // Upsert por email+fonte
+        if (comEmail.length > 0) {
+          const { error, data } = await supabase
+            .from('leads_universal')
+            .upsert(comEmail, {
+              onConflict: 'email,fonte',
+              ignoreDuplicates: false,  // false = sobrescreve (update)
+            })
+            .select('id')
+          if (error) { erros += comEmail.length }
+          else {
+            // Contar inseridos vs atualizados seria complexo sem trigger
+            // Simplificamos: todos que passaram = processados com sucesso
+            inseridos += comEmail.length
+          }
+        }
+
+        // Upsert por nome+escola+fonte (sem email)
+        if (semEmailCom.length > 0) {
+          const { error } = await supabase
+            .from('leads_universal')
+            .upsert(semEmailCom, {
+              onConflict: 'nome,escola_nome,fonte',
+              ignoreDuplicates: false,
+            })
+          if (error) { erros += semEmailCom.length }
+          else { inseridos += semEmailCom.length }
+        }
+
       } catch (e: any) {
-        erros += batch.length
-        console.error('Erro insert batch:', e?.message)
+        // Fallback: se a constraint não existe ainda, usa insert simples
+        try {
+          await supabase.from('leads_universal').insert([...comEmail, ...semEmailCom])
+          inseridos += comEmail.length + semEmailCom.length
+        } catch {
+          erros += comEmail.length + semEmailCom.length
+        }
       }
     }
 
-    return NextResponse.json({ inseridos, erros, total: rawRows.length })
+    return NextResponse.json({ inseridos, erros, ignorados, total: rawRows.length })
   }
 
   return NextResponse.json({ error: 'Ação inválida' }, { status: 400 })
