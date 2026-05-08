@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import { Plus, Search } from 'lucide-react'
 import { LABEL } from '@/types/database'
+import { DeleteRegistroBtn } from '@/components/comercial/DeleteRegistroBtn'
 
 interface Props { searchParams: Promise<{ q?: string; classif?: string; page?: string }> }
 
@@ -157,9 +158,12 @@ export default async function RegistrosPage({ searchParams }: Props) {
                           </span>
                         </td>
                         <td style={{ padding: '.85rem 1rem', verticalAlign: 'middle' }}>
-                          <Link href={`/comercial/registros/novo?escola=${r.escola_id}&edit=${r.id}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 7, background: '#f1f5f9', color: '#475569', textDecoration: 'none', fontSize: '.72rem', fontWeight: 700 }} title="Editar">
-                            ✎
-                          </Link>
+                          <div style={{ display: 'flex', gap: '.3rem', alignItems: 'center' }}>
+                            <Link href={`/comercial/registros/novo?escola=${r.escola_id}&edit=${r.id}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 7, background: '#f1f5f9', color: '#475569', textDecoration: 'none' }} title="Editar registro">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </Link>
+                            <DeleteRegistroBtn registroId={r.id} escolaId={r.escola_id} />
+                          </div>
                         </td>
                       </tr>
                     )

@@ -147,34 +147,56 @@ export async function POST(request: NextRequest) {
   const sheetName = wb.SheetNames[abaIdx] ?? wb.SheetNames[0]
   const sheet     = wb.Sheets[sheetName]
 
-  // Tentar detectar a linha real de cabeçalho
-  // O Education_CRM_FINAL tem 2-3 linhas de título antes dos headers reais
-  // Estratégia: ler como array e encontrar a linha com mais campos não-vazios
+  // Detectar linha real de cabeçalho
+  // CIECC: header na linha 0 direto
+  // Education_CRM_FINAL: tem 3 linhas de título (linha 3 = headers reais)
   const rawArray = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1, defval: null })
 
-  // Encontrar a linha de cabeçalho real (tem mais colunas preenchidas consecutivas)
+  function scoreHeader(row: any[]): number {
+    if (!row || row.length === 0) return 0
+    const vals = row.filter((v: any) => v !== null && String(v).trim() !== '')
+    if (vals.length < 3) return 0
+    // Conta células com texto descritivo (letras, comprimento razoável)
+    const textos = vals.filter((v: any) => {
+      const s = String(v).trim()
+      return /[a-zA-ZÀ-ú]/.test(s) && s.length >= 2 && s.length <= 120
+    }).length
+    // Penaliza células que são apenas números (indicam dados, não headers)
+    const nums = vals.filter((v: any) => /^\d+([.,]\d+)?$/.test(String(v).trim())).length
+    // Bônus: muitas células preenchidas = provável header
+    return textos * 2 - nums * 3 + vals.length
+  }
+
   let headerRowIdx = 0
-  let maxFilledCols = 0
-  for (let i = 0; i < Math.min(5, rawArray.length); i++) {
-    const row = rawArray[i] ?? []
-    const filled = row.filter((v: any) => v !== null && String(v).trim() !== '').length
-    // Linha de header tem muitas colunas E valores curtos (não são frases longas)
-    const isHeaderLike = filled > 3 && row.every((v: any) =>
-      v === null || String(v).trim().length < 80
-    )
-    if (isHeaderLike && filled > maxFilledCols) {
-      maxFilledCols = filled
+  let melhorScore = -1
+  for (let i = 0; i < Math.min(6, rawArray.length); i++) {
+    const s = scoreHeader(rawArray[i] ?? [])
+    if (s > melhorScore) {
+      melhorScore = s
       headerRowIdx = i
     }
   }
 
-  // Ler com o header correto
-  const todasRowsFull = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, {
-    defval: null,
-    raw: false,
-    header: headerRowIdx === 0 ? undefined : undefined,
-    range: headerRowIdx, // pula as linhas de título
-  })
+  // Construir manualmente: headers da linha detectada + dados das linhas seguintes
+  const headerRow = (rawArray[headerRowIdx] ?? []).map((v: any) =>
+    v !== null && String(v).trim() !== '' ? String(v).trim() : `__col_${Math.random()}`
+  )
+
+  const todasRowsFull: Record<string, any>[] = []
+  for (let i = headerRowIdx + 1; i < rawArray.length; i++) {
+    const dataRow = rawArray[i] ?? []
+    // Pular linhas completamente vazias
+    const temDado = dataRow.some((v: any) => v !== null && String(v).trim() !== '')
+    if (!temDado) continue
+    const obj: Record<string, any> = {}
+    headerRow.forEach((col: string, ci: number) => {
+      if (!col.startsWith('__col_')) {
+        const v = dataRow[ci] ?? null
+        obj[col] = v !== null ? String(v) : null
+      }
+    })
+    todasRowsFull.push(obj)
+  }
 
   // Coluna de tipo de inscrição (varia entre planilhas)
   const COL_TIPO = [
@@ -313,53 +335,58 @@ export async function POST(request: NextRequest) {
 
       if (registros.length === 0) continue
 
-      // Separar por estratégia de upsert:
-      // COM email → upsert por (email, fonte) — sobrescreve se exato
-      // SEM email mas com nome+escola → upsert por (nome, escola_nome, fonte)
-      // Sem nenhum identificador → ignora (não cria duplicata cega)
+      // Separar por chave de deduplicação:
+      // COM email → tenta upsert, fallback para insert ignorando duplicata
+      // SEM email mas com nome+escola → tenta upsert, fallback insert
+      // Sem identificador → ignora
       const comEmail    = registros.filter(r => r.email)
       const semEmailCom = registros.filter(r => !r.email && r.nome && r.escola_nome)
       const semIdent    = registros.filter(r => !r.email && !(r.nome && r.escola_nome))
 
       ignorados += semIdent.length
 
-      try {
-        // Upsert por email+fonte
-        if (comEmail.length > 0) {
-          const { error, data } = await supabase
+      // Processar registros com email
+      if (comEmail.length > 0) {
+        // Tenta upsert (funciona se constraint existe)
+        const { error: errUpsert } = await supabase
+          .from('leads_universal')
+          .upsert(comEmail, { onConflict: 'email,fonte', ignoreDuplicates: false })
+
+        if (errUpsert) {
+          // Constraint não existe: usa insert com onConflict ignorando
+          // Isso evita duplicatas pelo Supabase de forma mais simples
+          const { error: errInsert, data: inserted } = await supabase
             .from('leads_universal')
-            .upsert(comEmail, {
-              onConflict: 'email,fonte',
-              ignoreDuplicates: false,  // false = sobrescreve (update)
-            })
-            .select('id')
-          if (error) { erros += comEmail.length }
-          else {
-            // Contar inseridos vs atualizados seria complexo sem trigger
-            // Simplificamos: todos que passaram = processados com sucesso
+            .insert(comEmail)
+          if (errInsert) {
+            // Tenta um por um para não perder tudo por um erro
+            for (const reg of comEmail) {
+              const { error: e1 } = await supabase.from('leads_universal').insert([reg])
+              if (e1) erros++
+              else inseridos++
+            }
+          } else {
             inseridos += comEmail.length
           }
+        } else {
+          inseridos += comEmail.length
         }
+      }
 
-        // Upsert por nome+escola+fonte (sem email)
-        if (semEmailCom.length > 0) {
-          const { error } = await supabase
+      // Processar registros sem email mas com nome+escola
+      if (semEmailCom.length > 0) {
+        const { error: errUpsert2 } = await supabase
+          .from('leads_universal')
+          .upsert(semEmailCom, { onConflict: 'nome,escola_nome,fonte', ignoreDuplicates: false })
+
+        if (errUpsert2) {
+          const { error: errInsert2 } = await supabase
             .from('leads_universal')
-            .upsert(semEmailCom, {
-              onConflict: 'nome,escola_nome,fonte',
-              ignoreDuplicates: false,
-            })
-          if (error) { erros += semEmailCom.length }
-          else { inseridos += semEmailCom.length }
-        }
-
-      } catch (e: any) {
-        // Fallback: se a constraint não existe ainda, usa insert simples
-        try {
-          await supabase.from('leads_universal').insert([...comEmail, ...semEmailCom])
-          inseridos += comEmail.length + semEmailCom.length
-        } catch {
-          erros += comEmail.length + semEmailCom.length
+            .insert(semEmailCom)
+          if (errInsert2) erros += semEmailCom.length
+          else inseridos += semEmailCom.length
+        } else {
+          inseridos += semEmailCom.length
         }
       }
     }

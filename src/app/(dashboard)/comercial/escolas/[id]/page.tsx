@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { LABEL } from '@/types/database'
 import { EscolaDetailClient } from '@/components/comercial/EscolaDetailClient'
+import { DeleteEscolaBtn } from '@/components/comercial/DeleteEscolaBtn'
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -465,6 +466,7 @@ export default async function EscolaDetalhe({ params }: Props) {
                 <IconEdit />
                 Editar
               </Link>
+              <DeleteEscolaBtn escolaId={id} escolaNome={e.nome} variant="hero" />
             </div>
           </div>
         </div>
@@ -783,6 +785,12 @@ export default async function EscolaDetalhe({ params }: Props) {
                 >
                   <IconEdit /> Editar Dados
                 </Link>
+
+                {/* Separador */}
+                <div style={{ height: 1, background: '#f1f5f9', margin: '.25rem 0' }} />
+
+                {/* Excluir escola */}
+                <DeleteEscolaBtn escolaId={id} escolaNome={e.nome} variant="sidebar" />
               </div>
             </div>
           </div>
