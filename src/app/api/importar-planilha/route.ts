@@ -5,34 +5,40 @@ import { createClient } from '@/lib/supabase/server'
 // Campos default para o cadastro de Escolas no CRM
 // Alinhado com os campos do formulário /comercial/escolas/nova
 const CAMPOS_DEFAULT_ESCOLA = new Set([
-  // Nome e identificação
+  // ── CIECC (inscritos) ──
   'Inscrito', 'Nome', '👤 Nome',
-  // Contato principal
   'Email', '📧 Email',
-  'Tel. Celular', '📱 Tel',
-  'Tel. Fixo',
-  // Localização
+  'Tel. Celular', '📱 Tel', 'Tel. Fixo',
   'Cidade', 'UF', 'Endereço', 'Bairro', 'CEP',
-  // Escola
   'Qual é o nome da sua instituição de ensino?',
   'Escola Declarada', 'Instituição',
-  '🏫 Escola', 'Escola',
   'CNPJ (Fórum)', 'CNPJ',
-  // Cargo/tipo — identifica gestores, diretores, mantenedores
-  'Qual é o tipo de sua inscrição?', 'Tipo',
-  'Cargo Original',
-  // Alunos por segmento — alimenta diretamente o cadastro
+  'Qual é o tipo de sua inscrição?', 'Tipo', 'Cargo Original',
   'Qtd Alunos', 'Alunos',
-  'Alunos Infantil',
-  'Alunos Fund. I',
-  'Alunos Fund. II',
-  'Alunos Ens. Médio',
-  // Origem do lead
-  'Data Inscrição', '📅 Data',
-  // Evento de referência
-  'Lote',
-  // Participação anterior
-  'Participou I Congresso?',
+  'Alunos Infantil', 'Alunos Fund. I', 'Alunos Fund. II', 'Alunos Ens. Médio',
+  'Data Inscrição', '📅 Data', 'Lote', 'Participou I Congresso?',
+
+  // ── CRM Education (Education_CRM_FINAL.xlsx) ──
+  // Identificação da escola
+  '🏫 Escola', 'Escola',
+  // Localização
+  // (Cidade e UF já mapeados acima)
+  // Contatos (até 8 por escola — os mais importantes)
+  '👤 Contato 1', 'Contato 1',
+  '👤 Contato 2', 'Contato 2',
+  'Cargo 1', 'Cargo 2',
+  'Tel 1', 'Tel 2',
+  'Email 1', 'Email 2',
+  // Alunos
+  // (Alunos já mapeado acima)
+  // Status comercial
+  '🔥 Status Lead', 'Status Lead',
+  'Status 1º CIECC', 'Status 2026',
+  'Origem', 'Fontes',
+  // Representante Legal
+  'Rep. Legal', 'Email Rep.', 'Tel Rep.',
+  // Observações
+  '📝 Observações', 'Observações',
 ])
 
 // Mapeamento de nomes de colunas das planilhas → campos fixos do banco
@@ -63,6 +69,18 @@ const CAMPO_FIXO: Record<string, string> = {
   'Instituição': 'escola_nome',
   '🏫 Escola': 'escola_nome', 'Escola': 'escola_nome',
   'CNPJ (Fórum)': 'escola_cnpj', 'CNPJ': 'escola_cnpj',
+
+  // CRM — contato principal (usa Contato 1 como nome, Email 1 como email, Tel 1 como tel)
+  '👤 Contato 1': 'nome', 'Contato 1': 'nome',
+  'Email 1': 'email',
+  'Tel 1': 'tel_celular',
+  'Cargo 1': 'tipo_inscricao',
+  // CRM — status e origem
+  '🔥 Status Lead': 'cargo',  // reutiliza campo cargo para status do lead
+  'Origem': 'lote',           // reutiliza lote como campo de origem/fonte da captação
+  'Rep. Legal': 'nome',       // fallback se não tiver Contato 1
+  'Email Rep.': 'email',
+  'Tel Rep.': 'tel_celular',
 
   // Perfil
   'Qual é o tipo de sua inscrição?': 'tipo_inscricao',
@@ -128,7 +146,35 @@ export async function POST(request: NextRequest) {
   const wb        = XLSX.read(buffer, { type: 'array', cellDates: true })
   const sheetName = wb.SheetNames[abaIdx] ?? wb.SheetNames[0]
   const sheet     = wb.Sheets[sheetName]
-  const todasRowsFull = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, { defval: null, raw: false })
+
+  // Tentar detectar a linha real de cabeçalho
+  // O Education_CRM_FINAL tem 2-3 linhas de título antes dos headers reais
+  // Estratégia: ler como array e encontrar a linha com mais campos não-vazios
+  const rawArray = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1, defval: null })
+
+  // Encontrar a linha de cabeçalho real (tem mais colunas preenchidas consecutivas)
+  let headerRowIdx = 0
+  let maxFilledCols = 0
+  for (let i = 0; i < Math.min(5, rawArray.length); i++) {
+    const row = rawArray[i] ?? []
+    const filled = row.filter((v: any) => v !== null && String(v).trim() !== '').length
+    // Linha de header tem muitas colunas E valores curtos (não são frases longas)
+    const isHeaderLike = filled > 3 && row.every((v: any) =>
+      v === null || String(v).trim().length < 80
+    )
+    if (isHeaderLike && filled > maxFilledCols) {
+      maxFilledCols = filled
+      headerRowIdx = i
+    }
+  }
+
+  // Ler com o header correto
+  const todasRowsFull = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, {
+    defval: null,
+    raw: false,
+    header: headerRowIdx === 0 ? undefined : undefined,
+    range: headerRowIdx, // pula as linhas de título
+  })
 
   // Coluna de tipo de inscrição (varia entre planilhas)
   const COL_TIPO = [

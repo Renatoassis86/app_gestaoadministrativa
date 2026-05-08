@@ -23,10 +23,16 @@ export async function GET(request: NextRequest) {
   if (q)     query = query.or(`nome.ilike.%${q}%,email.ilike.%${q}%,escola_nome.ilike.%${q}%`)
   if (fonte) query = query.eq('fonte', fonte)
   if (uf)    query = query.eq('uf', uf.toUpperCase())
-  if (tipo === 'decisores')     query = query.or('tipo_inscricao.ilike.%gestor%,tipo_inscricao.ilike.%diretor%,tipo_inscricao.ilike.%mantenedor%,tipo_inscricao.ilike.%coordenador%')
-  else if (tipo === 'gestores')      query = query.ilike('tipo_inscricao', '%gestor%')
-  else if (tipo === 'diretores')     query = query.ilike('tipo_inscricao', '%diretor%')
-  else if (tipo === 'mantenedores')  query = query.ilike('tipo_inscricao', '%mantenedor%')
+
+  // Filtro por tipo só se a fonte NÃO for crm
+  // (CRM não tem tipo_inscricao — todos são representantes de escolas)
+  const isCRM = fonte === 'crm'
+  if (!isCRM) {
+    if (tipo === 'decisores')    query = query.or('tipo_inscricao.ilike.%gestor%,tipo_inscricao.ilike.%diretor%,tipo_inscricao.ilike.%mantenedor%,tipo_inscricao.ilike.%coordenador%')
+    else if (tipo === 'gestores')     query = query.ilike('tipo_inscricao', '%gestor%')
+    else if (tipo === 'diretores')    query = query.ilike('tipo_inscricao', '%diretor%')
+    else if (tipo === 'mantenedores') query = query.ilike('tipo_inscricao', '%mantenedor%')
+  }
 
   const { data: leads } = await query
 
