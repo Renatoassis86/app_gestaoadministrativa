@@ -314,30 +314,16 @@ export default async function LeadsBancoPage({ searchParams }: Props) {
                   fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap',
                 }}>{u}</a>
               ))}
-              {/* Select dropdown para ver todos os estados */}
-              {ufsUnicas.length > 8 && (
-                <div style={{ position: 'relative' }}>
-                  <select
-                    defaultValue={ufsUnicas.indexOf(uf) >= 8 ? uf : ''}
-                    onChange={e => { if (e.target.value) window.location.href = buildUrl({ uf: e.target.value }) }}
-                    style={{
-                      padding: '.3rem 1.6rem .3rem .65rem', borderRadius: 7,
-                      border: `1.5px solid ${ufsUnicas.indexOf(uf) >= 8 && uf ? '#d97706' : '#e2e8f0'}`,
-                      background: ufsUnicas.indexOf(uf) >= 8 && uf ? '#fffbeb' : '#f1f5f9',
-                      color: ufsUnicas.indexOf(uf) >= 8 && uf ? '#d97706' : '#475569',
-                      fontSize: '.68rem', fontWeight: ufsUnicas.indexOf(uf) >= 8 && uf ? 700 : 400,
-                      fontFamily: 'var(--font-montserrat,sans-serif)',
-                      cursor: 'pointer', outline: 'none', appearance: 'none' as const,
-                    }}
-                  >
-                    <option value="">+{ufsUnicas.length - 8} estados</option>
-                    {ufsUnicas.slice(8).map(u => (
-                      <option key={u} value={u} selected={uf === u}>{u}</option>
-                    ))}
-                  </select>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ position: 'absolute', right: '.4rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#475569' }}><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-              )}
+              {/* Demais estados — links diretos */}
+              {ufsUnicas.slice(8).map(u => (
+                <a key={u} href={buildUrl({ uf: u })} style={{
+                  padding: '.3rem .55rem', borderRadius: 7, textDecoration: 'none',
+                  fontSize: '.68rem', fontWeight: uf === u ? 700 : 400,
+                  background: uf === u ? '#d97706' : '#f1f5f9',
+                  color: uf === u ? '#fff' : '#475569',
+                  fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap',
+                }}>{u}</a>
+              ))}
             </div>
           )}
 
