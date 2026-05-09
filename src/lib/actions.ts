@@ -653,6 +653,67 @@ export async function enviarFormularioPublico(formData: FormData) {
   const { error } = await supabase.from('formularios').insert(payload)
   if (error) throw new Error(error.message)
 
+  // Vincular automaticamente ao banco de escolas do CRM
+  // Busca se já existe escola com mesmo nome ou CNPJ
+  const nomeEscola  = payload.nome_escola
+  const cnpj        = payload.cnpj
+  const cidade      = payload.cidade
+  const estado      = payload.estado
+
+  if (nomeEscola) {
+    const qtdInfantil = (payload.infantil2_qtd || 0) + (payload.infantil3_qtd || 0) +
+                        (payload.infantil4_qtd || 0) + (payload.infantil5_qtd || 0)
+    const qtdFund1    = (payload.fund1_ano1_qtd || 0) + (payload.fund1_ano2_qtd || 0) +
+                        (payload.fund1_ano3_qtd || 0) + (payload.fund1_ano4_qtd || 0) +
+                        (payload.fund1_ano5_qtd || 0)
+
+    // Tentar encontrar escola existente pelo CNPJ ou nome+cidade
+    let { data: escolaExistente } = cnpj
+      ? await supabase.from('escolas').select('id').eq('cnpj', cnpj).single()
+      : await supabase.from('escolas').select('id')
+          .ilike('nome', nomeEscola)
+          .eq('ativa', true)
+          .limit(1)
+          .single()
+
+    if (escolaExistente?.id) {
+      // Atualiza escola existente com os dados do formulário
+      await supabase.from('escolas').update({
+        cnpj:          cnpj || undefined,
+        cidade:        cidade || undefined,
+        estado:        estado || undefined,
+        qtd_infantil:  qtdInfantil || undefined,
+        qtd_fund1:     qtdFund1 || undefined,
+        contato_nome:  payload.legal_nome || undefined,
+        email:         payload.email_responsavel || undefined,
+      }).eq('id', escolaExistente.id)
+    } else {
+      // Cria nova escola no CRM com os dados do formulário
+      await supabase.from('escolas').insert({
+        nome:          nomeEscola,
+        cnpj:          cnpj || null,
+        cidade:        cidade || null,
+        estado:        estado || null,
+        rua:           payload.rua || null,
+        numero:        payload.numero || null,
+        bairro:        payload.bairro || null,
+        cep:           payload.cep || null,
+        email:         payload.email_responsavel || null,
+        contato_nome:  payload.legal_nome || null,
+        qtd_infantil:  qtdInfantil,
+        qtd_fund1:     qtdFund1,
+        qtd_fund1_ano1: payload.fund1_ano1_qtd || 0,
+        qtd_fund1_ano2: payload.fund1_ano2_qtd || 0,
+        qtd_fund1_ano3: payload.fund1_ano3_qtd || 0,
+        qtd_fund1_ano4: payload.fund1_ano4_qtd || 0,
+        qtd_fund1_ano5: payload.fund1_ano5_qtd || 0,
+        qtd_fund2: 0, qtd_medio: 0,
+        origem_lead:   'site',
+        ativa:         true,
+      })
+    }
+  }
+
   redirect('/formulario/obrigado')
 }
 

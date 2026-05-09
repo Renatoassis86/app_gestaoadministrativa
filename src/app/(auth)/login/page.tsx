@@ -417,8 +417,8 @@ export default function LoginPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
                 {[
                   { icon: <Mail size={14} />, label: 'comercial.education@cidadeviva.org', href: 'mailto:comercial.education@cidadeviva.org' },
-                  { icon: <Phone size={14} />, label: '+55 (11) 97391-6735', href: 'tel:+5511973916735' },
-                  { icon: <MessageCircle size={14} />, label: 'WhatsApp Comercial', href: 'https://wa.me/5511973916735' },
+                  { icon: <Phone size={14} />, label: '(83) 98604-8784', href: 'tel:+5583986048784' },
+                  { icon: <MessageCircle size={14} />, label: 'WhatsApp Comercial', href: 'https://wa.me/5583986048784' },
                   { icon: <span style={{fontSize:'14px'}}>📷</span>, label: '@cidadeviva.education', href: 'https://instagram.com/cidadeviva.education' },
                 ].map(item => (
                   <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" style={{

@@ -8,8 +8,10 @@ import { ContratoUpload } from '@/components/comercial/ContratoUpload'
 
 interface Props { searchParams: Promise<{ escola?: string }> }
 
-const META_ALUNOS  = 3000
-const META_RECEITA = 3000000
+// Metas 2027 — alinhadas com o Plano Estratégico CVE
+// 5.000 alunos = 2.000 base + 1.000 Fund.I + 2.000 novas escolas
+const META_ALUNOS  = 5000
+const META_RECEITA = 5000000
 
 /* ── estilos locais ─────────────────────────────────────────────── */
 const card: React.CSSProperties = {
@@ -137,8 +139,8 @@ export default async function ContratosPage({ searchParams }: Props) {
           <div style={{ padding: '1.25rem 1.75rem' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
               {[
-                { label: 'Meta de Alunos 2026', pct: pct_alunos, atual: total_alunos, meta: META_ALUNOS, unit: '', cor: '#16a34a' },
-                { label: 'Meta de Receita 2026', pct: pct_receita, atual: formatCurrency(total_receita), meta: formatCurrency(META_RECEITA), unit: '', cor: '#7c3aed' },
+                { label: 'Meta de Alunos 2027', pct: pct_alunos, atual: total_alunos, meta: META_ALUNOS, unit: '', cor: '#16a34a' },
+                { label: 'Meta de Receita 2027', pct: pct_receita, atual: formatCurrency(total_receita), meta: formatCurrency(META_RECEITA), unit: '', cor: '#7c3aed' },
               ].map(m => (
                 <div key={m.label}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '.5rem' }}>

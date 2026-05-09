@@ -117,11 +117,19 @@ export default async function PesquisaMercadoPage({ searchParams }: Props) {
 
   const supabase = await createClient()
 
-  // Verificar se tabela existe
-  const { data: teste, error: erroTabela } = await supabase
+  // Verificar se há dados no leads_universal (tabela principal de importação)
+  const { count: totalLeadsUniversal } = await supabase
+    .from('leads_universal')
+    .select('*', { count: 'exact', head: true })
+    .in('fonte', ['ciecc_2025', 'ciecc_2026'])
+
+  // Tabela legada ciecc_inscritos — verificar se existe
+  const { error: erroTabela } = await supabase
     .from('ciecc_inscritos').select('id').limit(1)
 
-  const tabelaOk = !erroTabela || erroTabela.code !== 'PGRST205'
+  // Usar leads_universal se tiver dados lá (nova importação), senão tentar ciecc_inscritos
+  const usarLeadsUniversal = (totalLeadsUniversal ?? 0) > 0
+  const tabelaOk = usarLeadsUniversal || (!erroTabela || erroTabela?.code !== 'PGRST205')
 
   if (!tabelaOk) {
     return (
@@ -153,18 +161,54 @@ export default async function PesquisaMercadoPage({ searchParams }: Props) {
     )
   }
 
+  // Tabela de dados: usa leads_universal se houver dados importados lá
+  const TABELA = usarLeadsUniversal ? 'leads_universal' : 'ciecc_inscritos'
+  const CAMPO_ESCOLA     = usarLeadsUniversal ? 'escola_nome'       : 'nome_escola'
+  const CAMPO_INTERESSE  = usarLeadsUniversal ? 'dados_extras'      : 'interesse_solucao_cve'
+  const CAMPO_NPS        = usarLeadsUniversal ? 'dados_extras'      : 'nps'
+
   // Buscar dados com filtros
-  let query = supabase.from('ciecc_inscritos').select('*')
+  let query = supabase.from(TABELA).select('*') as any
   if (anoFiltro !== 'todos')  query = query.eq('fonte', anoFiltro === '2025' ? 'ciecc_2025' : 'ciecc_2026')
+  else query = query.in('fonte', ['ciecc_2025', 'ciecc_2026'])
   if (tipoFiltro !== 'todos') query = query.eq('tipo_inscricao', tipoFiltro)
   if (ufFiltro !== 'todos')   query = query.eq('uf', ufFiltro)
 
   const { data: inscritos } = await query
-  const todos = inscritos ?? []
+  const todos = (inscritos ?? []).map((r: any) => ({
+    ...r,
+    // Normaliza campos para interface unificada
+    nome_escola:         r.nome_escola         ?? r.escola_nome,
+    nps:                 r.nps                 ?? r.dados_extras?.['NPS Sistema Atual (0-10)'],
+    csi:                 r.csi                 ?? r.dados_extras?.['Satisfação Sistema Atual (CSI)'],
+    interesse_solucao_cve: r.interesse_solucao_cve ?? r.dados_extras?.['Interesse Solução CVE'],
+    confessionalidade:   r.confessionalidade   ?? r.dados_extras?.['Qual é a situação atual da sua escola em relação à confessionalidade cristã?'],
+    prazo_decisao:       r.prazo_decisao       ?? r.dados_extras?.['Prazo de Decisão'],
+    investimento_atual:  r.investimento_atual  ?? r.dados_extras?.['Investimento Atual (R$/aluno/ano)'],
+    qtd_alunos_total:    r.qtd_alunos_total    ?? r.qtd_alunos,
+  }))
 
-  // Dados das escolas
-  const { data: escolas2025 } = await supabase.from('ciecc_inscritos').select('nome_escola, cidade, uf, tipo_inscricao, nps, csi, interesse_solucao_cve, prazo_decisao, confessionalidade, interesse_bilingue, investimento_atual, disponibilidade_invest, qtd_alunos_total').eq('fonte', 'ciecc_2025').not('nome_escola', 'is', null)
-  const { data: escolas2026 } = await supabase.from('ciecc_inscritos').select('nome_escola, cidade, uf, tipo_inscricao, nps, csi, interesse_solucao_cve, prazo_decisao, confessionalidade, interesse_bilingue, investimento_atual, disponibilidade_invest, qtd_alunos_total').eq('fonte', 'ciecc_2026').not('nome_escola', 'is', null)
+  // Dados das escolas por ano (para as tabelas de escolas)
+  const buildEscolaQuery = (fonte: string) =>
+    supabase.from(TABELA)
+      .select('escola_nome, nome_escola, cidade, uf, tipo_inscricao, dados_extras, nps, csi, interesse_solucao_cve, prazo_decisao, confessionalidade, qtd_alunos_total, qtd_alunos, investimento_atual, disponibilidade_invest')
+      .eq('fonte', fonte)
+      .not(CAMPO_ESCOLA, 'is', null) as any
+
+  const { data: _escolas2025 } = await buildEscolaQuery('ciecc_2025')
+  const { data: _escolas2026 } = await buildEscolaQuery('ciecc_2026')
+
+  // Normalizar escolas
+  const normalizar = (arr: any[]) => (arr ?? []).map((r: any) => ({
+    ...r,
+    nome_escola: r.nome_escola ?? r.escola_nome,
+    nps: r.nps ?? r.dados_extras?.['NPS Sistema Atual (0-10)'],
+    interesse_solucao_cve: r.interesse_solucao_cve ?? r.dados_extras?.['Interesse Solução CVE'],
+    confessionalidade: r.confessionalidade ?? r.dados_extras?.['Qual é a situação atual da sua escola em relação à confessionalidade cristã?'],
+    qtd_alunos_total: r.qtd_alunos_total ?? r.qtd_alunos,
+  }))
+  const escolas2025 = normalizar(_escolas2025)
+  const escolas2026 = normalizar(_escolas2026)
 
   // Tipos relevantes para prospecção (decisores / gestão escolar)
   // Filtramos apenas quem tem poder de decisão na escola
@@ -204,20 +248,31 @@ export default async function PesquisaMercadoPage({ searchParams }: Props) {
   const leads2026Decisores = (leadsDecisores2026 ?? []).filter(l => isDecisores(l.tipo_inscricao))
   const leads2025Decisores = (leadsDecisores2025 ?? []).filter(l => isDecisores(l.tipo_inscricao))
 
-  // Estatísticas gerais
-  const total2025 = (await supabase.from('ciecc_inscritos').select('id', { count: 'exact', head: true }).eq('fonte', 'ciecc_2025')).count ?? 0
-  const total2026 = (await supabase.from('ciecc_inscritos').select('id', { count: 'exact', head: true }).eq('fonte', 'ciecc_2026')).count ?? 0
-  const totalEscolas2025 = (await supabase.from('ciecc_inscritos').select('nome_escola', { count: 'exact', head: true }).eq('fonte', 'ciecc_2025').not('nome_escola', 'is', null)).count ?? 0
-  const totalEscolas2026 = (await supabase.from('ciecc_inscritos').select('nome_escola', { count: 'exact', head: true }).eq('fonte', 'ciecc_2026').not('nome_escola', 'is', null)).count ?? 0
+  // Estatísticas gerais — usa leads_universal ou ciecc_inscritos
+  const countFonte = async (fonte: string) =>
+    ((await (supabase.from(TABELA) as any).select('id', { count: 'exact', head: true }).eq('fonte', fonte)).count ?? 0)
+
+  const countEscolas = async (fonte: string) => {
+    const colEscola = usarLeadsUniversal ? 'escola_nome' : 'nome_escola'
+    return ((await (supabase.from(TABELA) as any).select(colEscola, { count: 'exact', head: true }).eq('fonte', fonte).not(colEscola, 'is', null)).count ?? 0)
+  }
+
+  const [total2025, total2026, totalEscolas2025, totalEscolas2026] = await Promise.all([
+    countFonte('ciecc_2025'),
+    countFonte('ciecc_2026'),
+    countEscolas('ciecc_2025'),
+    countEscolas('ciecc_2026'),
+  ])
+
   const totalLeads2026 = leads2026Decisores.length
   const totalLeads2025 = leads2025Decisores.length
 
   // Tipos únicos para filtro
-  const { data: tipos } = await supabase.from('ciecc_inscritos').select('tipo_inscricao').not('tipo_inscricao', 'is', null).limit(500)
-  const tiposUnicos = [...new Set(tipos?.map(t => t.tipo_inscricao).filter(Boolean) ?? [])]
+  const { data: tipos } = await (supabase.from(TABELA) as any).select('tipo_inscricao').not('tipo_inscricao', 'is', null).limit(500)
+  const tiposUnicos = [...new Set(tipos?.map((t: any) => t.tipo_inscricao).filter(Boolean) ?? [])] as string[]
 
-  const { data: ufs } = await supabase.from('ciecc_inscritos').select('uf').not('uf', 'is', null).limit(500)
-  const ufsUnicas = [...new Set(ufs?.map(u => u.uf).filter(Boolean) ?? [])].sort()
+  const { data: ufs } = await (supabase.from(TABELA) as any).select('uf').not('uf', 'is', null).limit(500)
+  const ufsUnicas = ([...new Set(ufs?.map((u: any) => u.uf).filter(Boolean) ?? [])] as string[]).sort()
 
   // Análises dos dados filtrados
   const porTipo         = count(todos, 'tipo_inscricao')
@@ -227,11 +282,11 @@ export default async function PesquisaMercadoPage({ searchParams }: Props) {
   const porPrazo        = count(todos, 'prazo_decisao')
   const porInvestimento = count(todos, 'investimento_atual')
 
-  const comEscola   = todos.filter(r => r.nome_escola)
-  const npsValidos  = todos.filter(r => r.nps != null && r.nps >= 0)
-  const npsMedia    = npsValidos.length > 0 ? (npsValidos.reduce((a, r) => a + (r.nps ?? 0), 0) / npsValidos.length).toFixed(1) : '—'
-  const csiValidos  = todos.filter(r => r.csi != null)
-  const csiMedia    = csiValidos.length > 0 ? (csiValidos.reduce((a, r) => a + (Number(r.csi) ?? 0), 0) / csiValidos.length).toFixed(1) : '—'
+  const comEscola   = todos.filter((r: any) => r.nome_escola)
+  const npsValidos  = todos.filter((r: any) => r.nps != null && r.nps >= 0)
+  const npsMedia    = npsValidos.length > 0 ? (npsValidos.reduce((a: number, r: any) => a + (r.nps ?? 0), 0) / npsValidos.length).toFixed(1) : '—'
+  const csiValidos  = todos.filter((r: any) => r.csi != null)
+  const csiMedia    = csiValidos.length > 0 ? (csiValidos.reduce((a: number, r: any) => a + (Number(r.csi) ?? 0), 0) / csiValidos.length).toFixed(1) : '—'
 
   // ── KPIs do banco de leads (novo banco relacional) ─────────
   const tabelaLeadsOk = !(await supabase.from('leads_pessoa').select('id').limit(1)).error
@@ -614,7 +669,7 @@ export default async function PesquisaMercadoPage({ searchParams }: Props) {
                   </tr>
                 </thead>
                 <tbody>
-                  {comEscola.slice(0, 50).map((r, i) => (
+                  {comEscola.slice(0, 50).map((r: any, i: number) => (
                     <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
                       <td style={{ padding: '.65rem .85rem', fontWeight: 700, fontSize: '.78rem', color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.nome_escola}</td>
                       <td style={{ padding: '.65rem .85rem', fontSize: '.72rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)', whiteSpace: 'nowrap' }}>{r.cidade}{r.uf ? `/${r.uf}` : ''}</td>

@@ -43,7 +43,6 @@ const NAV_TOOLS = [
   { href: '/pesquisa-mercado',    label: 'Pesquisa CIECC',   icon: TrendingUp      },
   { href: '/calculadora',         label: 'Calculadora',      icon: Calculator      },
   { href: '/exports',             label: 'Downloads',        icon: Download        },
-  { href: '/tutorial',            label: 'Tutorial',         icon: BookOpen        },
 ]
 
 const NAV_WIP = [
@@ -202,6 +201,8 @@ export default function Sidebar({ profile }: SidebarProps) {
   }
 
   const isGerente = profile?.role === 'gerente'
+  // Gestão de Usuários visível apenas para o administrador principal
+  const isAdmin = profile?.email === 'renato.consultoria@cidadeviva.org'
 
   return (
     <>
@@ -276,8 +277,9 @@ export default function Sidebar({ profile }: SidebarProps) {
       {/* ── Nav ───────────────────────────────────────────────── */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '.5rem 0 1rem' }}>
 
-        {/* ── Sobre — primeira aba ──────────────────────────────── */}
-        <NavItem href="/sobre" label="A Plataforma" icon={Info} active={isActive('/sobre')} />
+        {/* ── Sobre + Tutorial — primeiras abas ────────────────── */}
+        <NavItem href="/sobre"    label="A Plataforma" icon={Info}     active={isActive('/sobre')} />
+        <NavItem href="/tutorial" label="Tutorial"     icon={BookOpen} active={isActive('/tutorial')} />
         <NavDivider />
 
         <SectionLabel>CRM</SectionLabel>
@@ -324,8 +326,8 @@ export default function Sidebar({ profile }: SidebarProps) {
           external
         />
 
-        {/* Gestão de usuários (gerente) */}
-        {isGerente && (
+        {/* Gestão de usuários — visível apenas para Renato (admin principal) */}
+        {isAdmin && (
           <>
             <NavDivider />
             <NavItem href="/adminpanel" label="Gestão de Usuários" icon={Settings} active={isActive('/adminpanel')} />
