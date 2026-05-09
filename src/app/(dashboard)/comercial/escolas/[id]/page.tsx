@@ -188,7 +188,7 @@ export default async function EscolaDetalhe({ params }: Props) {
   ] = await Promise.all([
     supabase.from('escolas_resumo').select('*').eq('id', id).single(),
     supabase.from('registros').select('*, responsavel:profiles(full_name)').eq('escola_id', id).order('data_contato', { ascending: false }),
-    supabase.from('negociacoes').select('*, responsavel:profiles(full_name)').eq('escola_id', id).order('updated_at', { ascending: false }),
+    supabase.from('negociacoes').select('*, responsavel:profiles!negociacoes_responsavel_id_fkey(full_name)').eq('escola_id', id).order('updated_at', { ascending: false }),
     supabase.from('tarefas').select('*').eq('escola_id', id).eq('status', 'pendente').order('vencimento'),
     supabase.from('notas_escola').select('*').eq('escola_id', id).order('fixada', { ascending: false }).order('created_at', { ascending: false }),
     supabase.from('contratos').select('*').eq('escola_id', id).single(),

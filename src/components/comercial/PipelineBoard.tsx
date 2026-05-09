@@ -42,7 +42,7 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
     // Busca negociações — sem nenhum filtro para ver TUDO que o RLS permite
     const { data: negs, error: errNegs, count } = await supabase
       .from('negociacoes')
-      .select('*, escola:escolas(id, nome, cidade, estado), responsavel:profiles(id, full_name, role)', { count: 'exact' })
+      .select('*, escola:escolas(id, nome, cidade, estado), responsavel:profiles!negociacoes_responsavel_id_fkey(id, full_name, role)', { count: 'exact' })
       .order('created_at', { ascending: false })
 
     const { data: profs } = await supabase
