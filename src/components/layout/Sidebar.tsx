@@ -423,7 +423,12 @@ export default function Sidebar({ profile }: SidebarProps) {
     </aside>
 
     <style>{`
-      .mobile-close-btn { display: none; }
+      /* Desktop: esconde o botão X completamente */
+      .mobile-close-btn {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
       @media (max-width: 768px) {
         #main-sidebar {
           transform: translateX(-100%);
@@ -431,7 +436,12 @@ export default function Sidebar({ profile }: SidebarProps) {
         #main-sidebar.mobile-open {
           transform: translateX(0) !important;
         }
-        .mobile-close-btn { display: flex !important; }
+        .mobile-close-btn {
+          display: flex !important;
+          visibility: visible !important;
+          pointer-events: auto !important;
+        }
+        .mobile-overlay { display: block !important; }
       }
     `}</style>
     </>
