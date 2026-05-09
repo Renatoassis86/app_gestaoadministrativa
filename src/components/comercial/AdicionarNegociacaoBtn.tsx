@@ -13,6 +13,7 @@ interface Escola {
 interface Props {
   escolas: Escola[]
   userId: string
+  onSuccess?: () => void
 }
 
 const STAGES = [
@@ -24,7 +25,7 @@ const STAGES = [
   { id: 'fechamento',   label: 'Fechamento' },
 ]
 
-export function AdicionarNegociacaoBtn({ escolas, userId }: Props) {
+export function AdicionarNegociacaoBtn({ escolas, userId, onSuccess }: Props) {
   const router = useRouter()
   const [aberto, setAberto]         = useState(false)
   const [busca, setBusca]           = useState('')
@@ -63,8 +64,13 @@ export function AdicionarNegociacaoBtn({ escolas, userId }: Props) {
     })
 
     if (res.ok) {
-      // Força bypass de cache com timestamp na URL
-      window.location.replace('/comercial/pipeline?t=' + Date.now())
+      setAberto(false)
+      setBusca(''); setEscolaSel(null); setValor(''); setTitulo('')
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        window.location.replace('/comercial/pipeline?t=' + Date.now())
+      }
     } else {
       let msg = `Erro HTTP ${res.status}`
       try {

@@ -38,6 +38,7 @@ interface Props {
   negociacoes: Neg[]
   stages: string[]
   userId: string
+  onUpdate?: () => void
 }
 
 function fmtCurrency(v: number) {
@@ -55,7 +56,7 @@ function nameColor(name: string) {
   return colors[Math.abs(h) % colors.length]
 }
 
-export function PipelineKanban({ negociacoes: initialNegs, stages, userId }: Props) {
+export function PipelineKanban({ negociacoes: initialNegs, stages, userId, onUpdate }: Props) {
   const [negs, setNegs] = useState<Neg[]>(initialNegs)
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [overStage, setOverStage] = useState<string | null>(null)
