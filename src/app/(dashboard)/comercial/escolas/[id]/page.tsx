@@ -426,27 +426,8 @@ export default async function EscolaDetalhe({ params }: Props) {
               </div>
             </div>
 
-            {/* right: action buttons */}
+            {/* right: action buttons — Editar e Excluir apenas */}
             <div style={{ display: 'flex', gap: '.65rem', alignItems: 'center', flexShrink: 0 }}>
-              <Link
-                href={`/comercial/registros/novo?escola=${id}`}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '.45rem',
-                  background: 'linear-gradient(135deg, #d97706, #b45309)',
-                  color: '#fff',
-                  padding: '.6rem 1.1rem',
-                  borderRadius: 8,
-                  fontSize: '.82rem',
-                  fontWeight: 700,
-                  fontFamily: 'var(--font-montserrat, sans-serif)',
-                  textDecoration: 'none',
-                  boxShadow: '0 2px 8px rgba(217,119,6,.35)',
-                  letterSpacing: '.02em',
-                }}
-              >
-                <IconPlus />
-                Novo Registro
-              </Link>
               <Link
                 href={`/comercial/escolas/${id}/editar`}
                 style={{

@@ -4,8 +4,10 @@
 -- Execute no SQL Editor do Supabase
 -- ============================================================
 
--- 1. Recriar a coluna potencial_financeiro na tabela escolas
--- (colunas generated stored não podem ser alteradas diretamente — precisa dropar e recriar)
+-- 1. Dropar a view que depende da coluna antes de recriar a coluna
+DROP VIEW IF EXISTS escolas_resumo;
+
+-- 2. Recriar a coluna potencial_financeiro com novos valores
 ALTER TABLE escolas DROP COLUMN IF EXISTS potencial_financeiro;
 ALTER TABLE escolas
   ADD COLUMN potencial_financeiro numeric(12,2) GENERATED ALWAYS AS (
@@ -15,7 +17,25 @@ ALTER TABLE escolas
     qtd_medio    * 1302.15
   ) STORED;
 
--- 2. Atualizar trigger de cálculo de métricas nos registros
+-- 3. Recriar a view escolas_resumo
+CREATE OR REPLACE VIEW escolas_resumo AS
+SELECT
+  e.*,
+  r_last.data_contato    AS ultimo_contato,
+  r_last.classificacao   AS classificacao_atual,
+  r_last.probabilidade   AS probabilidade_atual,
+  p.full_name            AS responsavel_nome
+FROM escolas e
+LEFT JOIN profiles p ON p.id = e.responsavel_id
+LEFT JOIN LATERAL (
+  SELECT data_contato, classificacao, probabilidade
+  FROM registros
+  WHERE escola_id = e.id
+  ORDER BY data_contato DESC, created_at DESC
+  LIMIT 1
+) r_last ON true;
+
+-- 4. Atualizar trigger de cálculo de métricas nos registros
 CREATE OR REPLACE FUNCTION calcular_metricas_registro()
 RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
@@ -25,7 +45,6 @@ DECLARE
   bonus         int;
   base_prob     numeric;
 BEGIN
-  -- Potencial financeiro com novos valores de kit
   new.potencial_financeiro := ROUND(
     new.qtd_infantil * 1046.26 +
     new.qtd_fund1    * 1302.15 +
@@ -33,7 +52,6 @@ BEGIN
     new.qtd_medio    * 1302.15
   );
 
-  -- Probabilidade
   p_interesse := CASE new.interesse
     WHEN 'muito_baixo' THEN 5  WHEN 'baixo' THEN 15
     WHEN 'medio' THEN 35       WHEN 'alto' THEN 65  WHEN 'muito_alto' THEN 85
@@ -51,7 +69,6 @@ BEGIN
   base_prob := p_interesse * 0.35 + p_prontidao * 0.45 + p_abertura * 0.20 + bonus;
   new.probabilidade := LEAST(base_prob::int, 100);
 
-  -- Classificação (ajustada para novos valores)
   new.classificacao := CASE
     WHEN new.probabilidade >= 80 AND new.potencial_financeiro >= 26044 THEN 'quente'::classificacao_lead
     WHEN new.probabilidade >= 50 AND new.potencial_financeiro >= 13022 THEN 'morno'::classificacao_lead
@@ -62,4 +79,4 @@ BEGIN
 END;
 $$;
 
-SELECT 'Valores dos kits atualizados ✅ Infantil: R$1.046,26 | Fundamental: R$1.302,15' as resultado;
+SELECT 'Kits atualizados + view recriada ✅ Infantil: R$1.046,26 | Fundamental: R$1.302,15' AS resultado;
