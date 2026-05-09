@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { buscarEscolasUnificadas } from '@/lib/escolas-unificadas'
 import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
 import { formatDate, formatCurrency } from '@/lib/utils'
@@ -254,8 +255,7 @@ export default async function JornadaPage({ searchParams }: Props) {
   const escolaId = params.escola ?? ''
   const supabase = await createClient()
 
-  const { data: escolas } = await supabase
-    .from('escolas').select('id, nome, estado').eq('ativa', true).order('nome')
+  const escolas = await buscarEscolasUnificadas(supabase)
 
   let escola: any = null
   let registros: any[] = []

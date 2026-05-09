@@ -56,10 +56,27 @@ function TurmaField({ name, label: lbl }: { name: string; label: string }) {
   )
 }
 
-export default async function EscolaNova() {
+interface Props { searchParams: Promise<{ lead?: string }> }
+
+export default async function EscolaNova({ searchParams }: Props) {
+  const params = await searchParams
+  const leadId = params.lead ?? ''  // 'lead:NomeEscola' quando vindo do banco de leads
+
   const supabase = await createClient()
   const { data: profiles } = await supabase
     .from('profiles').select('id, full_name').eq('is_active', true).order('full_name')
+
+  // Pré-preencher com dados do lead se vier do banco de leads
+  let leadData: any = null
+  if (leadId.startsWith('lead:')) {
+    const nomeEscola = decodeURIComponent(leadId.replace('lead:', ''))
+    const { data: leads } = await supabase
+      .from('leads_universal')
+      .select('*')
+      .ilike('escola_nome', nomeEscola)
+      .limit(1)
+    if (leads && leads.length > 0) leadData = leads[0]
+  }
 
   return (
     <div>

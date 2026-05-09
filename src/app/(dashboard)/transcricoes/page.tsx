@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { buscarEscolasUnificadas } from '@/lib/escolas-unificadas'
 import PageHeader from '@/components/layout/PageHeader'
 import { TranscricaoForm } from '@/components/transcricoes/TranscricaoForm'
 
@@ -7,11 +8,11 @@ export default async function TranscricoesPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   const [
-    { data: escolas },
+    escolas,
     { data: transcricoes },
     { data: meProfile },
   ] = await Promise.all([
-    supabase.from('escolas').select('id, nome, cidade, estado').eq('ativa', true).order('nome'),
+    buscarEscolasUnificadas(supabase),
     supabase.from('transcricoes_reunioes')
       .select('*, escola:escolas(nome), criador:profiles(full_name)')
       .order('data_reuniao', { ascending: false }),

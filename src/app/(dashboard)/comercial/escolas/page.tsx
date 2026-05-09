@@ -5,6 +5,7 @@ import { formatCurrency, formatDate, diasDesdeData } from '@/lib/utils'
 import { Plus, MapPin, Users, ChevronRight } from 'lucide-react'
 import { LABEL } from '@/types/database'
 import { EscolasToolbar } from './EscolasToolbar'
+import { MigrarLeadsBtn } from '@/components/comercial/MigrarLeadsBtn'
 
 interface Props {
   searchParams: Promise<{ q?: string; estado?: string; page?: string; view?: string; classif?: string }>
@@ -85,15 +86,19 @@ export default async function EscolasPage({ searchParams }: Props) {
         title="Escolas / Parceiros"
         subtitle={`${count ?? 0} resultado${(count ?? 0) !== 1 ? 's' : ''}`}
         actions={
-          <Link href="/comercial/escolas/nova" style={{
-            display: 'inline-flex', alignItems: 'center', gap: '.4rem',
-            background: '#d97706', color: '#fff', padding: '.45rem 1rem',
-            borderRadius: 9999, fontSize: '.82rem', fontWeight: 700,
-            textDecoration: 'none', boxShadow: '0 4px 12px rgba(217,119,6,.3)',
-            fontFamily: 'var(--font-montserrat,sans-serif)',
-          }}>
-            <Plus size={14} /> Nova Escola
-          </Link>
+          <div style={{ display: 'flex', gap: '.5rem' }}>
+            {/* Importar do banco de leads */}
+            <MigrarLeadsBtn />
+            <Link href="/comercial/escolas/nova" style={{
+              display: 'inline-flex', alignItems: 'center', gap: '.4rem',
+              background: '#d97706', color: '#fff', padding: '.45rem 1rem',
+              borderRadius: 9999, fontSize: '.82rem', fontWeight: 700,
+              textDecoration: 'none', boxShadow: '0 4px 12px rgba(217,119,6,.3)',
+              fontFamily: 'var(--font-montserrat,sans-serif)',
+            }}>
+              <Plus size={14} /> Nova Escola
+            </Link>
+          </div>
         }
       />
 

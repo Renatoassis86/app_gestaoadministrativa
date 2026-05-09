@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { buscarEscolasUnificadas } from '@/lib/escolas-unificadas'
 import { upsertContrato } from '@/lib/actions'
 import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
@@ -76,8 +77,8 @@ export default async function ContratosPage({ searchParams }: Props) {
   const escolaId  = params.escola ?? ''
   const supabase  = await createClient()
 
-  const [{ data: escolas }, { data: contratos_geral }] = await Promise.all([
-    supabase.from('escolas').select('id, nome, estado').eq('ativa', true).order('nome'),
+  const [escolas, { data: contratos_geral }] = await Promise.all([
+    buscarEscolasUnificadas(supabase),
     supabase.from('contratos').select('*, escola:escolas(nome, estado, cidade)')
       .order('updated_at', { ascending: false }),
   ])
