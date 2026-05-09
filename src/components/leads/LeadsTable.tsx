@@ -8,12 +8,22 @@ interface Lead {
   nome: string | null
   email: string | null
   tel_celular: string | null
+  tel_fixo: string | null
   cidade: string | null
   uf: string | null
+  endereco: string | null
+  bairro: string | null
+  cep: string | null
   tipo_inscricao: string | null
   cargo: string | null
   escola_nome: string | null
   escola_cnpj: string | null
+  // Campos extras do cadastro de escola
+  qtd_alunos_total: number | null
+  qtd_infantil: number | null
+  qtd_fund1: number | null
+  qtd_fund2: number | null
+  qtd_medio: number | null
   lote: string | null
   data_inscricao: string | null
   dados_extras: Record<string, any> | null
@@ -93,35 +103,107 @@ function ModalEditar({ lead, onClose, onSaved }: { lead: Lead; onClose: () => vo
           <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 7, border: '1px solid rgba(255,255,255,.15)', background: 'rgba(255,255,255,.08)', color: '#fff', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
         </div>
 
-        <div style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '.9rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.85rem' }}>
-            <div style={{ gridColumn: 'span 2' }}>
-              <label style={lbl}>Nome completo</label>
-              <input value={form.nome ?? ''} onChange={e => set('nome', e.target.value)} style={inp} />
+        <div style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+
+          {/* ── Responsável / Contato ── */}
+          <div>
+            <div style={{ fontSize: '.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.08em', color: '#d97706', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.6rem', paddingBottom: '.4rem', borderBottom: '2px solid #fde68a' }}>
+              Contato Principal
             </div>
-            <div>
-              <label style={lbl}>E-mail</label>
-              <input type="email" value={form.email ?? ''} onChange={e => set('email', e.target.value)} style={inp} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.75rem' }}>
+              <div style={{ gridColumn: 'span 2' }}>
+                <label style={lbl}>Nome completo</label>
+                <input value={form.nome ?? ''} onChange={e => set('nome', e.target.value)} style={inp} placeholder="Nome do responsável" />
+              </div>
+              <div>
+                <label style={lbl}>Tipo / Cargo</label>
+                <select value={form.tipo_inscricao ?? ''} onChange={e => set('tipo_inscricao', e.target.value)} style={{ ...inp, background: '#fff' }}>
+                  <option value="">Selecione...</option>
+                  {['Gestor de escola','Gestora de escola','Diretor de escola','Diretora de escola','Mantenedor de escola','Mantenedora de escola','Coordenador de escola','Coordenadora de escola','Professor de outra Instituição de Ensino','Pai/Mãe de Escola parceira CVE','Colaborador do Sistema Cidade Viva','Outro'].map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={lbl}>Cargo (detalhado)</label>
+                <input value={form.cargo ?? ''} onChange={e => set('cargo', e.target.value)} style={inp} placeholder="Ex: Diretor Pedagógico" />
+              </div>
+              <div>
+                <label style={lbl}>E-mail</label>
+                <input type="email" value={form.email ?? ''} onChange={e => set('email', e.target.value)} style={inp} placeholder="email@escola.com.br" />
+              </div>
+              <div>
+                <label style={lbl}>Telefone / WhatsApp</label>
+                <input value={form.tel_celular ?? ''} onChange={e => set('tel_celular', e.target.value)} style={inp} placeholder="(00) 00000-0000" />
+              </div>
+              <div>
+                <label style={lbl}>Telefone Fixo</label>
+                <input value={form.tel_fixo ?? ''} onChange={e => set('tel_fixo', e.target.value)} style={inp} placeholder="(00) 0000-0000" />
+              </div>
             </div>
-            <div>
-              <label style={lbl}>Telefone / WhatsApp</label>
-              <input value={form.tel_celular ?? ''} onChange={e => set('tel_celular', e.target.value)} style={inp} placeholder="DDD + número" />
+          </div>
+
+          {/* ── Escola / Instituição ── */}
+          <div>
+            <div style={{ fontSize: '.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.08em', color: '#2563eb', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.6rem', paddingBottom: '.4rem', borderBottom: '2px solid #bfdbfe' }}>
+              Escola / Instituição
             </div>
-            <div>
-              <label style={lbl}>Tipo / Cargo</label>
-              <input value={form.tipo_inscricao ?? ''} onChange={e => set('tipo_inscricao', e.target.value)} style={inp} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.75rem' }}>
+              <div style={{ gridColumn: 'span 2' }}>
+                <label style={lbl}>Nome da Escola / Instituição</label>
+                <input value={form.escola_nome ?? ''} onChange={e => set('escola_nome', e.target.value)} style={inp} placeholder="Nome completo da escola" />
+              </div>
+              <div>
+                <label style={lbl}>CNPJ</label>
+                <input value={form.escola_cnpj ?? ''} onChange={e => set('escola_cnpj', e.target.value)} style={inp} placeholder="00.000.000/0001-00" />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '.5rem' }}>
+                <div>
+                  <label style={lbl}>Cidade</label>
+                  <input value={form.cidade ?? ''} onChange={e => set('cidade', e.target.value)} style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>UF</label>
+                  <input value={form.uf ?? ''} onChange={e => set('uf', e.target.value)} maxLength={2} style={{ ...inp, width: 60, textTransform: 'uppercase' }} placeholder="SP" />
+                </div>
+              </div>
+              <div style={{ gridColumn: 'span 2' }}>
+                <label style={lbl}>Endereço</label>
+                <input value={form.endereco ?? ''} onChange={e => set('endereco', e.target.value)} style={inp} placeholder="Rua, número" />
+              </div>
+              <div>
+                <label style={lbl}>Bairro</label>
+                <input value={form.bairro ?? ''} onChange={e => set('bairro', e.target.value)} style={inp} />
+              </div>
+              <div>
+                <label style={lbl}>CEP</label>
+                <input value={form.cep ?? ''} onChange={e => set('cep', e.target.value)} style={inp} placeholder="00000-000" />
+              </div>
             </div>
-            <div>
-              <label style={lbl}>Escola / Instituição</label>
-              <input value={form.escola_nome ?? ''} onChange={e => set('escola_nome', e.target.value)} style={inp} />
+          </div>
+
+          {/* ── Alunos por segmento ── */}
+          <div>
+            <div style={{ fontSize: '.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.08em', color: '#16a34a', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.6rem', paddingBottom: '.4rem', borderBottom: '2px solid #86efac' }}>
+              Quantidade de Alunos por Segmento
             </div>
-            <div>
-              <label style={lbl}>Cidade</label>
-              <input value={form.cidade ?? ''} onChange={e => set('cidade', e.target.value)} style={inp} />
-            </div>
-            <div>
-              <label style={lbl}>UF</label>
-              <input value={form.uf ?? ''} onChange={e => set('uf', e.target.value)} maxLength={2} style={inp} placeholder="Ex: SP" />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '.75rem' }}>
+              {[
+                { campo: 'qtd_infantil', label: 'Ed. Infantil', cor: '#f97316', bg: '#fff7ed' },
+                { campo: 'qtd_fund1',    label: 'Fund. I',      cor: '#2563eb', bg: '#eff6ff' },
+                { campo: 'qtd_fund2',    label: 'Fund. II',     cor: '#7c3aed', bg: '#f5f3ff' },
+                { campo: 'qtd_medio',    label: 'Ens. Médio',   cor: '#dc2626', bg: '#fef2f2' },
+              ].map(seg => (
+                <div key={seg.campo} style={{ background: seg.bg, border: `1px solid ${seg.cor}30`, borderRadius: 10, padding: '.65rem .75rem', textAlign: 'center' }}>
+                  <label style={{ ...lbl, color: seg.cor, textAlign: 'center', display: 'block', marginBottom: '.35rem' }}>{seg.label}</label>
+                  <input
+                    type="number" min="0"
+                    value={(form as any)[seg.campo] ?? ''}
+                    onChange={e => setForm(prev => ({ ...prev, [seg.campo]: parseInt(e.target.value) || 0 }))}
+                    style={{ ...inp, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem', fontWeight: 800, padding: '.45rem', background: '#fff' }}
+                  />
+                </div>
+              ))}
             </div>
           </div>
 

@@ -66,7 +66,7 @@ export default async function LeadsBancoPage({ searchParams }: Props) {
   // Montar query com filtros
   let query = supabase
     .from('leads_universal')
-    .select('id,fonte,nome,email,tel_celular,cidade,uf,tipo_inscricao,cargo,escola_nome,escola_cnpj,lote,data_inscricao,dados_extras', { count: 'exact' })
+    .select('id,fonte,nome,email,tel_celular,tel_fixo,cidade,uf,endereco,bairro,cep,tipo_inscricao,cargo,escola_nome,escola_cnpj,qtd_alunos_total,qtd_infantil,qtd_fund1,qtd_fund2,qtd_medio,lote,data_inscricao,dados_extras', { count: 'exact' })
     .order('nome')
     .range(offset, offset + POR_PAGINA - 1)
 
