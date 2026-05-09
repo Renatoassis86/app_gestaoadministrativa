@@ -63,11 +63,16 @@ export function AdicionarNegociacaoBtn({ escolas, userId }: Props) {
     })
 
     if (res.ok) {
-      // Força reload completo para atualizar os dados do servidor
       window.location.href = '/comercial/pipeline'
     } else {
-      const d = await res.json()
-      setErro(d.error ?? 'Erro ao criar negociação')
+      let msg = `Erro HTTP ${res.status}`
+      try {
+        const d = await res.json()
+        msg = d.error ?? msg
+        if (d.detail) msg += ` — ${d.detail}`
+        if (d.hint)   msg += ` (${d.hint})`
+      } catch { /* json parse failed */ }
+      setErro(msg)
     }
     setSalvando(false)
   }
