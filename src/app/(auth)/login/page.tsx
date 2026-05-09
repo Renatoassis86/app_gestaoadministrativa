@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Eye, EyeOff, ArrowRight, ClipboardList, Phone, Mail, MessageCircle } from 'lucide-react'
@@ -13,6 +13,20 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
+
+  // Força o play do vídeo no mobile (iOS/Android bloqueiam autoplay sem interação)
+  const videoRef = React.useRef<HTMLVideoElement>(null)
+  React.useEffect(() => {
+    const v = videoRef.current
+    if (!v) return
+    v.muted = true
+    v.playsInline = true
+    const attempt = () => v.play().catch(() => {})
+    attempt()
+    // iOS às vezes precisa de um segundo try após o DOM estar pronto
+    const t = setTimeout(attempt, 500)
+    return () => clearTimeout(t)
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -79,6 +93,7 @@ export default function LoginPage() {
 
         {/* Vídeo de fundo */}
         <video
+          ref={videoRef}
           autoPlay muted loop playsInline
           style={{
             position: 'absolute', inset: 0,
