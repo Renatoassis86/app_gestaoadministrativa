@@ -222,6 +222,42 @@ export default async function PipelinePage({ searchParams }: Props) {
             ══════════════════════════════════════════════════════ */}
         {viewMode === 'kanban' && (
           <>
+            {/* Estado vazio — orientação visual */}
+            {negsFiltradas.length === 0 && (
+              <div style={{
+                background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                border: '2px dashed #e2e8f0', borderRadius: 18,
+                padding: '3rem 2rem', textAlign: 'center',
+                marginBottom: '1.25rem',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+                  <div style={{ width: 64, height: 64, borderRadius: 16, background: '#fffbeb', border: '2px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="3" width="6" height="18" rx="2"/><rect x="9" y="3" width="6" height="18" rx="2"/><rect x="16" y="3" width="6" height="18" rx="2"/>
+                    </svg>
+                  </div>
+                </div>
+                <h3 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', marginBottom: '.5rem' }}>
+                  Pipeline vazio
+                </h3>
+                <p style={{ fontSize: '.875rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)', maxWidth: 420, margin: '0 auto .75rem', lineHeight: 1.6 }}>
+                  Adicione escolas ao pipeline para acompanhar o progresso de cada negociação nos quadros Kanban.
+                </p>
+                <div style={{ display: 'flex', gap: '.75rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '1rem' }}>
+                  <AdicionarNegociacaoBtn escolas={escolas ?? []} userId={user?.id ?? ''} />
+                </div>
+                <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {['Prospecção','Qualificação','Apresentação','Proposta','Negociação','Fechamento'].map((s, i) => (
+                    <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '.35rem', fontSize: '.72rem', color: '#94a3b8', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: ['#6366f1','#8b5cf6','#d97706','#f59e0b','#0ea5e9','#16a34a'][i] }} />
+                      {s}
+                      {i < 5 && <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="2.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <PipelineKanban
               negociacoes={negsFiltradas as any}
               stages={ACTIVE_STAGES.map(s => s.value)}
