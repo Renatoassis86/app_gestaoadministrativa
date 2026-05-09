@@ -7,6 +7,8 @@ import { PipelineKanban } from './PipelineKanban'
 import { AdicionarNegociacaoBtn } from './AdicionarNegociacaoBtn'
 import { formatCurrency } from '@/lib/utils'
 
+const ACTIVE_STAGES = ['prospeccao','qualificacao','apresentacao','proposta','negociacao','fechamento']
+
 const STAGE_COLORS: Record<string, string> = {
   prospeccao:   '#6366f1',
   qualificacao: '#8b5cf6',
@@ -16,14 +18,7 @@ const STAGE_COLORS: Record<string, string> = {
   fechamento:   '#16a34a',
 }
 
-const ACTIVE_STAGES = ['prospeccao','qualificacao','apresentacao','proposta','negociacao','fechamento']
-
-interface Escola {
-  id: string
-  nome: string
-  cidade: string | null
-  estado: string | null
-}
+interface Escola { id: string; nome: string; cidade: string | null; estado: string | null }
 
 interface Props {
   escolas: Escola[]
@@ -36,11 +31,11 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
   const [negociacoes, setNegociacoes] = useState<any[]>([])
   const [profiles, setProfiles]       = useState<any[]>([])
   const [loading, setLoading]         = useState(true)
-  const supabase = createClient()
 
   const carregar = useCallback(async () => {
     setLoading(true)
-    const [{ data: negs }, { data: profs }] = await Promise.all([
+    const supabase = createClient()
+    const [{ data: negs, error }, { data: profs }] = await Promise.all([
       supabase
         .from('negociacoes')
         .select('*, escola:escolas(id, nome, cidade, estado), responsavel:profiles(id, full_name, role)')
@@ -50,17 +45,16 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
         .from('profiles')
         .select('id, full_name')
         .eq('is_active', true)
-        .in('role', ['gerente', 'supervisor', 'consultor'])
+        .in('role', ['gerente','supervisor','consultor'])
         .order('full_name'),
     ])
+    if (error) console.error('[PipelineBoard] erro ao carregar:', error)
     setNegociacoes(negs ?? [])
     setProfiles(profs ?? [])
     setLoading(false)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
-  useEffect(() => {
-    carregar()
-  }, [carregar])
+  useEffect(() => { carregar() }, [carregar])
 
   const negsFiltradas = filtroResp
     ? negociacoes.filter(n => n.responsavel_id === filtroResp)
@@ -87,22 +81,12 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
     }))
     .sort((a, b) => b.potencial - a.potencial)
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 320, gap: '.75rem' }}>
-        <div style={{ width: 20, height: 20, border: '2.5px solid #e2e8f0', borderTopColor: '#d97706', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
-        <span style={{ fontSize: '.82rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>Carregando pipeline...</span>
-        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-      </div>
-    )
-  }
-
   return (
     <div>
-      {/* Barra de filtro + estatísticas */}
+      {/* ── Barra de filtro ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '1rem', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
             Filtrar:
           </span>
           <Link href={`/comercial/pipeline?view=${viewMode}`}
@@ -117,8 +101,10 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
             </Link>
           ))}
         </div>
-        {/* Stats inline */}
-        <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '.4rem', alignItems: 'center' }}>
+          {loading && (
+            <div style={{ width: 14, height: 14, border: '2px solid #e2e8f0', borderTopColor: '#d97706', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
+          )}
           <span style={{ background: '#0f172a', color: '#f59e0b', fontSize: '.65rem', fontWeight: 800, padding: '.2rem .6rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
             {negsFiltradas.length} ativas
           </span>
@@ -136,43 +122,37 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
       {/* ── KANBAN VIEW ── */}
       {viewMode === 'kanban' && (
         <>
-          {negsFiltradas.length === 0 ? (
+          {/* Banner de pipeline vazio — aparece ACIMA dos quadros, não os substitui */}
+          {!loading && negsFiltradas.length === 0 && (
             <div style={{
-              background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-              border: '2px dashed #e2e8f0', borderRadius: 14,
-              padding: '2rem 1.5rem', textAlign: 'center', marginBottom: '1rem',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '.75rem',
+              background: '#fffbeb', border: '1.5px dashed #fde68a',
+              borderRadius: 12, padding: '1rem 1.5rem', marginBottom: '1rem',
+              display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap',
             }}>
-              <div style={{ width: 52, height: 52, borderRadius: 14, background: '#fffbeb', border: '2px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: '#fff', border: '1.5px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="3" width="6" height="18" rx="2"/><rect x="9" y="3" width="6" height="18" rx="2"/><rect x="16" y="3" width="6" height="18" rx="2"/>
                 </svg>
               </div>
-              <div>
-                <h3 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', marginBottom: '.3rem' }}>Pipeline vazio</h3>
-                <p style={{ fontSize: '.8rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)', maxWidth: 380, margin: '0 auto', lineHeight: 1.55 }}>
-                  Adicione escolas ao pipeline para acompanhar o progresso de cada negociação nos quadros Kanban.
-                </p>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 700, fontSize: '.82rem', color: '#92400e' }}>Nenhuma escola no pipeline ainda</div>
+                <div style={{ fontSize: '.72rem', color: '#b45309', fontFamily: 'var(--font-inter,sans-serif)', marginTop: '.15rem' }}>
+                  Adicione escolas para acompanhar as negociações nos quadros abaixo.
+                </div>
               </div>
               <AdicionarNegociacaoBtn escolas={escolas} userId={userId} onSuccess={carregar} />
-              <div style={{ display: 'flex', gap: '.6rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                {['Prospecção','Qualificação','Apresentação','Proposta','Negociação','Fechamento'].map((s, i) => (
-                  <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '.3rem', fontSize: '.68rem', color: '#94a3b8', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
-                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: ['#6366f1','#8b5cf6','#d97706','#f59e0b','#0ea5e9','#16a34a'][i] }} />
-                    {s}{i < 5 && <span style={{ color: '#cbd5e1' }}>›</span>}
-                  </div>
-                ))}
-              </div>
             </div>
-          ) : (
-            <PipelineKanban
-              negociacoes={negsFiltradas}
-              stages={ACTIVE_STAGES}
-              userId={userId}
-              onUpdate={carregar}
-            />
           )}
 
+          {/* Quadros Kanban — sempre visíveis */}
+          <PipelineKanban
+            negociacoes={negsFiltradas}
+            stages={ACTIVE_STAGES}
+            userId={userId}
+            onUpdate={carregar}
+          />
+
+          {/* Seção Ganhos / Perdidos */}
           {(ganhos.length > 0 || perdidos.length > 0) && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.25rem' }}>
               {[
@@ -187,9 +167,7 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
                     <span style={{ background: group.cor, color: '#fff', fontSize: '.6rem', fontWeight: 800, padding: '.1rem .45rem', borderRadius: 99 }}>{group.items.length}</span>
                   </div>
                   <div style={{ padding: '1rem 1.25rem' }}>
-                    {group.items.length === 0 ? (
-                      <div style={{ fontSize: '.8rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>Nenhum registro</div>
-                    ) : group.items.map((n: any) => (
+                    {group.items.map((n: any) => (
                       <div key={n.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '.4rem 0', borderBottom: '1px solid #f1f5f9', fontSize: '.8rem' }}>
                         <span style={{ fontWeight: 600, color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)' }}>{n.escola?.nome?.substring(0, 28) ?? '—'}</span>
                         {n.valor_estimado && <span style={{ color: group.cor, fontWeight: 700, fontFamily: 'var(--font-cormorant,serif)', fontSize: '.9rem' }}>{formatCurrency(n.valor_estimado)}</span>}
@@ -206,7 +184,7 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
       {/* ── CONSULTOR VIEW ── */}
       {viewMode === 'consultor' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {consultorStats.length === 0 && (
+          {consultorStats.length === 0 && !loading && (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)', fontSize: '.85rem' }}>
               Nenhuma negociação cadastrada.
             </div>
@@ -231,7 +209,7 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
               </div>
               <div style={{ display: 'flex', overflowX: 'auto' }}>
                 {ACTIVE_STAGES.map(stg => {
-                  const cor = STAGE_COLORS[stg] ?? '#64748b'
+                  const cor   = STAGE_COLORS[stg] ?? '#64748b'
                   const items = negsList.filter((n: any) => n.stage === stg)
                   return (
                     <div key={stg} style={{ minWidth: 160, flex: 1, borderRight: '1px solid #f1f5f9' }}>
@@ -262,6 +240,8 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
           ))}
         </div>
       )}
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
 }
