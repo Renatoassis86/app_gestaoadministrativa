@@ -717,3 +717,27 @@ h1, h2, h3 { font-family: var(--font-cormorant, serif); }
   /* ── Fonte mínima legível ── */
   * { font-size: max(inherit, 11px); }
 }
+
+/* ══════════════════════════════════════════════════════════
+   PIPELINE KANBAN — layout responsivo
+   ══════════════════════════════════════════════════════════ */
+
+/* Desktop: grid fills available width, never wraps */
+.pipeline-board {
+  display: grid !important;
+  overflow-x: auto;
+}
+
+/* Tablet: 3 colunas, com scroll se necessário */
+@media (max-width: 1100px) {
+  .pipeline-board {
+    grid-template-columns: repeat(3, minmax(160px, 1fr)) !important;
+  }
+}
+
+/* Mobile: 2 colunas */
+@media (max-width: 640px) {
+  .pipeline-board {
+    grid-template-columns: repeat(2, minmax(140px, 1fr)) !important;
+  }
+}

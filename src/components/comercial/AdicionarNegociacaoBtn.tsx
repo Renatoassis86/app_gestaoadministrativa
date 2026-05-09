@@ -63,9 +63,8 @@ export function AdicionarNegociacaoBtn({ escolas, userId }: Props) {
     })
 
     if (res.ok) {
-      setAberto(false)
-      setBusca(''); setEscolaSel(null); setTitulo(''); setValor(''); setStage('prospeccao')
-      router.refresh()
+      // Força reload completo para atualizar os dados do servidor
+      window.location.href = '/comercial/pipeline'
     } else {
       const d = await res.json()
       setErro(d.error ?? 'Erro ao criar negociação')

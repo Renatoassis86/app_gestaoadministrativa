@@ -6,6 +6,9 @@ import { STAGE_OPTIONS, LABEL } from '@/types/database'
 import { PipelineKanban } from '@/components/comercial/PipelineKanban'
 import { AdicionarNegociacaoBtn } from '@/components/comercial/AdicionarNegociacaoBtn'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 interface Props { searchParams: Promise<{ view?: string; responsavel?: string }> }
 
 const ACTIVE_STAGES = STAGE_OPTIONS.filter(s => !['ganho', 'perdido'].includes(s.value))
@@ -70,31 +73,42 @@ export default async function PipelinePage({ searchParams }: Props) {
     ativos: data.negs.filter((n: any) => !['ganho','perdido'].includes(n.stage)).length,
   })).sort((a, b) => b.potencial - a.potencial)
 
+  const totalValorAtivo = negsFiltradas.reduce((acc: number, n: any) => acc + (n.valor_estimado ?? 0), 0)
+
   return (
     <div>
       <PageHeader
         title="Pipeline Comercial"
-        subtitle={`${negsFiltradas.length} negociações ativas`}
+        badge={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', flexShrink: 0 }}>
+            <span style={{ background: '#0f172a', color: '#f59e0b', fontSize: '.65rem', fontWeight: 800, padding: '.2rem .55rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)', letterSpacing: '.04em' }}>
+              {negsFiltradas.length} ativos
+            </span>
+            {totalValorAtivo > 0 && (
+              <span style={{ background: '#f0fdf4', color: '#16a34a', fontSize: '.65rem', fontWeight: 800, padding: '.2rem .55rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)', border: '1px solid #86efac' }}>
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(totalValorAtivo)}
+              </span>
+            )}
+          </div>
+        }
         actions={
           <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
-            {/* Adicionar escola ao pipeline */}
             <AdicionarNegociacaoBtn escolas={escolas ?? []} userId={user?.id ?? ''} />
-            {/* Toggle view */}
             <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 8, padding: 3, gap: 2 }}>
               {[
                 { v: 'kanban',    label: 'Kanban' },
-                { v: 'consultor', label: 'Por Consultor' },
+                { v: 'consultor', label: 'Consultores' },
               ].map(t => (
                 <Link key={t.v}
                   href={`/comercial/pipeline?view=${t.v}${filtroResp ? `&responsavel=${filtroResp}` : ''}`}
                   style={{
-                    padding: '5px 12px', borderRadius: 6, textDecoration: 'none',
-                    fontSize: '.75rem', fontWeight: 700,
+                    padding: '5px 11px', borderRadius: 6, textDecoration: 'none',
+                    fontSize: '.72rem', fontWeight: 700,
                     background: viewMode === t.v ? '#fff' : 'transparent',
                     color: viewMode === t.v ? '#0f172a' : '#64748b',
                     boxShadow: viewMode === t.v ? '0 1px 3px rgba(0,0,0,.1)' : 'none',
                     fontFamily: 'var(--font-montserrat,sans-serif)',
-                    transition: 'all .15s',
+                    transition: 'all .15s', whiteSpace: 'nowrap',
                   }}>
                   {t.label}
                 </Link>
@@ -104,10 +118,10 @@ export default async function PipelinePage({ searchParams }: Props) {
         }
       />
 
-      <div style={{ padding: '1.5rem 2rem' }}>
+      <div style={{ padding: '1rem 1.25rem' }}>
 
         {/* ── Filtro por responsável ──────────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
             Filtrar:
           </span>
@@ -226,32 +240,31 @@ export default async function PipelinePage({ searchParams }: Props) {
             {negsFiltradas.length === 0 && (
               <div style={{
                 background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-                border: '2px dashed #e2e8f0', borderRadius: 18,
-                padding: '3rem 2rem', textAlign: 'center',
-                marginBottom: '1.25rem',
+                border: '2px dashed #e2e8f0', borderRadius: 14,
+                padding: '2rem 1.5rem', textAlign: 'center',
+                marginBottom: '1rem',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '.75rem',
               }}>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
-                  <div style={{ width: 64, height: 64, borderRadius: 16, background: '#fffbeb', border: '2px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="2" y="3" width="6" height="18" rx="2"/><rect x="9" y="3" width="6" height="18" rx="2"/><rect x="16" y="3" width="6" height="18" rx="2"/>
-                    </svg>
-                  </div>
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: '#fffbeb', border: '2px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="3" width="6" height="18" rx="2"/><rect x="9" y="3" width="6" height="18" rx="2"/><rect x="16" y="3" width="6" height="18" rx="2"/>
+                  </svg>
                 </div>
-                <h3 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', marginBottom: '.5rem' }}>
-                  Pipeline vazio
-                </h3>
-                <p style={{ fontSize: '.875rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)', maxWidth: 420, margin: '0 auto .75rem', lineHeight: 1.6 }}>
-                  Adicione escolas ao pipeline para acompanhar o progresso de cada negociação nos quadros Kanban.
-                </p>
-                <div style={{ display: 'flex', gap: '.75rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '1rem' }}>
-                  <AdicionarNegociacaoBtn escolas={escolas ?? []} userId={user?.id ?? ''} />
+                <div>
+                  <h3 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', marginBottom: '.3rem' }}>
+                    Pipeline vazio
+                  </h3>
+                  <p style={{ fontSize: '.8rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)', maxWidth: 380, margin: '0 auto', lineHeight: 1.55 }}>
+                    Adicione escolas ao pipeline para acompanhar o progresso de cada negociação nos quadros Kanban.
+                  </p>
                 </div>
-                <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <AdicionarNegociacaoBtn escolas={escolas ?? []} userId={user?.id ?? ''} />
+                <div style={{ display: 'flex', gap: '.6rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                   {['Prospecção','Qualificação','Apresentação','Proposta','Negociação','Fechamento'].map((s, i) => (
-                    <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '.35rem', fontSize: '.72rem', color: '#94a3b8', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: ['#6366f1','#8b5cf6','#d97706','#f59e0b','#0ea5e9','#16a34a'][i] }} />
+                    <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '.3rem', fontSize: '.68rem', color: '#94a3b8', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                      <div style={{ width: 7, height: 7, borderRadius: '50%', background: ['#6366f1','#8b5cf6','#d97706','#f59e0b','#0ea5e9','#16a34a'][i] }} />
                       {s}
-                      {i < 5 && <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="2.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>}
+                      {i < 5 && <span style={{ color: '#cbd5e1' }}>›</span>}
                     </div>
                   ))}
                 </div>
