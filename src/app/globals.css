@@ -437,3 +437,118 @@ h1, h2, h3 { font-family: var(--font-cormorant, serif); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE RESPONSIVENESS — CVE Gestão Comercial
+   Breakpoints: 768px (tablet), 480px (phone)
+   ══════════════════════════════════════════════════════════ */
+
+/* Mobile sidebar toggle button (shown only on mobile) */
+#mobile-sidebar-toggle {
+  display: none;
+}
+
+/* Mobile sidebar overlay */
+#mobile-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  z-index: 99;
+  backdrop-filter: blur(2px);
+}
+
+@media (max-width: 768px) {
+  /* Show mobile toggle button */
+  #mobile-sidebar-toggle {
+    display: flex !important;
+  }
+
+  /* Overlay visible when sidebar open */
+  #mobile-sidebar-overlay.open {
+    display: block;
+  }
+
+  /* Sidebar hidden off-screen on mobile */
+  .sidebar-mobile-hidden {
+    transform: translateX(-100%) !important;
+    transition: transform .28s cubic-bezier(.4,0,.2,1) !important;
+  }
+
+  .sidebar-mobile-open {
+    transform: translateX(0) !important;
+    transition: transform .28s cubic-bezier(.4,0,.2,1) !important;
+  }
+
+  /* Dashboard layout: remove margin, full width */
+  .dashboard-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Reduce page padding on mobile */
+  .p-6 { padding: 1rem !important; }
+
+  /* Cards stack on mobile */
+  .card-body { padding: 1rem !important; }
+
+  /* Tables: allow horizontal scroll */
+  table { min-width: 600px; }
+  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Grids: 1 column on mobile */
+  [style*="grid-template-columns: 1fr 1fr"],
+  [style*="gridTemplateColumns: '1fr 1fr'"] {
+    grid-template-columns: 1fr !important;
+  }
+  [style*="grid-template-columns: repeat(2"],
+  [style*="repeat(3,1fr)"],
+  [style*="repeat(4,1fr)"],
+  [style*="repeat(5,1fr)"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Hero sections: smaller padding */
+  [style*="padding: '2rem 2.5rem'"],
+  [style*="padding: '1.5rem 2.5rem'"] {
+    padding: 1rem !important;
+  }
+
+  /* Text scaling */
+  [style*="fontSize: '2rem'"],
+  [style*="fontSize: '1.8rem'"] {
+    font-size: 1.4rem !important;
+  }
+
+  /* Buttons: min touch target 44px */
+  button, a[style*="border-radius: 9999"] {
+    min-height: 40px;
+  }
+
+  /* Hide non-essential columns on mobile */
+  .hide-mobile { display: none !important; }
+
+  /* PageHeader: smaller on mobile */
+  .topbar-mobile {
+    padding: 0 1rem !important;
+  }
+
+  /* KPI grids */
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: .75rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  [style*="repeat(3,1fr)"],
+  [style*="repeat(4,1fr)"],
+  [style*="repeat(5,1fr)"],
+  [style*="repeat(2,1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}

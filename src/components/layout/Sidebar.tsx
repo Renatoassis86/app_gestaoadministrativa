@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types/database'
 import { getInitials } from '@/lib/utils'
@@ -175,6 +176,17 @@ export default function Sidebar({ profile }: SidebarProps) {
   const pathname = usePathname()
   const router   = useRouter()
   const supabase = createClient()
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  useEffect(() => {
+    (window as any).__toggleSidebar = () => setMobileOpen(p => !p)
+    return () => { delete (window as any).__toggleSidebar }
+  }, [])
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
 
   const isActive = (href: string) => {
     if (href === '/comercial') return pathname === '/comercial'
@@ -192,13 +204,47 @@ export default function Sidebar({ profile }: SidebarProps) {
   const isGerente = profile?.role === 'gerente'
 
   return (
-    <aside style={{
-      width: 'var(--sidebar-w)', minHeight: '100vh',
-      background: 'linear-gradient(180deg, #0f172a 0%, #111827 100%)',
-      position: 'fixed', top: 0, left: 0, bottom: 0,
-      zIndex: 100, display: 'flex', flexDirection: 'column',
-      borderRight: '1px solid rgba(255,255,255,.05)',
-    }}>
+    <>
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          className="mobile-overlay"
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)',
+            zIndex: 99, backdropFilter: 'blur(2px)',
+          }}
+        />
+      )}
+
+    <aside
+      id="main-sidebar"
+      className={mobileOpen ? 'mobile-open' : ''}
+      style={{
+        width: 'var(--sidebar-w)', minHeight: '100vh',
+        background: 'linear-gradient(180deg, #0f172a 0%, #111827 100%)',
+        position: 'fixed', top: 0, left: 0, bottom: 0,
+        zIndex: 100, display: 'flex', flexDirection: 'column',
+        borderRight: '1px solid rgba(255,255,255,.05)',
+        transition: 'transform .28s cubic-bezier(.4,0,.2,1)',
+      }}>
+
+      {/* Mobile close button */}
+      <button
+        onClick={() => setMobileOpen(false)}
+        className="mobile-close-btn"
+        aria-label="Fechar menu"
+        style={{
+          position: 'absolute', top: '1rem', right: '-3rem',
+          width: 40, height: 40, borderRadius: '50%',
+          background: '#0f172a', border: '1px solid rgba(255,255,255,.2)',
+          color: '#fff', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 101,
+        }}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
 
       {/* ── Brand ─────────────────────────────────────────────── */}
       <div style={{
@@ -375,5 +421,19 @@ export default function Sidebar({ profile }: SidebarProps) {
         )}
       </div>
     </aside>
+
+    <style>{`
+      .mobile-close-btn { display: none; }
+      @media (max-width: 768px) {
+        #main-sidebar {
+          transform: translateX(-100%);
+        }
+        #main-sidebar.mobile-open {
+          transform: translateX(0) !important;
+        }
+        .mobile-close-btn { display: flex !important; }
+      }
+    `}</style>
+    </>
   )
 }

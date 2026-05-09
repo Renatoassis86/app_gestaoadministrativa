@@ -29,6 +29,22 @@ export default function PageHeader({ title, subtitle, actions, breadcrumbs, badg
       position: 'sticky', top: 0, zIndex: 40,
     }}>
 
+      {/* Hamburger — mobile only */}
+      <button
+        id="mobile-sidebar-toggle"
+        onClick={() => (window as any).__toggleSidebar?.()}
+        style={{
+          display: 'none', // shown via CSS
+          alignItems: 'center', justifyContent: 'center',
+          width: 40, height: 40, borderRadius: 8,
+          border: '1px solid #e2e8f0', background: '#f8fafc',
+          cursor: 'pointer', flexShrink: 0, marginRight: '.5rem',
+        }}
+        aria-label="Abrir menu"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+
       <div style={{ flex: 1, minWidth: 0 }}>
         {/* Breadcrumbs */}
         {breadcrumbs && breadcrumbs.length > 0 && (

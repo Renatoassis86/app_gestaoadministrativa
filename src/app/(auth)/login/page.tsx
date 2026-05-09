@@ -98,7 +98,7 @@ export default function LoginPage() {
         }} />
 
         {/* Conteúdo principal */}
-        <div style={{
+        <div className="hero-grid" style={{
           position: 'relative', zIndex: 2,
           width: '100%', maxWidth: 1200,
           margin: '0 auto',
@@ -378,7 +378,7 @@ export default function LoginPage() {
       }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: '3rem', marginBottom: '2.5rem' }}>
+          <div className="footer-grid" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: '3rem', marginBottom: '2.5rem' }}>
 
             {/* Coluna 1 — Logo + frase + contatos */}
             <div>
@@ -509,11 +509,32 @@ export default function LoginPage() {
         </div>
       </footer>
 
-      {/* Placeholder CSS para responsivo */}
+      {/* Responsivo — mobile */}
       <style>{`
         input::placeholder { color: rgba(255,255,255,.22) !important; }
+
+        @media (max-width: 768px) {
+          .hero-grid {
+            grid-template-columns: 1fr !important;
+            padding: 5rem 1rem 2rem !important;
+            gap: 2rem !important;
+          }
+          /* Hide hero text on very small screens, show only login form */
+          .hero-grid > div:first-child {
+            display: none;
+          }
+        }
+
         @media (max-width: 900px) {
           .hero-grid { grid-template-columns: 1fr !important; }
+        }
+
+        /* Footer responsive */
+        @media (max-width: 768px) {
+          .footer-grid {
+            grid-template-columns: 1fr !important;
+            gap: 2rem !important;
+          }
         }
       `}</style>
     </div>

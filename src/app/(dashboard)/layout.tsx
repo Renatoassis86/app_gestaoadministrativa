@@ -20,7 +20,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="flex">
       <Sidebar profile={profile} />
-      <div style={{ marginLeft: 'var(--sidebar-w)', flex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div
+        className="dashboard-content"
+        style={{ marginLeft: 'var(--sidebar-w)', flex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}
+      >
         {children}
       </div>
     </div>
