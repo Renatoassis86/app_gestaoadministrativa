@@ -87,21 +87,44 @@ export default async function LeadsBancoPage({ searchParams }: Props) {
   const total        = count ?? 0
   const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA))
 
-  // KPIs gerais (sem filtros)
+  // KPIs enriquecidos — métricas relevantes para prospecção comercial
   const [
     { count: totalGeral },
     { count: totalDecisores },
     { count: totalComEmail },
+    { count: totalComTel },
+    { count: totalComEscola },
     { count: total2025 },
     { count: total2026 },
+    { count: totalCRM },
+    { count: totalSemContato },  // leads sem email E sem telefone
   ] = await Promise.all([
     supabase.from('leads_universal').select('*', { count: 'exact', head: true }),
+    // Decisores = quem tem poder de decisão (gestores, diretores, mantenedores, coordenadores)
     supabase.from('leads_universal').select('*', { count: 'exact', head: true })
       .or('tipo_inscricao.ilike.%gestor%,tipo_inscricao.ilike.%diretor%,tipo_inscricao.ilike.%mantenedor%,tipo_inscricao.ilike.%coordenador%'),
     supabase.from('leads_universal').select('*', { count: 'exact', head: true }).not('email', 'is', null),
+    supabase.from('leads_universal').select('*', { count: 'exact', head: true }).not('tel_celular', 'is', null),
+    // Com escola = tem nome de escola vinculado (contexto comercial definido)
+    supabase.from('leads_universal').select('*', { count: 'exact', head: true }).not('escola_nome', 'is', null),
     supabase.from('leads_universal').select('*', { count: 'exact', head: true }).eq('fonte', 'ciecc_2025'),
     supabase.from('leads_universal').select('*', { count: 'exact', head: true }).eq('fonte', 'ciecc_2026'),
+    supabase.from('leads_universal').select('*', { count: 'exact', head: true }).eq('fonte', 'crm'),
+    // Leads órfãos = sem email E sem telefone (não alcançáveis)
+    supabase.from('leads_universal').select('*', { count: 'exact', head: true })
+      .is('email', null).is('tel_celular', null),
   ])
+
+  // Métricas derivadas
+  const totalAlcancaveis = (totalComEmail ?? 0) > 0 || (totalComTel ?? 0) > 0
+    ? Math.max(totalComEmail ?? 0, totalComTel ?? 0)
+    : 0
+  const pctAlcancaveis = (totalGeral ?? 0) > 0
+    ? Math.round((Math.max(totalComEmail ?? 0, totalComTel ?? 0) / (totalGeral ?? 1)) * 100)
+    : 0
+  const pctDecisores = (totalGeral ?? 0) > 0
+    ? Math.round(((totalDecisores ?? 0) / (totalGeral ?? 1)) * 100)
+    : 0
 
   // UFs para filtro
   const { data: ufsData } = await supabase.from('leads_universal').select('uf').not('uf', 'is', null).limit(3000)
@@ -156,20 +179,74 @@ export default async function LeadsBancoPage({ searchParams }: Props) {
 
       <div style={{ padding: '1.5rem 1.75rem' }}>
 
-        {/* ── KPIs ─────────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0,1fr))', gap: '.85rem', marginBottom: '1.5rem' }}>
+        {/* ── KPIs — Métricas comerciais relevantes ─────────── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0,1fr))', gap: '.85rem', marginBottom: '.85rem' }}>
           {[
-            { label: 'Total de Leads',   val: (totalGeral ?? 0).toLocaleString('pt-BR'),     cor: '#0f172a', bg: '#f8fafc', border: '#e2e8f0' },
-            { label: 'Decisores',        val: (totalDecisores ?? 0).toLocaleString('pt-BR'),  cor: '#dc2626', bg: '#fef2f2', border: '#fca5a5' },
-            { label: 'Com E-mail',       val: (totalComEmail ?? 0).toLocaleString('pt-BR'),   cor: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
-            { label: '1º CIECC 2025',    val: (total2025 ?? 0).toLocaleString('pt-BR'),       cor: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
-            { label: '2º CIECC 2026',    val: (total2026 ?? 0).toLocaleString('pt-BR'),       cor: '#0d9488', bg: '#f0fdfa', border: '#99f6e4' },
+            {
+              label: 'Total de Leads',
+              val: (totalGeral ?? 0).toLocaleString('pt-BR'),
+              sub: `${total2025 ?? 0} em 2025 · ${total2026 ?? 0} em 2026`,
+              cor: '#0f172a', bg: '#f8fafc', border: '#e2e8f0',
+              icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+            },
+            {
+              label: 'Decisores Comerciais',
+              val: (totalDecisores ?? 0).toLocaleString('pt-BR'),
+              sub: `${pctDecisores}% do total — gestores, diretores, mantenedores`,
+              cor: '#dc2626', bg: '#fef2f2', border: '#fca5a5',
+              icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+            },
+            {
+              label: 'Alcançáveis',
+              val: Math.max(totalComEmail ?? 0, totalComTel ?? 0).toLocaleString('pt-BR'),
+              sub: `${totalComEmail ?? 0} com e-mail · ${totalComTel ?? 0} com telefone`,
+              cor: '#16a34a', bg: '#f0fdf4', border: '#86efac',
+              icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
+            },
+            {
+              label: 'Vinculados a Escola',
+              val: (totalComEscola ?? 0).toLocaleString('pt-BR'),
+              sub: `${(totalGeral ?? 0) - (totalComEscola ?? 0)} sem escola identificada`,
+              cor: '#d97706', bg: '#fffbeb', border: '#fde68a',
+              icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+            },
           ].map(k => (
-            <div key={k.label} style={{ background: k.bg, border: `1.5px solid ${k.border}`, borderTop: `3px solid ${k.cor}`, borderRadius: 14, padding: '.9rem 1rem', minWidth: 0 }}>
-              <div style={{ fontSize: '.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: k.cor, fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.25rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{k.label}</div>
-              <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{k.val}</div>
+            <div key={k.label} style={{ background: k.bg, border: `1.5px solid ${k.border}`, borderTop: `3px solid ${k.cor}`, borderRadius: 14, padding: '1rem 1.1rem', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontSize: '.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: k.cor, fontFamily: 'var(--font-montserrat,sans-serif)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{k.label}</div>
+                <div style={{ color: k.cor, opacity: .5, flexShrink: 0 }}>{k.icon}</div>
+              </div>
+              <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.8rem', fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{k.val}</div>
+              <div style={{ fontSize: '.62rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)', lineHeight: 1.4 }}>{k.sub}</div>
             </div>
           ))}
+        </div>
+
+        {/* ── Barra de progresso de alcançabilidade ────────── */}
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '.85rem 1.25rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap', boxShadow: '0 1px 4px rgba(15,23,42,.04)' }}>
+          {[
+            { label: 'Decisores', n: totalDecisores ?? 0, total: totalGeral ?? 0, cor: '#dc2626' },
+            { label: 'Com E-mail', n: totalComEmail ?? 0, total: totalGeral ?? 0, cor: '#2563eb' },
+            { label: 'Com Telefone', n: totalComTel ?? 0, total: totalGeral ?? 0, cor: '#16a34a' },
+            { label: 'Com Escola', n: totalComEscola ?? 0, total: totalGeral ?? 0, cor: '#d97706' },
+            { label: 'Sem Contato', n: totalSemContato ?? 0, total: totalGeral ?? 0, cor: '#94a3b8' },
+          ].map(m => {
+            const p = m.total > 0 ? Math.round((m.n / m.total) * 100) : 0
+            return (
+              <div key={m.label} style={{ flex: 1, minWidth: 100 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '.2rem' }}>
+                  <span style={{ fontSize: '.65rem', fontWeight: 600, color: '#475569', fontFamily: 'var(--font-montserrat,sans-serif)' }}>{m.label}</span>
+                  <span style={{ fontSize: '.65rem', fontWeight: 700, color: m.cor, fontFamily: 'var(--font-montserrat,sans-serif)' }}>{p}%</span>
+                </div>
+                <div style={{ height: 5, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', background: m.cor, width: `${p}%`, borderRadius: 3 }} />
+                </div>
+                <div style={{ fontSize: '.58rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)', marginTop: '.15rem' }}>
+                  {m.n.toLocaleString('pt-BR')} leads
+                </div>
+              </div>
+            )
+          })}
         </div>
 
         {/* ── Filtros ──────────────────────────────────────── */}
@@ -215,14 +292,52 @@ export default async function LeadsBancoPage({ searchParams }: Props) {
             ))}
           </div>
 
-          {/* UF */}
+          {/* UF — select dropdown com todos os estados disponíveis */}
           {ufsUnicas.length > 0 && (
-            <div style={{ display: 'flex', gap: '.3rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '.62rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.05em', fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap' }}>Estado:</span>
-              <a href={buildUrl({ uf: '' })} style={{ padding: '.3rem .65rem', borderRadius: 7, textDecoration: 'none', fontSize: '.68rem', fontWeight: !uf ? 700 : 400, background: !uf ? '#0f172a' : '#f1f5f9', color: !uf ? '#fff' : '#475569', fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap' }}>Todos</a>
-              {ufsUnicas.slice(0, 12).map(u => (
-                <a key={u} href={buildUrl({ uf: u })} style={{ padding: '.3rem .6rem', borderRadius: 7, textDecoration: 'none', fontSize: '.68rem', fontWeight: uf === u ? 700 : 400, background: uf === u ? '#d97706' : '#f1f5f9', color: uf === u ? '#fff' : '#475569', fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap' }}>{u}</a>
+              {/* Botão Todos */}
+              <a href={buildUrl({ uf: '' })} style={{
+                padding: '.3rem .65rem', borderRadius: 7, textDecoration: 'none',
+                fontSize: '.68rem', fontWeight: !uf ? 700 : 400,
+                background: !uf ? '#0f172a' : '#f1f5f9',
+                color: !uf ? '#fff' : '#475569',
+                fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap',
+              }}>Todos</a>
+              {/* Pills para os primeiros 8 estados mais comuns */}
+              {ufsUnicas.slice(0, 8).map(u => (
+                <a key={u} href={buildUrl({ uf: u })} style={{
+                  padding: '.3rem .55rem', borderRadius: 7, textDecoration: 'none',
+                  fontSize: '.68rem', fontWeight: uf === u ? 700 : 400,
+                  background: uf === u ? '#d97706' : '#f1f5f9',
+                  color: uf === u ? '#fff' : '#475569',
+                  fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap',
+                }}>{u}</a>
               ))}
+              {/* Select dropdown para ver todos os estados */}
+              {ufsUnicas.length > 8 && (
+                <div style={{ position: 'relative' }}>
+                  <select
+                    defaultValue={ufsUnicas.indexOf(uf) >= 8 ? uf : ''}
+                    onChange={e => { if (e.target.value) window.location.href = buildUrl({ uf: e.target.value }) }}
+                    style={{
+                      padding: '.3rem 1.6rem .3rem .65rem', borderRadius: 7,
+                      border: `1.5px solid ${ufsUnicas.indexOf(uf) >= 8 && uf ? '#d97706' : '#e2e8f0'}`,
+                      background: ufsUnicas.indexOf(uf) >= 8 && uf ? '#fffbeb' : '#f1f5f9',
+                      color: ufsUnicas.indexOf(uf) >= 8 && uf ? '#d97706' : '#475569',
+                      fontSize: '.68rem', fontWeight: ufsUnicas.indexOf(uf) >= 8 && uf ? 700 : 400,
+                      fontFamily: 'var(--font-montserrat,sans-serif)',
+                      cursor: 'pointer', outline: 'none', appearance: 'none' as const,
+                    }}
+                  >
+                    <option value="">+{ufsUnicas.length - 8} estados</option>
+                    {ufsUnicas.slice(8).map(u => (
+                      <option key={u} value={u} selected={uf === u}>{u}</option>
+                    ))}
+                  </select>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ position: 'absolute', right: '.4rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#475569' }}><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+              )}
             </div>
           )}
 

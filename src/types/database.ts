@@ -364,8 +364,12 @@ export const LABEL: Record<string, Record<string, string>> = {
 }
 
 // Helpers
+// Valores dos kits CVE Education
+export const KIT_INFANTIL = 1046.26
+export const KIT_FUND     = 1302.15
+
 export function calcPotencial(inf: number, f1: number, f2: number, med: number) {
-  return inf * 500 + f1 * 600 + f2 * 700 + med * 800
+  return Math.round(inf * KIT_INFANTIL + (f1 + f2 + med) * KIT_FUND)
 }
 
 export function calcProbabilidade(

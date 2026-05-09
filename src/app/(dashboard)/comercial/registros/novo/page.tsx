@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { upsertRegistro } from '@/lib/actions'
 import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
+import { buscarEscolasUnificadas } from '@/lib/escolas-unificadas'
 import {
   MEIO_OPTIONS, INTERESSE_OPTIONS, PRONTIDAO_OPTIONS,
   ABERTURA_OPTIONS, ENCAMINHAMENTOS_OPTIONS, CARGO_CONTATO_OPTIONS,
@@ -49,8 +50,8 @@ export default async function RegistroNovo({ searchParams }: Props) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [{ data: escolas }, { data: profiles }, { data: negociacoes }] = await Promise.all([
-    supabase.from('escolas').select('id, nome').eq('ativa', true).order('nome'),
+  const [escolas, { data: profiles }, { data: negociacoes }] = await Promise.all([
+    buscarEscolasUnificadas(supabase),
     supabase.from('profiles').select('id, full_name').eq('is_active', true).order('full_name'),
     escolaId
       ? supabase.from('negociacoes').select('id, titulo, stage').eq('escola_id', escolaId).eq('ativa', true)
@@ -270,7 +271,7 @@ export default async function RegistroNovo({ searchParams }: Props) {
                   <div style={{ fontSize: '.78rem', color: '#78350f', fontFamily: 'var(--font-inter,sans-serif)', lineHeight: 1.5 }}>
                     Potencial, probabilidade e classificação são calculados automaticamente ao salvar.
                     <br />
-                    <span style={{ fontWeight: 600 }}>Infantil × R$500 · Fund.I × R$600 · Fund.II × R$700 · Médio × R$800</span>
+                    <span style={{ fontWeight: 600 }}>Infantil × R$1.046,26 · Fund.I × R$1.302,15 · Fund.II × R$1.302,15 · Médio × R$1.302,15</span>
                   </div>
                 </div>
               </div>
