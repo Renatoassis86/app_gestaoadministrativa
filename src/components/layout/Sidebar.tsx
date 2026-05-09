@@ -239,7 +239,7 @@ export default function Sidebar({ profile }: SidebarProps) {
           width: 40, height: 40, borderRadius: '50%',
           background: '#0f172a', border: '1px solid rgba(255,255,255,.2)',
           color: '#fff', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          alignItems: 'center', justifyContent: 'center',
           zIndex: 101,
         }}
       >
