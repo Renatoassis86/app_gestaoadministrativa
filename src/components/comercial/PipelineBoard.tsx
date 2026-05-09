@@ -32,7 +32,6 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
   const [profiles, setProfiles]       = useState<any[]>([])
   const [loading, setLoading]         = useState(true)
   const [erroDb, setErroDb]           = useState<string | null>(null)
-  const [debug, setDebug]             = useState<string>('')
 
   const carregar = useCallback(async () => {
     setLoading(true)
@@ -53,13 +52,9 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
       .order('full_name')
 
     if (errNegs) {
-      setErroDb(`Erro RLS/DB: ${errNegs.message} | code: ${errNegs.code} | hint: ${errNegs.hint ?? '—'}`)
+      setErroDb(`Erro ao carregar: ${errNegs.message}`)
       setNegociacoes([])
-      setDebug(`ERRO: ${JSON.stringify(errNegs)}`)
     } else {
-      const total = count ?? negs?.length ?? 0
-      setDebug(`Banco retornou ${total} registros | userId=${userId}`)
-      // Normaliza stages inválidos para 'prospeccao'
       const VALIDOS = ['prospeccao','qualificacao','apresentacao','proposta','negociacao','fechamento','ganho','perdido']
       const normalizados = (negs ?? []).map((n: any) => ({
         ...n,
@@ -134,15 +129,6 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
           </button>
         </div>
       </div>
-
-      {/* ── Debug strip — remove depois que funcionar ── */}
-      {!loading && (
-        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '.5rem .85rem', marginBottom: '.75rem', fontSize: '.68rem', color: '#475569', fontFamily: 'monospace', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <span>🔍 {debug}</span>
-          {negociacoes.length > 0 && <span>| stages: {[...new Set(negociacoes.map(n => n.stage))].join(', ')}</span>}
-          {filtroResp && <span>| filtro → {negsFiltradas.length} neg.</span>}
-        </div>
-      )}
 
       {/* ── Erro de banco ── */}
       {erroDb && (
