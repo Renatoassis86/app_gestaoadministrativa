@@ -199,6 +199,7 @@ export default async function EscolasPage({ searchParams }: Props) {
         <EscolasToolbar
           q={q} estado={estado} classif={classif}
           view={view} page={page} estados={estados}
+          escolas={(escolas ?? []).map((e: any) => ({ id: e.id, nome: e.nome, cidade: e.cidade, estado: e.estado }))}
         />
 
         {/* ── Conteúdo ─────────────────────────────────────────── */}
@@ -440,15 +441,23 @@ export default async function EscolasPage({ searchParams }: Props) {
                               >
                                 +
                               </Link>
+                              {/* Ver ficha */}
                               <Link href={`/comercial/escolas/${e.id}`} style={{
                                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                                 width: 28, height: 28, borderRadius: 7,
                                 background: '#f1f5f9', color: '#475569', textDecoration: 'none',
-                                fontSize: '.7rem', fontWeight: 700,
                                 transition: 'all .15s',
-                              }} title="Ver ficha"
-                              >
-                                →
+                              }} title="Ver ficha">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                              </Link>
+                              {/* Editar escola */}
+                              <Link href={`/comercial/escolas/${e.id}/editar`} style={{
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                width: 28, height: 28, borderRadius: 7,
+                                background: '#eff6ff', color: '#2563eb', textDecoration: 'none',
+                                transition: 'all .15s',
+                              }} title="Editar escola">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                               </Link>
                             </div>
                           </td>
