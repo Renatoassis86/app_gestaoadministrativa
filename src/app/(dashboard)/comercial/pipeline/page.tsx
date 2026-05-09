@@ -8,8 +8,9 @@ import { AdicionarNegociacaoBtn } from '@/components/comercial/AdicionarNegociac
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
+export const fetchCache = 'force-no-store'
 
-interface Props { searchParams: Promise<{ view?: string; responsavel?: string }> }
+interface Props { searchParams: Promise<{ view?: string; responsavel?: string; t?: string }> }
 
 const ACTIVE_STAGES = STAGE_OPTIONS.filter(s => !['ganho', 'perdido'].includes(s.value))
 

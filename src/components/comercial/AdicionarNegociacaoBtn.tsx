@@ -63,7 +63,8 @@ export function AdicionarNegociacaoBtn({ escolas, userId }: Props) {
     })
 
     if (res.ok) {
-      window.location.href = '/comercial/pipeline'
+      // Força bypass de cache com timestamp na URL
+      window.location.replace('/comercial/pipeline?t=' + Date.now())
     } else {
       let msg = `Erro HTTP ${res.status}`
       try {

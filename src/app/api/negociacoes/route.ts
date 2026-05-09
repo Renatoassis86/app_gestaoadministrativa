@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
+
+export const dynamic = 'force-dynamic'
+
+// GET — lista todas as negociações ativas (diagnóstico + uso futuro)
+export async function GET() {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+
+    const { data, error } = await supabase
+      .from('negociacoes')
+      .select('id, stage, titulo, ativa, escola_id, escola:escolas(nome), created_at')
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    if (error) return NextResponse.json({ error: error.message, code: error.code }, { status: 400 })
+    return NextResponse.json({ total: data?.length ?? 0, negociacoes: data })
+  } catch (err: any) {
+    return NextResponse.json({ error: String(err) }, { status: 500 })
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,13 +33,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { escola_id, stage, titulo, responsavel_id, valor_estimado, ativa = true } = body
+    const { escola_id, stage, titulo, responsavel_id, valor_estimado } = body
 
     if (!escola_id) {
       return NextResponse.json({ error: 'escola_id obrigatório' }, { status: 400 })
     }
 
-    // Valida se a escola existe
+    // Valida escola
     const { data: escola, error: escolaError } = await supabase
       .from('escolas')
       .select('id, nome')
@@ -26,10 +47,13 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (escolaError || !escola) {
-      return NextResponse.json({ error: `Escola não encontrada: ${escolaError?.message ?? 'id inválido'}` }, { status: 400 })
+      return NextResponse.json({
+        error: `Escola não encontrada`,
+        detail: escolaError?.message ?? 'id inválido'
+      }, { status: 400 })
     }
 
-    // Verifica se já existe negociação ativa para essa escola nesse stage
+    // Detecta duplicata ativa
     const { data: existente } = await supabase
       .from('negociacoes')
       .select('id, stage, titulo')
@@ -39,30 +63,30 @@ export async function POST(request: NextRequest) {
 
     if (existente) {
       return NextResponse.json({
-        error: `Esta escola já está no pipeline (${existente.titulo ?? existente.stage}). Mova o card existente ou desative-o antes de adicionar novamente.`
+        error: `"${escola.nome}" já está no pipeline (quadro: ${existente.stage}). Arraste o card existente para mudar de quadro.`
       }, { status: 409 })
     }
 
-    const stageValido = ['prospeccao','qualificacao','apresentacao','proposta','negociacao','fechamento'].includes(stage)
-    const stageFinal = stageValido ? stage : 'prospeccao'
+    const STAGES_VALIDOS = ['prospeccao','qualificacao','apresentacao','proposta','negociacao','fechamento']
+    const stageFinal = STAGES_VALIDOS.includes(stage) ? stage : 'prospeccao'
 
     const { data, error } = await supabase
       .from('negociacoes')
       .insert({
         escola_id,
-        stage:           stageFinal,
-        titulo:          titulo || null,
-        responsavel_id:  responsavel_id ?? user.id,
-        valor_estimado:  valor_estimado ?? null,
-        probabilidade:   0,
-        ativa,
-        created_by:      user.id,
+        stage:          stageFinal,
+        titulo:         titulo || `${escola.nome} — ${stageFinal}`,
+        responsavel_id: responsavel_id ?? user.id,
+        valor_estimado: valor_estimado ?? null,
+        probabilidade:  0,
+        ativa:          true,
+        created_by:     user.id,
       })
       .select('id, stage, titulo, escola_id')
       .single()
 
     if (error) {
-      console.error('[negociacoes POST] Supabase error:', error)
+      console.error('[negociacoes POST] error:', JSON.stringify(error))
       return NextResponse.json({
         error: error.message,
         code: error.code,
@@ -71,11 +95,14 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    revalidatePath('/comercial/pipeline')
-    return NextResponse.json(data)
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'no-store',
+      }
+    })
 
   } catch (err: any) {
-    console.error('[negociacoes POST] Unexpected error:', err)
-    return NextResponse.json({ error: 'Erro interno do servidor', detail: String(err) }, { status: 500 })
+    console.error('[negociacoes POST] unexpected:', err)
+    return NextResponse.json({ error: 'Erro interno', detail: String(err) }, { status: 500 })
   }
 }
