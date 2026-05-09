@@ -223,13 +223,195 @@ function ModalEditar({ lead, onClose, onSaved }: { lead: Lead; onClose: () => vo
   )
 }
 
+// ── Modal de e-mail ───────────────────────────────────────────
+function ModalEmail({ destinatarios, onClose }: {
+  destinatarios: { email: string; nome: string | null }[]
+  onClose: () => void
+}) {
+  const [assunto, setAssunto] = useState('')
+  const [corpo, setCorpo]     = useState('')
+  const [isHtml, setIsHtml]   = useState(false)
+  const [enviando, setEnviando] = useState(false)
+  const [resultado, setResultado] = useState<any>(null)
+  const [erro, setErro]       = useState('')
+
+  async function handleEnviar() {
+    if (!assunto.trim()) { setErro('Informe o assunto'); return }
+    if (!corpo.trim())   { setErro('Informe o corpo do e-mail'); return }
+    setEnviando(true); setErro('')
+    const res = await fetch('/api/enviar-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ destinatarios, assunto, corpo, isHtml }),
+    })
+    const data = await res.json()
+    if (!res.ok) { setErro(data.error ?? 'Erro ao enviar'); setEnviando(false); return }
+    setResultado(data); setEnviando(false)
+  }
+
+  const inp: React.CSSProperties = { width: '100%', padding: '.65rem .9rem', border: '1.5px solid #e2e8f0', borderRadius: 8, fontSize: '.82rem', fontFamily: 'var(--font-inter,sans-serif)', outline: 'none', background: '#f8fafc', color: '#0f172a', boxSizing: 'border-box' as const }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15,23,42,.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div style={{ background: '#fff', borderRadius: 18, width: '100%', maxWidth: 700, maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,.18)' }}>
+
+        {/* Header */}
+        <div style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', padding: '1.1rem 1.5rem', borderRadius: '18px 18px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: '.58rem', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: '#d97706', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.2rem' }}>
+              Enviar E-mail
+            </div>
+            <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.2rem', fontWeight: 700, color: '#fff' }}>
+              {destinatarios.length} destinatário{destinatarios.length !== 1 ? 's' : ''}
+            </div>
+          </div>
+          <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 7, border: '1px solid rgba(255,255,255,.15)', background: 'rgba(255,255,255,.08)', color: '#fff', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+        </div>
+
+        <div style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+          {resultado ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '.5rem' }}>
+                {resultado.erros?.length === 0 ? '✅' : '⚠️'}
+              </div>
+              <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', marginBottom: '.5rem' }}>
+                {resultado.enviados} e-mail{resultado.enviados !== 1 ? 's' : ''} enviado{resultado.enviados !== 1 ? 's' : ''}
+              </div>
+              {resultado.erros?.length > 0 && (
+                <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 8, padding: '.75rem', fontSize: '.75rem', color: '#dc2626', fontFamily: 'var(--font-inter,sans-serif)', textAlign: 'left', marginTop: '.5rem' }}>
+                  <strong>Erros:</strong><br />
+                  {resultado.erros.slice(0, 5).join('\n')}
+                </div>
+              )}
+              <button onClick={onClose} style={{ marginTop: '1rem', padding: '.65rem 2rem', borderRadius: 9999, border: 'none', background: '#0f172a', color: '#fff', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Fechar</button>
+            </div>
+          ) : (
+            <>
+              {/* Destinatários */}
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '.75rem 1rem', maxHeight: 100, overflowY: 'auto' }}>
+                <div style={{ fontSize: '.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: '#64748b', marginBottom: '.4rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Para:</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.25rem' }}>
+                  {destinatarios.map(d => (
+                    <span key={d.email} style={{ fontSize: '.68rem', background: '#e2e8f0', color: '#334155', padding: '.15rem .5rem', borderRadius: 99, fontFamily: 'var(--font-inter,sans-serif)' }}>
+                      {d.nome ? `${d.nome} <${d.email}>` : d.email}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Assunto */}
+              <div>
+                <label style={{ display: 'block', fontSize: '.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#64748b', marginBottom: '.3rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Assunto *</label>
+                <input value={assunto} onChange={e => setAssunto(e.target.value)} style={inp} placeholder="Ex: Apresentação do Currículo Paideia — CVE Education" />
+              </div>
+
+              {/* Toggle HTML/Texto */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '.4rem', cursor: 'pointer', fontSize: '.78rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                  <input type="checkbox" checked={isHtml} onChange={e => setIsHtml(e.target.checked)} style={{ accentColor: '#d97706' }} />
+                  Formato HTML
+                </label>
+                {isHtml && (
+                  <span style={{ fontSize: '.68rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                    Use {'{{nome}}'} para personalizar com o nome do destinatário
+                  </span>
+                )}
+              </div>
+
+              {/* Corpo */}
+              <div>
+                <label style={{ display: 'block', fontSize: '.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#64748b', marginBottom: '.3rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                  {isHtml ? 'Corpo (HTML)' : 'Mensagem'} *
+                </label>
+                <textarea
+                  value={corpo}
+                  onChange={e => setCorpo(e.target.value)}
+                  rows={isHtml ? 14 : 8}
+                  placeholder={isHtml
+                    ? '<h2>Olá {{nome}},</h2>\n<p>Somos a Cidade Viva Education...</p>'
+                    : 'Olá {{nome}},\n\nGostaríamos de apresentar...'
+                  }
+                  style={{ ...inp, resize: 'vertical', fontFamily: isHtml ? 'monospace' : 'var(--font-inter,sans-serif)', fontSize: isHtml ? '.78rem' : '.82rem', lineHeight: 1.7 }}
+                />
+                {!isHtml && (
+                  <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.3rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                    Use {'{{nome}}'} para personalizar · Ex: "Olá {'{{nome}}'}, gostaríamos de..."
+                  </div>
+                )}
+              </div>
+
+              {/* Templates rápidos */}
+              <div>
+                <div style={{ fontSize: '.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: '#64748b', marginBottom: '.4rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Templates rápidos:</div>
+                <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>
+                  {[
+                    { label: 'Apresentação', assunto: 'Apresentação CVE Education — Currículo Paideia', corpo: `Olá {{nome}},\n\nMeu nome é da equipe comercial da Cidade Viva Education.\n\nGostaríamos de apresentar o Currículo Paideia, nosso sistema de ensino cristão clássico que já transforma a educação em diversas escolas parceiras.\n\nPodemos agendar uma conversa para apresentar nossa proposta?\n\nAtenciosamente,\nEquipe Comercial CVE Education` },
+                    { label: 'Follow-up', assunto: 'Retomando contato — CVE Education', corpo: `Olá {{nome}},\n\nEstou retomando nosso contato para saber se teria interesse em conhecer mais sobre o Currículo Paideia.\n\nFico à disposição!\n\nAtenciosamente,\nEquipe Comercial CVE Education` },
+                    { label: 'Demo Paideia', assunto: 'Acesso à plataforma de demonstração — Currículo Paideia', corpo: `Olá {{nome}},\n\nSegue o acesso à nossa plataforma de demonstração do Currículo Paideia:\n\n🔗 Link: https://hub.cidadeviva.education/hub/login?t=professor\n📧 Login: demonstracao.plataforma.paideia@cidadeviva.org\n🔑 Senha: 12345678\n\n⏱ Disponível por 48 horas.\n\nQualquer dúvida, estou à disposição!\n\nAtenciosamente,\nEquipe Comercial CVE Education` },
+                  ].map(t => (
+                    <button key={t.label} onClick={() => { setAssunto(t.assunto); setCorpo(t.corpo); setIsHtml(false) }}
+                      style={{ padding: '.3rem .75rem', borderRadius: 7, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#475569', fontSize: '.68rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {erro && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 8, padding: '.65rem .9rem', fontSize: '.78rem', color: '#dc2626', fontFamily: 'var(--font-inter,sans-serif)' }}>{erro}</div>}
+
+              <div style={{ display: 'flex', gap: '.75rem', paddingTop: '.25rem' }}>
+                <button onClick={handleEnviar} disabled={enviando} style={{ flex: 1, padding: '.75rem', borderRadius: 9999, border: 'none', background: enviando ? '#e2e8f0' : 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: enviando ? '#94a3b8' : '#fff', fontWeight: 700, fontSize: '.875rem', cursor: enviando ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-montserrat,sans-serif)', boxShadow: enviando ? 'none' : '0 4px 14px rgba(37,99,235,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.4rem' }}>
+                  {enviando ? (
+                    <><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin .8s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>Enviando...</>
+                  ) : (
+                    <><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    Enviar para {destinatarios.length} destinatário{destinatarios.length !== 1 ? 's' : ''}</>
+                  )}
+                </button>
+                <button onClick={onClose} style={{ padding: '.75rem 1.5rem', borderRadius: 9999, border: '1.5px solid #e2e8f0', background: '#fff', color: '#64748b', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Cancelar</button>
+              </div>
+              <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Componente principal ──────────────────────────────────────
 export function LeadsTable({ leads: initialLeads, total, pagina, totalPaginas, q, fonte, tipo, uf }: Props) {
-  const [leads, setLeads] = useState<Lead[]>(initialLeads)
-  const [editando, setEditando] = useState<Lead | null>(null)
-  const [deletando, setDeletando] = useState<string | null>(null)
+  const [leads, setLeads]           = useState<Lead[]>(initialLeads)
+  const [editando, setEditando]     = useState<Lead | null>(null)
+  const [deletando, setDeletando]   = useState<string | null>(null)
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
+  const [modalEmail, setModalEmail] = useState<{ email: string; nome: string | null }[] | null>(null)
 
   const fonteInfo = (f: string) => FONTE_COR[f] ?? FONTE_COR.outro
+
+  // Seleção
+  function toggleSelecionar(id: string) {
+    setSelecionados(prev => {
+      const n = new Set(prev)
+      n.has(id) ? n.delete(id) : n.add(id)
+      return n
+    })
+  }
+  function selecionarTodos() {
+    const comEmail = leads.filter(l => l.email).map(l => l.id)
+    setSelecionados(prev => prev.size === comEmail.length ? new Set() : new Set(comEmail))
+  }
+
+  // Destinatários para e-mail em massa
+  function abrirEmailMassa() {
+    const dest = leads
+      .filter(l => selecionados.has(l.id) && l.email)
+      .map(l => ({ email: l.email!, nome: l.nome }))
+    if (dest.length === 0) { alert('Nenhum lead selecionado com e-mail'); return }
+    setModalEmail(dest)
+  }
 
   async function handleDelete(id: string, nome: string) {
     if (!confirm(`Excluir o lead "${nome}"? Esta ação não pode ser desfeita.`)) return
@@ -246,8 +428,27 @@ export function LeadsTable({ leads: initialLeads, total, pagina, totalPaginas, q
 
   const fmtTel = (t: string | null) => t ? t.replace(/\D/g, '') : ''
 
+  const leadsComEmail = leads.filter(l => l.email)
+  const todosSelecionados = leadsComEmail.length > 0 && leadsComEmail.every(l => selecionados.has(l.id))
+
   return (
     <div>
+      {/* ── Barra de seleção em massa ─── */}
+      {selecionados.size > 0 && (
+        <div style={{ background: '#0f172a', borderRadius: 12, padding: '.75rem 1.25rem', marginBottom: '.75rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '.78rem', fontWeight: 700, color: '#fff', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+            {selecionados.size} selecionado{selecionados.size !== 1 ? 's' : ''}
+          </span>
+          <button onClick={abrirEmailMassa} style={{ display: 'inline-flex', alignItems: 'center', gap: '.4rem', padding: '.4rem 1rem', borderRadius: 7, border: 'none', background: '#2563eb', color: '#fff', fontSize: '.75rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Enviar E-mail para {leads.filter(l => selecionados.has(l.id) && l.email).length} com e-mail
+          </button>
+          <button onClick={() => setSelecionados(new Set())} style={{ padding: '.4rem .85rem', borderRadius: 7, border: '1px solid rgba(255,255,255,.2)', background: 'transparent', color: 'rgba(255,255,255,.6)', fontSize: '.72rem', cursor: 'pointer', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+            Limpar seleção
+          </button>
+        </div>
+      )}
+
       {/* ── Tabela ──────────────────────────────────────────── */}
       <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,23,42,.05)' }}>
         {/* Header da tabela */}
@@ -255,6 +456,12 @@ export function LeadsTable({ leads: initialLeads, total, pagina, totalPaginas, q
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
             <thead>
               <tr style={{ background: '#0f172a' }}>
+                {/* Checkbox selecionar todos */}
+                <th style={{ padding: '.65rem .75rem', width: 36 }}>
+                  <input type="checkbox" checked={todosSelecionados} onChange={selecionarTodos}
+                    style={{ width: 15, height: 15, cursor: 'pointer', accentColor: '#d97706' }}
+                    title="Selecionar todos com e-mail" />
+                </th>
                 {['#', 'Nome', 'Tipo / Cargo', 'Escola', 'Contato', 'Cidade/UF', 'Fonte', 'Ações'].map((col, i) => (
                   <th key={col} style={{
                     padding: '.65rem .9rem', textAlign: i === 0 ? 'center' : 'left',
@@ -279,8 +486,20 @@ export function LeadsTable({ leads: initialLeads, total, pagina, totalPaginas, q
                 const tel  = fmtTel(lead.tel_celular)
                 const isDel = deletando === lead.id
 
+                const isSel = selecionados.has(lead.id)
+
                 return (
-                  <tr key={lead.id} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#fff' : '#fafafa', opacity: isDel ? 0.4 : 1, transition: 'opacity .2s' }}>
+                  <tr key={lead.id} style={{ borderBottom: '1px solid #f1f5f9', background: isSel ? '#fffbeb' : idx % 2 === 0 ? '#fff' : '#fafafa', opacity: isDel ? 0.4 : 1, transition: 'all .1s' }}>
+
+                    {/* Checkbox */}
+                    <td style={{ padding: '.7rem .75rem', textAlign: 'center', verticalAlign: 'middle' }}>
+                      {lead.email ? (
+                        <input type="checkbox" checked={isSel} onChange={() => toggleSelecionar(lead.id)}
+                          style={{ width: 15, height: 15, cursor: 'pointer', accentColor: '#d97706' }} />
+                      ) : (
+                        <span style={{ color: '#e2e8f0', fontSize: '.6rem' }}>—</span>
+                      )}
+                    </td>
 
                     {/* Nº */}
                     <td style={{ padding: '.7rem .9rem', textAlign: 'center', verticalAlign: 'middle' }}>
@@ -354,11 +573,13 @@ export function LeadsTable({ leads: initialLeads, total, pagina, totalPaginas, q
                           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
 
-                        {/* Email */}
+                        {/* Email — abre modal de envio */}
                         {lead.email && (
-                          <a href={`mailto:${lead.email}`} title={`Enviar e-mail para ${lead.email}`} style={{ width: 28, height: 28, borderRadius: 7, border: '1.5px solid #bfdbfe', background: '#eff6ff', color: '#2563eb', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', flexShrink: 0 }}>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                          </a>
+                          <button onClick={() => setModalEmail([{ email: lead.email!, nome: lead.nome }])}
+                            title={`Enviar e-mail para ${lead.email}`}
+                            style={{ width: 28, height: 28, borderRadius: 7, border: '1.5px solid #bfdbfe', background: '#eff6ff', color: '#2563eb', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                          </button>
                         )}
 
                         {/* WhatsApp */}
@@ -443,6 +664,14 @@ export function LeadsTable({ leads: initialLeads, total, pagina, totalPaginas, q
           lead={editando}
           onClose={() => setEditando(null)}
           onSaved={updated => setLeads(prev => prev.map(l => l.id === updated.id ? updated : l))}
+        />
+      )}
+
+      {/* Modal de e-mail */}
+      {modalEmail && (
+        <ModalEmail
+          destinatarios={modalEmail}
+          onClose={() => setModalEmail(null)}
         />
       )}
 
