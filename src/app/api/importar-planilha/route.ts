@@ -152,47 +152,41 @@ export async function POST(request: NextRequest) {
   // Education_CRM_FINAL: tem 3 linhas de título (linha 3 = headers reais)
   const rawArray = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1, defval: null })
 
-  function scoreHeader(row: any[]): number {
-    if (!row || row.length === 0) return 0
-    const vals = row.filter((v: any) => v !== null && String(v).trim() !== '')
-    if (vals.length < 3) return 0
-    // Conta células com texto descritivo (letras, comprimento razoável)
-    const textos = vals.filter((v: any) => {
-      const s = String(v).trim()
-      return /[a-zA-ZÀ-ú]/.test(s) && s.length >= 2 && s.length <= 120
+  // Detectar linha de header: a que tem MAIS células com texto descritivo (letras)
+  // CRM linha 3 tem 69 textos; CIECC linha 0 tem ~40 textos
+  function contarTextos(row: any[]): number {
+    if (!row) return 0
+    return row.filter((v: any) => {
+      const s = String(v ?? '').trim()
+      return s.length >= 2 && (s.match(/[a-zA-ZÀ-ú]/g) || []).length >= 2
     }).length
-    // Penaliza células que são apenas números (indicam dados, não headers)
-    const nums = vals.filter((v: any) => /^\d+([.,]\d+)?$/.test(String(v).trim())).length
-    // Bônus: muitas células preenchidas = provável header
-    return textos * 2 - nums * 3 + vals.length
   }
 
   let headerRowIdx = 0
-  let melhorScore = -1
-  for (let i = 0; i < Math.min(6, rawArray.length); i++) {
-    const s = scoreHeader(rawArray[i] ?? [])
-    if (s > melhorScore) {
-      melhorScore = s
-      headerRowIdx = i
-    }
+  let maxTextos = 0
+  for (let i = 0; i < Math.min(8, rawArray.length); i++) {
+    const n = contarTextos(rawArray[i] ?? [])
+    if (n > maxTextos) { maxTextos = n; headerRowIdx = i }
   }
 
-  // Construir manualmente: headers da linha detectada + dados das linhas seguintes
-  const headerRow = (rawArray[headerRowIdx] ?? []).map((v: any) =>
-    v !== null && String(v).trim() !== '' ? String(v).trim() : `__col_${Math.random()}`
-  )
+  // Montar headers: valores não-nulos da linha detectada; gaps recebem nome interno
+  const headerRow = (rawArray[headerRowIdx] ?? []).map((v: any, ci: number) => {
+    const s = String(v ?? '').trim()
+    return s.length > 0 ? s : `__gap_${ci}`
+  })
 
+  // Montar registros: linhas seguintes, apenas não-vazias
   const todasRowsFull: Record<string, any>[] = []
   for (let i = headerRowIdx + 1; i < rawArray.length; i++) {
     const dataRow = rawArray[i] ?? []
-    // Pular linhas completamente vazias
-    const temDado = dataRow.some((v: any) => v !== null && String(v).trim() !== '')
+    const temDado = dataRow.some((v: any) => String(v ?? '').trim() !== '')
     if (!temDado) continue
     const obj: Record<string, any> = {}
     headerRow.forEach((col: string, ci: number) => {
-      if (!col.startsWith('__col_')) {
-        const v = dataRow[ci] ?? null
-        obj[col] = v !== null ? String(v) : null
+      if (!col.startsWith('__gap_')) {
+        const v = dataRow[ci]
+        const s = String(v ?? '').trim()
+        obj[col] = s.length > 0 ? s : null
       }
     })
     todasRowsFull.push(obj)
@@ -226,19 +220,20 @@ export async function POST(request: NextRequest) {
   // Suporta dois formatos:
   //   1. Tipo exato: "Gestor de escola" → match exato (case-insensitive)
   //   2. Keyword: "__kw:gestor" → match parcial (contém "gestor")
+  // Aplicar filtro apenas se a planilha TEM coluna de tipo (CIECC sim, CRM não)
+  const planilhaTipoExiste = todasRowsFull.length > 0
+    && COL_TIPO.some(c => todasRowsFull[0][c] !== undefined)
   let rawRows = todasRowsFull
-  if (filtrosTipo.length > 0) {
+  if (filtrosTipo.length > 0 && planilhaTipoExiste) {
     rawRows = todasRowsFull.filter(row => {
       for (const col of COL_TIPO) {
         const v = String(row[col] ?? '').trim().toLowerCase()
-        if (!v) continue
+        if (!v || v === 'null') continue
         for (const filtro of filtrosTipo) {
           if (filtro.startsWith('__kw:')) {
-            // Match parcial por keyword
             const kw = filtro.replace('__kw:', '').toLowerCase()
             if (v.includes(kw)) return true
           } else {
-            // Match exato (case-insensitive)
             if (v === filtro.toLowerCase()) return true
           }
         }
@@ -246,6 +241,7 @@ export async function POST(request: NextRequest) {
       return false
     })
   }
+  // CRM não tem tipo → filtros ignorados, todos os registros passam
 
   // Filtrar colunas reais
   const todasColunas = rawRows.length > 0
