@@ -265,17 +265,20 @@ export const PERFIL_OPTIONS = [
   { value: 'outro',            label: 'Outro' },
 ]
 
+// Apenas valores válidos no enum PostgreSQL origem_lead
+// Para adicionar novos, execute supabase/fix_origem_lead_enum.sql
 export const ORIGEM_OPTIONS = [
-  { value: 'feira',            label: 'Feira' },
-  { value: 'instagram',        label: 'Instagram' },
-  { value: 'network',          label: 'Network' },
-  { value: 'envio_material',   label: 'Envio de material (Livros)' },
-  { value: 'opening_company',  label: 'Opening Company' },
-  { value: 'abeka',            label: 'ABEKA' },
-  { value: 'acsi',             label: 'ACSI' },
-  { value: 'congresso_ecc',    label: 'Congresso Internacional de ECC' },
-  { value: 'indicacao_escola', label: 'Indicação de outra escola' },
-  { value: 'outros',           label: 'Outros' },
+  { value: 'feira',     label: 'Feira' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'network',   label: 'Network' },
+  { value: 'site',      label: 'Site' },
+  { value: 'whatsapp',  label: 'WhatsApp' },
+  { value: 'email',     label: 'E-mail' },
+  { value: 'telefone',  label: 'Telefone' },
+  { value: 'visita',    label: 'Visita Presencial' },
+  { value: 'evento',    label: 'Evento / Congresso ECC' },
+  { value: 'parceiro',  label: 'Indicação de parceiro' },
+  { value: 'outro',     label: 'Outro' },
 ]
 
 export const CARGO_CONTATO_OPTIONS = [

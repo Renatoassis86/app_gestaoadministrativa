@@ -91,7 +91,12 @@ export async function upsertEscola(formData: FormData) {
                    + (parseInt(formData.get('qtd_medio_3s') as string) || 0)
       return soma > 0 ? soma : direto
     },
-    origem_lead:        formData.get('origem_lead') as string || null,
+    // Apenas valores válidos no enum PostgreSQL — fallback para null se inválido
+    origem_lead: (() => {
+      const v = formData.get('origem_lead') as string
+      const VALIDOS = ['feira','instagram','network','site','whatsapp','email','telefone','visita','evento','parceiro','outro']
+      return v && VALIDOS.includes(v) ? v : null
+    })(),
     responsavel_id:     formData.get('responsavel_id') as string || null,
     observacoes:        formData.get('observacoes') as string || null,
     updated_by:         user.id,
