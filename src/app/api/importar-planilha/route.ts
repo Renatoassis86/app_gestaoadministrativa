@@ -102,6 +102,16 @@ const CAMPO_FIXO: Record<string, string> = {
   'Alunos Ens. Médio': 'qtd_medio',
 }
 
+// Normaliza nome para deduplicação: minúsculo, sem acentos, sem pontuação
+function normalizar(s: string): string {
+  // Remove acentos via NFD + filtro de combining marks (U+0300–U+036F)
+  const semAcento = s.normalize('NFD').split('').filter(c => {
+    const cp = c.codePointAt(0) ?? 0
+    return cp < 0x0300 || cp > 0x036F
+  }).join('')
+  return semAcento.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim()
+}
+
 function limparValor(v: any): string | number | null {
   if (v === null || v === undefined) return null
   if (typeof v === 'number') {
@@ -288,106 +298,121 @@ export async function POST(request: NextRequest) {
     if (colsSel.length === 0) return NextResponse.json({ error: 'Selecione ao menos uma coluna' }, { status: 400 })
 
     let inseridos = 0, atualizados = 0, erros = 0, ignorados = 0
-    const BATCH = 150
 
-    for (let i = 0; i < rawRows.length; i += BATCH) {
-      const batch = rawRows.slice(i, i + BATCH)
+    // ── Carregar todos os leads existentes para cruzamento ───────────
+    // (carrega email + escola_nome + cnpj + fonte para deduplicar)
+    const { data: existentes } = await supabase
+      .from('leads_universal')
+      .select('id, email, escola_nome, escola_cnpj, fonte, nome')
+      .limit(50000)
 
-      const registros = batch.map(row => {
-        const fixo: Record<string, any> = { fonte, importado_por: user.id }
-        const extra: Record<string, any> = {}
+    // Índices para busca rápida
+    const idxEmail   = new Map<string, string>() // "email|fonte" → id
+    const idxCNPJ    = new Map<string, string>() // "cnpj"        → id
+    const idxEscola  = new Map<string, string>() // "escola_norm|fonte" → id
 
-        colsSel.forEach(col => {
-          const val = row[col]
-          const campoFixo = CAMPO_FIXO[col]
+    ;(existentes ?? []).forEach((r: any) => {
+      if (r.email)       idxEmail.set(`${r.email.toLowerCase()}|${r.fonte}`, r.id)
+      if (r.escola_cnpj) idxCNPJ.set(r.escola_cnpj.replace(/\D/g,''), r.id)
+      if (r.escola_nome) idxEscola.set(`${normalizar(r.escola_nome)}|${r.fonte}`, r.id)
+    })
 
-          if (campoFixo) {
-            let v = limparValor(val)
-            if (campoFixo === 'tel_celular' || campoFixo === 'tel_fixo' || campoFixo === 'tel_comercial') {
-              v = limparTel(val)
-            } else if (campoFixo === 'uf') {
-              v = typeof v === 'string' ? v.toUpperCase().slice(0, 2) : null
-            } else if (campoFixo === 'email') {
-              v = typeof v === 'string' ? v.toLowerCase().trim() : null
-            } else if (campoFixo === 'valor_total') {
-              const n = parseFloat(String(val).replace(',', '.').replace('R$', ''))
-              v = isNaN(n) ? null : Math.round(n * 100) / 100
-            } else if (['qtd_alunos_total','qtd_infantil','qtd_fund1','qtd_fund2','qtd_medio'].includes(campoFixo)) {
-              const n = parseInt(String(val).split('.')[0])
-              v = isNaN(n) ? null : n
-            }
-            if (v !== null && v !== undefined) fixo[campoFixo] = v
-          } else {
-            const v = limparValor(val)
-            if (v !== null) extra[col] = v
+    const BATCH = 1  // processa um por um para cruzamento preciso (mais lento mas sem duplicatas)
+
+    for (const row of rawRows) {
+      const fixo: Record<string, any> = { fonte, importado_por: user.id }
+      const extra: Record<string, any> = {}
+
+      colsSel.forEach(col => {
+        const val = row[col]
+        const campoFixo = CAMPO_FIXO[col]
+        if (campoFixo) {
+          let v = limparValor(val)
+          if (campoFixo === 'tel_celular' || campoFixo === 'tel_fixo' || campoFixo === 'tel_comercial') {
+            v = limparTel(val)
+          } else if (campoFixo === 'uf') {
+            v = typeof v === 'string' ? v.toUpperCase().slice(0, 2) : null
+          } else if (campoFixo === 'email') {
+            v = typeof v === 'string' ? v.toLowerCase().trim() : null
+          } else if (campoFixo === 'valor_total') {
+            const n = parseFloat(String(val).replace(',', '.').replace('R$', ''))
+            v = isNaN(n) ? null : Math.round(n * 100) / 100
+          } else if (['qtd_alunos_total','qtd_infantil','qtd_fund1','qtd_fund2','qtd_medio'].includes(campoFixo)) {
+            const n = parseInt(String(val).split('.')[0])
+            v = isNaN(n) ? null : n
           }
-        })
-
-        if (fixo.lote) fixo.modalidade = detectarModalidade(fixo.lote)
-        if (Object.keys(extra).length > 0) fixo.dados_extras = extra
-
-        return fixo
-      }).filter(r => Object.keys(r).length > 2)
-
-      if (registros.length === 0) continue
-
-      // Separar por chave de deduplicação:
-      // COM email → tenta upsert, fallback para insert ignorando duplicata
-      // SEM email mas com nome+escola → tenta upsert, fallback insert
-      // Sem identificador → ignora
-      const comEmail    = registros.filter(r => r.email)
-      const semEmailCom = registros.filter(r => !r.email && r.nome && r.escola_nome)
-      const semIdent    = registros.filter(r => !r.email && !(r.nome && r.escola_nome))
-
-      ignorados += semIdent.length
-
-      // Processar registros com email
-      if (comEmail.length > 0) {
-        // Tenta upsert (funciona se constraint existe)
-        const { error: errUpsert } = await supabase
-          .from('leads_universal')
-          .upsert(comEmail, { onConflict: 'email,fonte', ignoreDuplicates: false })
-
-        if (errUpsert) {
-          // Constraint não existe: usa insert com onConflict ignorando
-          // Isso evita duplicatas pelo Supabase de forma mais simples
-          const { error: errInsert, data: inserted } = await supabase
-            .from('leads_universal')
-            .insert(comEmail)
-          if (errInsert) {
-            // Tenta um por um para não perder tudo por um erro
-            for (const reg of comEmail) {
-              const { error: e1 } = await supabase.from('leads_universal').insert([reg])
-              if (e1) erros++
-              else inseridos++
-            }
-          } else {
-            inseridos += comEmail.length
-          }
+          if (v !== null && v !== undefined) fixo[campoFixo] = v
         } else {
-          inseridos += comEmail.length
+          const v = limparValor(val)
+          if (v !== null) extra[col] = v
         }
+      })
+
+      if (fixo.lote) fixo.modalidade = detectarModalidade(fixo.lote)
+      if (Object.keys(extra).length > 0) fixo.dados_extras = extra
+      if (Object.keys(fixo).length <= 2) { ignorados++; continue }
+
+      // ── Cruzamento: verificar se já existe ──────────────────────────
+      let existeId: string | undefined
+
+      // 1. Mesmo e-mail + mesma fonte
+      if (fixo.email) {
+        existeId = idxEmail.get(`${fixo.email}|${fonte}`)
       }
 
-      // Processar registros sem email mas com nome+escola
-      if (semEmailCom.length > 0) {
-        const { error: errUpsert2 } = await supabase
-          .from('leads_universal')
-          .upsert(semEmailCom, { onConflict: 'nome,escola_nome,fonte', ignoreDuplicates: false })
+      // 2. Mesmo CNPJ (escola com certeza igual)
+      if (!existeId && fixo.escola_cnpj) {
+        const cnpjLimpo = String(fixo.escola_cnpj).replace(/\D/g,'')
+        if (cnpjLimpo.length >= 8) existeId = idxCNPJ.get(cnpjLimpo)
+      }
 
-        if (errUpsert2) {
-          const { error: errInsert2 } = await supabase
-            .from('leads_universal')
-            .insert(semEmailCom)
-          if (errInsert2) erros += semEmailCom.length
-          else inseridos += semEmailCom.length
-        } else {
-          inseridos += semEmailCom.length
+      // 3. Nome de escola normalizado + mesma fonte
+      if (!existeId && fixo.escola_nome) {
+        existeId = idxEscola.get(`${normalizar(fixo.escola_nome)}|${fonte}`)
+      }
+
+      if (existeId) {
+        // ── ATUALIZA: apenas preenche campos que estavam nulos ───────
+        // Não sobrescreve dados existentes — só completa lacunas
+        const updatePayload: Record<string, any> = {}
+        for (const [k, v] of Object.entries(fixo)) {
+          if (['fonte','importado_por'].includes(k)) continue
+          if (v !== null && v !== undefined) updatePayload[k] = v
+        }
+        // Mescla dados_extras com o existente (não substitui)
+        if (fixo.dados_extras) {
+          const { data: atual } = await supabase
+            .from('leads_universal').select('dados_extras').eq('id', existeId).single()
+          const extrasAtuais = (atual as any)?.dados_extras ?? {}
+          updatePayload.dados_extras = { ...fixo.dados_extras, ...extrasAtuais } // existentes prevalecem
+        }
+        const { error } = await supabase
+          .from('leads_universal').update(updatePayload).eq('id', existeId)
+        if (error) erros++
+        else {
+          atualizados++
+          // Atualiza índices em memória
+          if (fixo.email)       idxEmail.set(`${fixo.email}|${fonte}`, existeId)
+          if (fixo.escola_cnpj) idxCNPJ.set(String(fixo.escola_cnpj).replace(/\D/g,''), existeId)
+          if (fixo.escola_nome) idxEscola.set(`${normalizar(fixo.escola_nome)}|${fonte}`, existeId)
+        }
+      } else {
+        // ── INSERE: novo registro ─────────────────────────────────────
+        const { data: novo, error } = await supabase
+          .from('leads_universal').insert([fixo]).select('id').single()
+        if (error) erros++
+        else {
+          inseridos++
+          const novoId = (novo as any).id
+          // Adiciona aos índices para deduplicar dentro do mesmo lote
+          if (fixo.email)       idxEmail.set(`${fixo.email}|${fonte}`, novoId)
+          if (fixo.escola_cnpj) idxCNPJ.set(String(fixo.escola_cnpj).replace(/\D/g,''), novoId)
+          if (fixo.escola_nome) idxEscola.set(`${normalizar(fixo.escola_nome)}|${fonte}`, novoId)
         }
       }
-    }
+    } // end for (const row of rawRows)
 
-    return NextResponse.json({ inseridos, erros, ignorados, total: rawRows.length })
+    return NextResponse.json({ inseridos, atualizados, erros, ignorados, total: rawRows.length })
   }
 
   return NextResponse.json({ error: 'Ação inválida' }, { status: 400 })

@@ -28,7 +28,7 @@ interface PreviewData {
   colTipoAtiva?: string | null
 }
 
-interface Resultado { inseridos: number; erros: number; ignorados: number; total: number }
+interface Resultado { inseridos: number; atualizados: number; erros: number; ignorados: number; total: number }
 
 export function ImportacaoClient() {
   const [etapa,        setEtapa]       = useState<'config' | 'colunas' | 'resultado'>('config')
@@ -835,12 +835,13 @@ export function ImportacaoClient() {
             Fonte: <strong>{fonteAtual.label}</strong> · {colSel.size} colunas importadas
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem', maxWidth: 580, margin: '0 auto 2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '1rem', maxWidth: 680, margin: '0 auto 2rem' }}>
             {[
-              { label: 'Total',      val: resultado.total,      cor: '#64748b' },
-              { label: 'Processados', val: resultado.inseridos,  cor: '#16a34a' },
-              { label: 'Ignorados',  val: resultado.ignorados ?? 0, cor: '#d97706', sub: 'sem identificador' },
-              { label: 'Erros',      val: resultado.erros,      cor: resultado.erros > 0 ? '#dc2626' : '#94a3b8' },
+              { label: 'Total',       val: resultado.total,               cor: '#64748b' },
+              { label: 'Inseridos',   val: resultado.inseridos,            cor: '#16a34a' },
+              { label: 'Atualizados', val: resultado.atualizados ?? 0,     cor: '#2563eb' },
+              { label: 'Ignorados',   val: resultado.ignorados ?? 0,       cor: '#d97706' },
+              { label: 'Erros',       val: resultado.erros,                cor: resultado.erros > 0 ? '#dc2626' : '#94a3b8' },
             ].map(k => (
               <div key={k.label} style={{ background: '#fff', border: `1.5px solid ${k.cor}30`, borderTop: `3px solid ${k.cor}`, borderRadius: 12, padding: '1rem' }}>
                 <div style={{ fontSize: '.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: k.cor, fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.25rem' }}>{k.label}</div>
