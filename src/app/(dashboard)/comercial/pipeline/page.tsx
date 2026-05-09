@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils'
 import { STAGE_OPTIONS, LABEL } from '@/types/database'
 import { PipelineKanban } from '@/components/comercial/PipelineKanban'
+import { AdicionarNegociacaoBtn } from '@/components/comercial/AdicionarNegociacaoBtn'
 
 interface Props { searchParams: Promise<{ view?: string; responsavel?: string }> }
 
@@ -26,6 +27,10 @@ export default async function PipelinePage({ searchParams }: Props) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const { data: profile }  = await supabase.from('profiles').select('role').eq('id', user?.id ?? '').single()
+
+  // Buscar escolas para o seletor de "adicionar ao pipeline"
+  const { data: escolas } = await supabase
+    .from('escolas').select('id, nome, cidade, estado').eq('ativa', true).order('nome')
 
   const [{ data: negociacoes }, { data: profiles }] = await Promise.all([
     supabase.from('negociacoes')
@@ -71,7 +76,9 @@ export default async function PipelinePage({ searchParams }: Props) {
         title="Pipeline Comercial"
         subtitle={`${negsFiltradas.length} negociações ativas`}
         actions={
-          <div style={{ display: 'flex', gap: '.5rem' }}>
+          <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
+            {/* Adicionar escola ao pipeline */}
+            <AdicionarNegociacaoBtn escolas={escolas ?? []} userId={user?.id ?? ''} />
             {/* Toggle view */}
             <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 8, padding: 3, gap: 2 }}>
               {[
