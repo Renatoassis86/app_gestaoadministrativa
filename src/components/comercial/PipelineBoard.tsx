@@ -31,25 +31,38 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
   const [negociacoes, setNegociacoes] = useState<any[]>([])
   const [profiles, setProfiles]       = useState<any[]>([])
   const [loading, setLoading]         = useState(true)
+  const [erroDb, setErroDb]           = useState<string | null>(null)
+  const [totalBanco, setTotalBanco]   = useState<number | null>(null)
 
   const carregar = useCallback(async () => {
     setLoading(true)
+    setErroDb(null)
     const supabase = createClient()
-    const [{ data: negs, error }, { data: profs }] = await Promise.all([
-      supabase
-        .from('negociacoes')
-        .select('*, escola:escolas(id, nome, cidade, estado), responsavel:profiles(id, full_name, role)')
-        .eq('ativa', true)
-        .order('updated_at', { ascending: false }),
-      supabase
-        .from('profiles')
-        .select('id, full_name')
-        .eq('is_active', true)
-        .in('role', ['gerente','supervisor','consultor'])
-        .order('full_name'),
-    ])
-    if (error) console.error('[PipelineBoard] erro ao carregar:', error)
-    setNegociacoes(negs ?? [])
+
+    // Busca TODAS as negociações — sem filtro ativa para ver o que o banco tem
+    const { data: negs, error: errNegs } = await supabase
+      .from('negociacoes')
+      .select('*, escola:escolas(id, nome, cidade, estado), responsavel:profiles(id, full_name, role)')
+      .order('updated_at', { ascending: false })
+
+    const { data: profs } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .eq('is_active', true)
+      .in('role', ['gerente','supervisor','consultor'])
+      .order('full_name')
+
+    if (errNegs) {
+      console.error('[PipelineBoard]', errNegs)
+      setErroDb(`${errNegs.message} (code: ${errNegs.code})`)
+      setNegociacoes([])
+    } else {
+      setTotalBanco(negs?.length ?? 0)
+      // Filtra ativas no cliente
+      const ativas = (negs ?? []).filter((n: any) => n.ativa !== false)
+      setNegociacoes(ativas)
+    }
+
     setProfiles(profs ?? [])
     setLoading(false)
   }, [])
@@ -62,7 +75,8 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
 
   const ganhos   = negsFiltradas.filter(n => n.stage === 'ganho')
   const perdidos = negsFiltradas.filter(n => n.stage === 'perdido')
-  const totalValor = negsFiltradas.reduce((acc, n) => acc + (n.valor_estimado ?? 0), 0)
+  const ativos   = negsFiltradas.filter(n => !['ganho','perdido'].includes(n.stage))
+  const totalValor = ativos.reduce((acc, n) => acc + (n.valor_estimado ?? 0), 0)
 
   // Agrupamento por consultor
   const byConsultor: Record<string, { profile: any; negs: any[] }> = {}
@@ -102,11 +116,9 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
           ))}
         </div>
         <div style={{ display: 'flex', gap: '.4rem', alignItems: 'center' }}>
-          {loading && (
-            <div style={{ width: 14, height: 14, border: '2px solid #e2e8f0', borderTopColor: '#d97706', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
-          )}
+          {loading && <div style={{ width: 14, height: 14, border: '2px solid #e2e8f0', borderTopColor: '#d97706', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />}
           <span style={{ background: '#0f172a', color: '#f59e0b', fontSize: '.65rem', fontWeight: 800, padding: '.2rem .6rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
-            {negsFiltradas.length} ativas
+            {ativos.length} ativas
           </span>
           {totalValor > 0 && (
             <span style={{ background: '#f0fdf4', color: '#16a34a', fontSize: '.65rem', fontWeight: 800, padding: '.2rem .6rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)', border: '1px solid #86efac' }}>
@@ -119,14 +131,27 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
         </div>
       </div>
 
+      {/* ── Erro de banco ── */}
+      {erroDb && (
+        <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 10, padding: '.85rem 1.1rem', marginBottom: '1rem', fontSize: '.8rem', color: '#dc2626', fontFamily: 'var(--font-inter,sans-serif)', display: 'flex', gap: '.75rem', alignItems: 'flex-start' }}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div>
+            <strong>Erro ao carregar negociações:</strong> {erroDb}
+            <div style={{ marginTop: '.35rem', fontSize: '.72rem', color: '#ef4444' }}>
+              Execute o SQL <code>fix_negociacoes_v2.sql</code> no Supabase e clique em recarregar.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── KANBAN VIEW ── */}
       {viewMode === 'kanban' && (
         <>
-          {/* Banner de pipeline vazio — aparece ACIMA dos quadros, não os substitui */}
-          {!loading && negsFiltradas.length === 0 && (
+          {/* Banner vazio — aparece ACIMA dos quadros */}
+          {!loading && !erroDb && ativos.length === 0 && (
             <div style={{
-              background: '#fffbeb', border: '1.5px dashed #fde68a',
-              borderRadius: 12, padding: '1rem 1.5rem', marginBottom: '1rem',
+              background: '#fffbeb', border: '1.5px dashed #fde68a', borderRadius: 12,
+              padding: '1rem 1.5rem', marginBottom: '1rem',
               display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap',
             }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: '#fff', border: '1.5px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -135,24 +160,28 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
                 </svg>
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 700, fontSize: '.82rem', color: '#92400e' }}>Nenhuma escola no pipeline ainda</div>
+                <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 700, fontSize: '.82rem', color: '#92400e' }}>
+                  {filtroResp ? 'Nenhuma negociação para este consultor' : 'Nenhuma escola no pipeline ainda'}
+                </div>
                 <div style={{ fontSize: '.72rem', color: '#b45309', fontFamily: 'var(--font-inter,sans-serif)', marginTop: '.15rem' }}>
-                  Adicione escolas para acompanhar as negociações nos quadros abaixo.
+                  {totalBanco !== null && totalBanco > 0
+                    ? `${totalBanco} registros no banco — verifique se estão marcados como ativa=true`
+                    : 'Adicione escolas para acompanhar as negociações nos quadros abaixo.'}
                 </div>
               </div>
-              <AdicionarNegociacaoBtn escolas={escolas} userId={userId} onSuccess={carregar} />
+              {!filtroResp && <AdicionarNegociacaoBtn escolas={escolas} userId={userId} onSuccess={carregar} />}
             </div>
           )}
 
-          {/* Quadros Kanban — sempre visíveis */}
+          {/* Quadros Kanban — SEMPRE visíveis */}
           <PipelineKanban
-            negociacoes={negsFiltradas}
+            negociacoes={negsFiltradas.filter(n => !['ganho','perdido'].includes(n.stage))}
             stages={ACTIVE_STAGES}
             userId={userId}
             onUpdate={carregar}
           />
 
-          {/* Seção Ganhos / Perdidos */}
+          {/* Ganhos / Perdidos */}
           {(ganhos.length > 0 || perdidos.length > 0) && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.25rem' }}>
               {[
@@ -189,7 +218,7 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
               Nenhuma negociação cadastrada.
             </div>
           )}
-          {consultorStats.map(({ profile: prof, negs: negsList, ativos, ganhos: g, potencial }) => (
+          {consultorStats.map(({ profile: prof, negs: negsList, ativos: a, ganhos: g, potencial }) => (
             <div key={prof.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 8px rgba(15,23,42,.05)' }}>
               <div style={{ background: '#0f172a', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                 <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '.8rem', fontWeight: 800, fontFamily: 'var(--font-montserrat,sans-serif)', flexShrink: 0 }}>
@@ -199,7 +228,7 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
                   <div style={{ fontWeight: 700, color: '#fff', fontSize: '.9rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>{prof.full_name}</div>
                 </div>
                 <div style={{ display: 'flex', gap: '1.5rem' }}>
-                  {[['Ativas', ativos], ['Ganhos', g], ['Potencial', formatCurrency(potencial)]].map(([l, v]) => (
+                  {[['Ativas', a], ['Ganhos', g], ['Potencial', formatCurrency(potencial)]].map(([l, v]) => (
                     <div key={String(l)} style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: '.58rem', color: 'rgba(255,255,255,.4)', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'var(--font-montserrat,sans-serif)' }}>{l}</div>
                       <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem', fontWeight: 700, color: '#f59e0b', lineHeight: 1 }}>{String(v)}</div>
