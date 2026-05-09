@@ -12,7 +12,7 @@ import {
   Package, FlaskConical, BarChart2, Download,
   Bot, DollarSign, Table2, Info, FileSignature, ClipboardList,
   ExternalLink, GitBranch, Target, CalendarDays, FileAudio,
-  Upload, TrendingUp, Database
+  Upload, TrendingUp, Database, BookOpen
 } from 'lucide-react'
 
 interface SidebarProps { profile: Profile | null }
@@ -42,6 +42,7 @@ const NAV_TOOLS = [
   { href: '/pesquisa-mercado',    label: 'Pesquisa CIECC',   icon: TrendingUp      },
   { href: '/calculadora',         label: 'Calculadora',      icon: Calculator      },
   { href: '/exports',             label: 'Downloads',        icon: Download        },
+  { href: '/tutorial',            label: 'Tutorial',         icon: BookOpen        },
 ]
 
 const NAV_WIP = [
