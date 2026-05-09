@@ -552,3 +552,168 @@ h1, h2, h3 { font-family: var(--font-cormorant, serif); }
     grid-template-columns: 1fr 1fr !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE REFINAMENTOS — layouts e espaçamentos específicos
+   ══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* ── Topbar / PageHeader ── */
+  header[style] {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    flex-wrap: wrap !important;
+    gap: .5rem !important;
+    min-height: auto !important;
+  }
+
+  /* Esconde subtítulo do PageHeader em telas pequenas */
+  header span[style*="color: var(--text-s)"],
+  header span[style*="color: #64748b"],
+  header span[style*="color: #94a3b8"] {
+    display: none !important;
+  }
+
+  /* ── Conteúdo da dashboard ── */
+  div[style*="padding: '1.75rem 2.5rem'"],
+  div[style*="padding: '2rem 2.5rem'"],
+  div[style*="padding: '1.5rem 2rem'"],
+  div[style*="padding: '1.5rem 2.5rem'"],
+  div[style*="padding: '2rem'"] {
+    padding: 1rem !important;
+  }
+
+  /* ── Grids de KPI com 5 colunas → 2x2 em mobile ── */
+  div[style*="repeat(5,minmax(0,1fr))"],
+  div[style*="repeat(5, minmax(0,1fr))"],
+  div[style*="repeat(5,1fr)"] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: .65rem !important;
+  }
+
+  /* ── Grids 4 colunas → 2x2 ── */
+  div[style*="repeat(4,1fr)"],
+  div[style*="repeat(4, 1fr)"] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: .65rem !important;
+  }
+
+  /* ── Grids 3 colunas → 1 coluna ── */
+  div[style*="repeat(3,1fr)"],
+  div[style*="repeat(3, 1fr)"],
+  div[style*="1fr 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Grids 2 colunas → 1 coluna em telefone (só no 480px) ── */
+
+  /* ── Layouts "1fr 300px" ou "1fr 340px" (sidebar direita) ── */
+  div[style*="1fr 300px"],
+  div[style*="1fr 340px"],
+  div[style*="1fr 320px"],
+  div[style*="1fr 280px"],
+  div[style*="1fr 260px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Layout login hero ── */
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+    padding: 5rem 1rem 2rem !important;
+    gap: 1.5rem !important;
+  }
+  .hero-grid > div:first-child { display: none !important; }
+
+  /* ── Tabela geral: scroll horizontal ── */
+  .table-responsive-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* ── Cards: padding menor ── */
+  .card-header { padding: .75rem 1rem !important; }
+  .card-body   { padding: 1rem !important; }
+
+  /* ── Botões de ação: empilhar em coluna ── */
+  div[style*="display: 'flex'"][style*="gap: '.5rem'"] {
+    flex-wrap: wrap !important;
+  }
+
+  /* ── Filtros que ficam lado a lado: wrap ── */
+  div[style*="flexWrap: 'wrap'"] {
+    flex-wrap: wrap !important;
+  }
+
+  /* ── Headers de seção com muitos elementos ── */
+  div[style*="justifyContent: 'space-between'"][style*="alignItems: 'center'"] {
+    flex-wrap: wrap !important;
+    gap: .5rem !important;
+  }
+
+  /* ── Pipeline kanban: scroll horizontal ── */
+  div[style*="overflowX: 'auto'"] {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* ── Modais: full screen em mobile ── */
+  div[style*="maxWidth: 580"],
+  div[style*="maxWidth: 640"],
+  div[style*="maxWidth: 700"] {
+    max-width: calc(100vw - 2rem) !important;
+    margin: 1rem !important;
+  }
+
+  /* ── Formulários: padding reduzido ── */
+  form div[style*="padding: '1.5rem'"] {
+    padding: 1rem !important;
+  }
+
+  /* ── Estatísticas hero (fundo escuro) ── */
+  div[style*="background: 'linear-gradient(135deg, #0f172a"],
+  div[style*="background: linear-gradient(135deg, #0f172a"] {
+    padding: 1.25rem !important;
+  }
+
+  /* ── Remove overflow que causa sobreposição ── */
+  * {
+    max-width: 100%;
+    word-break: break-word;
+  }
+
+  /* ── Imagens e SVGs não excedem a viewport ── */
+  img, svg { max-width: 100% !important; height: auto !important; }
+
+  /* ── Texto principal nas fichas ── */
+  h1[style], h2[style] {
+    font-size: clamp(1.2rem, 5vw, 2rem) !important;
+  }
+
+  /* ── Espaçamento vertical entre seções ── */
+  div[style*="marginBottom: '2rem'"] { margin-bottom: 1.25rem !important; }
+  div[style*="marginBottom: '1.5rem'"] { margin-bottom: 1rem !important; }
+}
+
+@media (max-width: 480px) {
+  /* ── Grids de 2 → 1 coluna em telefones muito pequenos ── */
+  div[style*="repeat(2,1fr)"],
+  div[style*="repeat(2, 1fr)"],
+  div[style*="1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* KPI mantém 2 colunas */
+  .kpi-grid,
+  div[style*="repeat(5,minmax(0,1fr))"],
+  div[style*="repeat(4,1fr)"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ── Padding mínimo ── */
+  div[style*="padding: '1rem"] { padding: .85rem !important; }
+  div[style*="padding: '1.25rem'"] { padding: .85rem !important; }
+
+  /* ── Fonte mínima legível ── */
+  * { font-size: max(inherit, 11px); }
+}
