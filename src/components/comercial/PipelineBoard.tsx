@@ -59,7 +59,13 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
     } else {
       const total = count ?? negs?.length ?? 0
       setDebug(`Banco retornou ${total} registros | userId=${userId}`)
-      setNegociacoes(negs ?? [])
+      // Normaliza stages inválidos para 'prospeccao'
+      const VALIDOS = ['prospeccao','qualificacao','apresentacao','proposta','negociacao','fechamento','ganho','perdido']
+      const normalizados = (negs ?? []).map((n: any) => ({
+        ...n,
+        stage: VALIDOS.includes(n.stage) ? n.stage : 'prospeccao'
+      }))
+      setNegociacoes(normalizados)
     }
 
     setProfiles(profs ?? [])
@@ -133,8 +139,8 @@ export function PipelineBoard({ escolas, userId, viewMode, filtroResp }: Props) 
       {!loading && (
         <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '.5rem .85rem', marginBottom: '.75rem', fontSize: '.68rem', color: '#475569', fontFamily: 'monospace', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <span>🔍 {debug}</span>
-          {filtroResp && <span>| filtro: <b>{filtroResp}</b> → {negsFiltradas.length} neg.</span>}
-          {negociacoes.length > 0 && <span>| responsavel_ids: {[...new Set(negociacoes.map(n => n.responsavel_id ?? 'null'))].join(', ')}</span>}
+          {negociacoes.length > 0 && <span>| stages: {[...new Set(negociacoes.map(n => n.stage))].join(', ')}</span>}
+          {filtroResp && <span>| filtro → {negsFiltradas.length} neg.</span>}
         </div>
       )}
 
