@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react'
 import Link from 'next/link'
-import { moverNegociacao } from './pipeline-actions'
+import { moverNegociacao, removerDoQuadro } from './pipeline-actions'
 
 const STAGE_COLORS: Record<string, string> = {
   prospeccao:   '#6366f1',
@@ -64,7 +64,16 @@ export function PipelineKanban({ negociacoes, stages, userId, onUpdate }: Props)
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [overStage, setOverStage]   = useState<string | null>(null)
   const [moving, setMoving]         = useState<string | null>(null)
+  const [removing, setRemoving]     = useState<string | null>(null)
   const dragStageRef = useRef<string | null>(null)
+
+  async function handleRemover(negId: string) {
+    setRemoving(negId)
+    setNegs(prev => prev.filter(n => n.id !== negId))
+    await removerDoQuadro(negId)
+    setRemoving(null)
+    onUpdate?.()
+  }
 
   const byStage = (stage: string) => negs.filter(n => n.stage === stage)
 
@@ -205,6 +214,7 @@ export function PipelineKanban({ negociacoes, stages, userId, onUpdate }: Props)
                     draggable
                     onDragStart={e => handleDragStart(e, n.id, stage)}
                     onDragEnd={e => handleDragEnd(e, n.id)}
+                    className="kanban-card"
                     style={{
                       background: isMoving ? '#f8fafc' : '#fff',
                       border: `1px solid ${isMoving ? cor : '#e8edf3'}`,
@@ -216,20 +226,43 @@ export function PipelineKanban({ negociacoes, stages, userId, onUpdate }: Props)
                       userSelect: 'none',
                       transition: 'box-shadow .15s, transform .1s',
                       opacity: isMoving ? 0.55 : 1,
+                      position: 'relative',
                     }}
                     onMouseEnter={e => {
                       if (!draggingId) {
                         e.currentTarget.style.boxShadow = '0 6px 20px rgba(15,23,42,.13)'
                         e.currentTarget.style.transform = 'translateY(-2px)'
                       }
+                      const btn = e.currentTarget.querySelector('.card-remove-btn') as HTMLElement
+                      if (btn) btn.style.opacity = '1'
                     }}
                     onMouseLeave={e => {
                       e.currentTarget.style.boxShadow = '0 1px 4px rgba(15,23,42,.07)'
                       e.currentTarget.style.transform = 'translateY(0)'
+                      const btn = e.currentTarget.querySelector('.card-remove-btn') as HTMLElement
+                      if (btn) btn.style.opacity = '0'
                     }}
                   >
+                    {/* Botão remover — aparece no hover */}
+                    <button
+                      className="card-remove-btn"
+                      onClick={e => { e.stopPropagation(); handleRemover(n.id) }}
+                      title="Remover do quadro"
+                      style={{
+                        position: 'absolute', top: 6, right: 6,
+                        width: 20, height: 20, borderRadius: 5,
+                        border: '1px solid #fca5a5', background: '#fef2f2',
+                        color: '#ef4444', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        opacity: 0, transition: 'opacity .15s',
+                        padding: 0, lineHeight: 1,
+                      }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+
                     {/* Nome da escola */}
-                    <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 800, fontSize: '.8rem', color: '#0f172a', lineHeight: 1.3, marginBottom: '.35rem', wordBreak: 'break-word' }}>
+                    <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 800, fontSize: '.8rem', color: '#0f172a', lineHeight: 1.3, marginBottom: '.35rem', wordBreak: 'break-word', paddingRight: '1.2rem' }}>
                       {n.escola?.nome ?? n.titulo ?? '—'}
                     </div>
 
