@@ -278,7 +278,7 @@ export default function Sidebar({ profile }: SidebarProps) {
       <nav style={{ flex: 1, overflowY: 'auto', padding: '.5rem 0 1rem' }}>
 
         {/* ── Sobre + Tutorial — primeiras abas ────────────────── */}
-        <NavItem href="/sobre"    label="A Plataforma" icon={Info}     active={isActive('/sobre')} />
+        <NavItem href="/sobre"    label="Plataforma Education" icon={Info}     active={isActive('/sobre')} />
         <NavItem href="/tutorial" label="Tutorial"     icon={BookOpen} active={isActive('/tutorial')} />
         <NavDivider />
 
