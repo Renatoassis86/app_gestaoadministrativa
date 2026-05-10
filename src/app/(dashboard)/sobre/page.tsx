@@ -228,72 +228,112 @@ export default function SobrePage() {
               </p>
             </div>
 
-            {/* Imagem ilustrativa — formato arredondado com gradiente */}
+            {/* Imagem ilustrativa — escola comercial */}
             <div style={{ position: 'relative' }}>
               <div style={{
                 width: '100%', aspectRatio: '4/3',
                 borderRadius: 20, overflow: 'hidden',
-                background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)',
+                background: 'linear-gradient(145deg, #0f2744 0%, #1a3a6b 45%, #0f172a 100%)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 16px 48px rgba(15,23,42,.2)',
+                boxShadow: '0 16px 48px rgba(15,23,42,.25)',
                 position: 'relative',
               }}>
-                {/* Ilustração SVG — livro aberto com luz */}
-                <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" style={{ width: '85%', height: '85%' }}>
-                  {/* Fundo estrelado */}
-                  {[...Array(20)].map((_, i) => (
-                    <circle key={i} cx={20 + (i * 19) % 360} cy={10 + (i * 13) % 80} r={i % 3 === 0 ? 1.5 : 1} fill="rgba(255,255,255,0.4)" />
-                  ))}
-                  {/* Raio de luz central */}
+                <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
                   <defs>
-                    <radialGradient id="luz" cx="50%" cy="60%" r="50%">
-                      <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+                    <radialGradient id="glow1" cx="50%" cy="70%" r="55%">
+                      <stop offset="0%" stopColor="#d97706" stopOpacity="0.18" />
+                      <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
                     </radialGradient>
-                    <radialGradient id="luzBranca" cx="50%" cy="40%" r="40%">
-                      <stop offset="0%" stopColor="#fff" stopOpacity="0.15" />
-                      <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+                    <radialGradient id="glow2" cx="30%" cy="40%" r="35%">
+                      <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.12" />
+                      <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
                     </radialGradient>
+                    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#1e3a5f" stopOpacity="0.6"/>
+                      <stop offset="100%" stopColor="#0f172a" stopOpacity="0"/>
+                    </linearGradient>
                   </defs>
-                  <ellipse cx="200" cy="180" rx="160" ry="100" fill="url(#luz)" />
-                  <ellipse cx="200" cy="120" rx="80" ry="60" fill="url(#luzBranca)" />
 
-                  {/* Livro aberto */}
-                  <g transform="translate(100, 120)">
-                    {/* Página esquerda */}
-                    <path d="M0,0 Q50,-15 100,0 L100,80 Q50,65 0,80 Z" fill="#fff" opacity="0.95" />
-                    {/* Linhas de texto página esquerda */}
-                    {[15,25,35,45,55].map((y, i) => (
-                      <rect key={i} x={12} y={y} width={i % 2 === 0 ? 65 : 55} height={3} rx={1.5} fill="#e2e8f0" opacity="0.8" />
-                    ))}
-                    {/* Página direita */}
-                    <path d="M100,0 Q150,-15 200,0 L200,80 Q150,65 100,80 Z" fill="#fffbeb" opacity="0.95" />
-                    {/* Linhas de texto página direita */}
-                    {[15,25,35,45,55].map((y, i) => (
-                      <rect key={i} x={112} y={y} width={i % 2 === 0 ? 65 : 45} height={3} rx={1.5} fill="#fde68a" opacity="0.8" />
-                    ))}
-                    {/* Lombada */}
-                    <line x1="100" y1="0" x2="100" y2="80" stroke="#d97706" strokeWidth="2" opacity="0.6" />
-                    {/* Sombra do livro */}
-                    <ellipse cx="100" cy="82" rx="95" ry="8" fill="rgba(0,0,0,0.2)" />
-                  </g>
+                  {/* Luz de fundo */}
+                  <ellipse cx="200" cy="200" rx="180" ry="120" fill="url(#glow1)" />
+                  <ellipse cx="130" cy="120" rx="100" ry="80" fill="url(#glow2)" />
 
-                  {/* Cruz pequena no alto */}
-                  <g transform="translate(190, 55)" opacity="0.6">
-                    <rect x="8" y="0" width="4" height="20" rx="2" fill="#fbbf24" />
-                    <rect x="0" y="6" width="20" height="4" rx="2" fill="#fbbf24" />
-                  </g>
+                  {/* Estrelas */}
+                  {[[30,20],[80,35],[150,18],[240,28],[310,15],[355,40],[20,60],[370,65]].map(([x,y],i) => (
+                    <circle key={i} cx={x} cy={y} r={i%2===0?1.2:.8} fill="rgba(255,255,255,0.5)" />
+                  ))}
 
-                  {/* Texto inferior */}
-                  <text x="200" y="270" textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="11" fontFamily="Georgia, serif" fontStyle="italic">
-                    "A sabedoria é o principal; adquire, pois, a sabedoria"
-                  </text>
+                  {/* Prédio escolar — edificio principal */}
+                  {/* Base/corpo */}
+                  <rect x="110" y="110" width="180" height="130" rx="4" fill="#1e3a6b" stroke="#2d5a9e" strokeWidth="1.5"/>
+                  {/* Telhado triangular */}
+                  <polygon points="95,112 200,55 305,112" fill="#162d5a" stroke="#2d5a9e" strokeWidth="1.5"/>
+                  {/* Frontão central */}
+                  <polygon points="155,112 200,80 245,112" fill="#0f2040"/>
+
+                  {/* Janelas — andar superior */}
+                  {[130,175,220,265].map((x,i) => (
+                    <g key={i}>
+                      <rect x={x} y="125" width="28" height="32" rx="3" fill="#0f172a" stroke="#3b82f6" strokeWidth="1" opacity="0.9"/>
+                      {/* Luz acesa nas janelas */}
+                      <rect x={x+2} y="127" width="11" height="28" rx="2" fill="#fbbf24" opacity={i%2===0?0.55:0.2}/>
+                      <rect x={x+15} y="127" width="11" height="28" rx="2" fill="#fbbf24" opacity={i%2===0?0.2:0.5}/>
+                    </g>
+                  ))}
+
+                  {/* Janelas — andar inferior */}
+                  {[130,175,265].map((x,i) => (
+                    <g key={i}>
+                      <rect x={x} y="172" width="28" height="32" rx="3" fill="#0f172a" stroke="#3b82f6" strokeWidth="1" opacity="0.9"/>
+                      <rect x={x+2} y="174" width="11" height="28" rx="2" fill="#60a5fa" opacity="0.35"/>
+                      <rect x={x+15} y="174" width="11" height="28" rx="2" fill="#fbbf24" opacity="0.3"/>
+                    </g>
+                  ))}
+
+                  {/* Porta principal */}
+                  <rect x="185" y="195" width="30" height="45" rx="3" fill="#0f172a" stroke="#d97706" strokeWidth="1.5"/>
+                  <rect x="187" y="197" width="12" height="41" rx="2" fill="#1e3a6b"/>
+                  <rect x="201" y="197" width="12" height="41" rx="2" fill="#1e3a6b"/>
+                  {/* Maçaneta */}
+                  <circle cx="199" cy="220" r="2" fill="#d97706"/>
+                  <circle cx="201" cy="220" r="2" fill="#d97706"/>
+
+                  {/* Bandeira no topo */}
+                  <line x1="200" y1="30" x2="200" y2="58" stroke="#d97706" strokeWidth="1.5"/>
+                  <polygon points="200,32 218,37 200,42" fill="#d97706" opacity="0.9"/>
+
+                  {/* Caminho / calçada */}
+                  <path d="M172,240 L172,268 L228,268 L228,240" fill="#162d5a" stroke="#2d5a9e" strokeWidth="1"/>
+                  {/* Piso da calçada */}
+                  <rect x="80" y="240" width="240" height="18" rx="2" fill="#1a2f50" stroke="#2d4a7a" strokeWidth="1"/>
+
+                  {/* Árvores */}
+                  {[[80,180],[310,175]].map(([x,y],i) => (
+                    <g key={i}>
+                      <rect x={x+8} y={y+20} width="6" height="30" rx="2" fill="#1a3a20"/>
+                      <ellipse cx={x+11} cy={y+14} rx="18" ry="22" fill="#16532a" opacity="0.85"/>
+                      <ellipse cx={x+11} cy={y+8} rx="13" ry="16" fill="#1a6b33" opacity="0.9"/>
+                    </g>
+                  ))}
+
+                  {/* Placa da escola */}
+                  <rect x="145" y="250" width="110" height="18" rx="4" fill="#d97706" opacity="0.85"/>
+                  <text x="200" y="263" textAnchor="middle" fill="white" fontSize="7.5" fontFamily="Arial, sans-serif" fontWeight="bold" letterSpacing="0.5">ESCOLA PARCEIRA</text>
+
+                  {/* Chão / gramado */}
+                  <ellipse cx="200" cy="258" rx="160" ry="12" fill="#0d2010" opacity="0.5"/>
                 </svg>
 
                 {/* Badge flutuante */}
-                <div style={{ position: 'absolute', bottom: 16, left: 16, background: 'rgba(217,119,6,.9)', backdropFilter: 'blur(8px)', borderRadius: 99, padding: '.4rem .9rem', display: 'flex', alignItems: 'center', gap: '.35rem' }}>
+                <div style={{ position: 'absolute', bottom: 16, left: 16, background: 'rgba(217,119,6,.92)', backdropFilter: 'blur(8px)', borderRadius: 99, padding: '.4rem .9rem', display: 'flex', alignItems: 'center', gap: '.35rem' }}>
                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />
                   <span style={{ fontSize: '.6rem', fontWeight: 800, color: '#fff', fontFamily: 'var(--font-montserrat,sans-serif)', letterSpacing: '.06em', textTransform: 'uppercase' }}>Currículo Paideia</span>
+                </div>
+
+                {/* Badge superior direito */}
+                <div style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(15,23,42,.7)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 99, padding: '.3rem .75rem', display: 'flex', alignItems: 'center', gap: '.3rem' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                  <span style={{ fontSize: '.58rem', fontWeight: 700, color: 'rgba(255,255,255,.7)', fontFamily: 'var(--font-montserrat,sans-serif)', letterSpacing: '.04em' }}>+282 escolas</span>
                 </div>
               </div>
             </div>
