@@ -24,8 +24,7 @@ SELECT
   r.resumo,
   r.data_contato,
   r.created_at,
-  r.classificacao,
-  r.ativa
+  r.classificacao
 FROM registros r
 LEFT JOIN escolas e ON r.escola_id = e.id
 WHERE r.created_by = 'SUBSTITUA_COM_JESSE_ID_ACIMA'
@@ -59,7 +58,7 @@ SELECT
   r.data_contato,
   r.created_at,
   p.email as criado_por,
-  r.ativa
+  r.classificacao
 FROM registros r
 LEFT JOIN escolas e ON r.escola_id = e.id
 LEFT JOIN profiles p ON r.created_by = p.id
@@ -74,8 +73,9 @@ SELECT
   COUNT(*) as total_registros,
   COUNT(CASE WHEN escola_id IS NOT NULL THEN 1 END) as com_escola_valida,
   COUNT(CASE WHEN escola_id IS NULL THEN 1 END) as com_escola_null,
-  COUNT(CASE WHEN ativa = true THEN 1 END) as ativos,
-  COUNT(CASE WHEN ativa = false THEN 1 END) as inativos
+  COUNT(CASE WHEN classificacao = 'quente' THEN 1 END) as quentes,
+  COUNT(CASE WHEN classificacao = 'morno' THEN 1 END) as mornos,
+  COUNT(CASE WHEN classificacao = 'frio' THEN 1 END) as frios
 FROM registros;
 
 -- ============================================================
