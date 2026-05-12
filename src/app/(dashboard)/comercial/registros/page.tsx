@@ -131,7 +131,7 @@ export default async function RegistrosPage({ searchParams }: Props) {
                           </div>
                         </td>
                         <td style={{ padding: '.85rem 1rem', verticalAlign: 'middle', maxWidth: 320 }}>
-                          <Link href={`/comercial/registros/sucesso?id=${r.id}`} style={{ fontSize: '.82rem', color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', fontFamily: 'var(--font-inter,sans-serif)', display: 'block', lineHeight: 1.5, textDecoration: 'none', maxHeight: 60, overflow: 'hidden', cursor: 'pointer' }} title={r.resumo}>
+                          <Link href={`/comercial/registros/sucesso?id=${r.id}`} style={{ fontSize: '.82rem', color: '#334155', textOverflow: 'ellipsis', whiteSpace: 'normal', fontFamily: 'var(--font-inter,sans-serif)', display: 'block', lineHeight: 1.5, textDecoration: 'none', maxHeight: 60, overflow: 'hidden', cursor: 'pointer' }} title={r.resumo}>
                             {r.resumo}
                           </Link>
                           {r.contato_nome && <div style={{ fontSize: '.68rem', color: '#475569', marginTop: '.15rem' }}>{r.contato_nome}{r.contato_cargo ? ` (${r.contato_cargo})` : ''}</div>}
