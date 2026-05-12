@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
-import { formatDate, formatCurrency, diasDesdeData } from '@/lib/utils'
-import { Plus, AlertTriangle, ArrowRight, Clock } from 'lucide-react'
+import { formatDate, formatCurrency } from '@/lib/utils'
+import { Plus } from 'lucide-react'
 import { LABEL } from '@/types/database'
 
 // ── Estilos reutilizáveis ─────────────────────────────────────────────────────
@@ -103,8 +103,8 @@ export default async function ComercialDashboard() {
           <div style={card}>
             <div style={{ background: '#0f172a', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>Últimas Interações</div>
-              <Link href="/comercial/registros" style={{ fontSize: '.72rem', color: '#d97706', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '.25rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
-                Ver todas <ArrowRight size={11} />
+              <Link href="/comercial/registros" style={{ fontSize: '.72rem', color: '#d97706', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                Ver todas →
               </Link>
             </div>
 
@@ -215,7 +215,7 @@ export default async function ComercialDashboard() {
               })}
               {escolasSemNegociacao.length > 12 && (
                 <Link href="/comercial/escolas" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '.7rem', background: '#f5f3ff', border: '1px dashed #c4b5fd', borderRadius: 10, textDecoration: 'none', fontSize: '.75rem', fontWeight: 600, color: '#7c3aed', fontFamily: 'var(--font-montserrat,sans-serif)', gap: '.3rem' }}>
-                  <ArrowRight size={13} /> Ver mais {escolasSemNegociacao.length - 12} escolas
+                  → Ver mais {escolasSemNegociacao.length - 12} escolas
                 </Link>
               )}
             </div>

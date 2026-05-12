@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { deleteRegistro } from '@/lib/actions'
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function DeleteRegistroBtn({ registroId, escolaId, onDeleted }: Props) {
+  const router = useRouter()
   const [loading,  setLoading]  = useState(false)
   const [confirm,  setConfirm]  = useState(false)
 
@@ -19,7 +21,7 @@ export function DeleteRegistroBtn({ registroId, escolaId, onDeleted }: Props) {
     const result = await deleteRegistro(registroId)
     if (result.success) {
       onDeleted?.(registroId)
-      window.location.reload()
+      router.refresh()
     } else {
       alert(result.error ?? 'Erro ao excluir')
       setLoading(false)
