@@ -310,7 +310,8 @@ export async function upsertRegistro(formData: FormData) {
   revalidatePath('/comercial/tabela', 'layout')
   revalidatePath('/comercial/pipeline', 'layout')
 
-  redirect(`/comercial/escolas/${escola_id}?t=${Date.now()}`)
+  // Redirecionar para página de sucesso com resumo
+  redirect(`/comercial/registros/sucesso?id=${registroId}`)
   } catch (err: any) {
     console.error('❌ Erro ao salvar registro:', err.message)
     throw err
