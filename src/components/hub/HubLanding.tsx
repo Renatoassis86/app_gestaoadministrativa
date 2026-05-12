@@ -88,14 +88,20 @@ export default function HubLanding() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem',
         }}>
           {/* Logo */}
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '.7rem', textDecoration: 'none' }}>
-            <Image src="/images/logo-education.png" alt="Cidade Viva Education" width={36} height={36} style={{ objectFit: 'contain' }} />
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '.9rem', textDecoration: 'none' }}>
+            <Image
+              src="/images/logo-education.png"
+              alt="Cidade Viva Education"
+              width={48}
+              height={48}
+              style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)', opacity: 0.95 }}
+            />
             <div>
-              <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.05rem', fontWeight: 700, color: '#fff', lineHeight: 1, letterSpacing: '.02em' }}>
+              <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem', fontWeight: 700, color: '#fff', lineHeight: 1, letterSpacing: '.02em' }}>
                 CIDADE VIVA
               </div>
-              <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.6rem', fontWeight: 700, color: '#d97706', letterSpacing: '.18em', marginTop: '.15rem' }}>
-                EDUCATION · HUB
+              <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.65rem', fontWeight: 700, color: '#d97706', letterSpacing: '.15em', marginTop: '.2rem' }}>
+                EDUCATION
               </div>
             </div>
           </Link>
