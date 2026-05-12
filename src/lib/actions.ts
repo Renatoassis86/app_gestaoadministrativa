@@ -293,10 +293,15 @@ export async function upsertRegistro(formData: FormData) {
 
   // Revalida todos os paths que usam registros
   revalidatePath(`/comercial/escolas/${escola_id}`, 'layout')
+  revalidatePath(`/comercial/escolas/${escola_id}/editar`, 'layout')
   revalidatePath('/comercial', 'layout')
   revalidatePath('/comercial/jornada', 'layout')
   revalidatePath('/comercial/jornada-visual', 'layout')
   revalidatePath('/comercial/registros', 'layout')
+  revalidatePath('/comercial/registros/novo', 'layout')
+  revalidatePath('/comercial/leads', 'layout')
+  revalidatePath('/comercial/tabela', 'layout')
+  revalidatePath('/comercial/pipeline', 'layout')
 
   redirect(`/comercial/escolas/${escola_id}?t=${Date.now()}`)
 }
@@ -314,7 +319,7 @@ export async function deleteRegistro(id: string): Promise<ActionResult> {
   // Busca o escola_id antes de deletar para revalidar o path correto
   const { data: registro, error: fetchError } = await supabase
     .from('registros')
-    .select('id, escola_id, created_by, responsavel_id')
+    .select('id, escola_id')
     .eq('id', id)
     .single()
 
@@ -322,19 +327,7 @@ export async function deleteRegistro(id: string): Promise<ActionResult> {
     return { success: false, error: 'Registro não encontrado' }
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  const isSupervisor = profile?.role === 'gerente' || profile?.role === 'supervisor'
-  const isOwner      = registro.created_by === user.id || registro.responsavel_id === user.id
-
-  if (!isSupervisor && !isOwner) {
-    return { success: false, error: 'Sem permissão para deletar este registro' }
-  }
-
+  // RLS Policy no banco valida a permissão
   const { error: deleteError } = await supabase.from('registros').delete().eq('id', id)
   if (deleteError) return { success: false, error: deleteError.message }
 
@@ -342,10 +335,14 @@ export async function deleteRegistro(id: string): Promise<ActionResult> {
 
   // Revalida todos os paths que usam registros
   revalidatePath(`/comercial/escolas/${registro.escola_id}`, 'layout')
+  revalidatePath(`/comercial/escolas/${registro.escola_id}/editar`, 'layout')
   revalidatePath('/comercial', 'layout')
   revalidatePath('/comercial/registros', 'layout')
   revalidatePath('/comercial/jornada', 'layout')
   revalidatePath('/comercial/jornada-visual', 'layout')
+  revalidatePath('/comercial/leads', 'layout')
+  revalidatePath('/comercial/tabela', 'layout')
+  revalidatePath('/comercial/pipeline', 'layout')
 
   return { success: true, id }
 }
@@ -464,7 +461,7 @@ export async function deleteNegociacao(id: string): Promise<ActionResult> {
 
   const { data: negociacao, error: fetchError } = await supabase
     .from('negociacoes')
-    .select('id, escola_id, created_by, responsavel_id')
+    .select('id, escola_id')
     .eq('id', id)
     .single()
 
@@ -472,19 +469,7 @@ export async function deleteNegociacao(id: string): Promise<ActionResult> {
     return { success: false, error: 'Negociação não encontrada' }
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  const isSupervisor = profile?.role === 'gerente' || profile?.role === 'supervisor'
-  const isOwner      = negociacao.created_by === user.id || negociacao.responsavel_id === user.id
-
-  if (!isSupervisor && !isOwner) {
-    return { success: false, error: 'Sem permissão para deletar esta negociação' }
-  }
-
+  // RLS Policy no banco valida a permissão
   const { error } = await supabase.from('negociacoes').delete().eq('id', id)
 
   if (error) return { success: false, error: error.message }
