@@ -7,6 +7,8 @@ import { LABEL } from '@/types/database'
 import { EscolasToolbar } from './EscolasToolbar'
 import { MigrarLeadsBtn } from '@/components/comercial/MigrarLeadsBtn'
 
+export const dynamic = 'force-dynamic'
+
 interface Props {
   searchParams: Promise<{ q?: string; estado?: string; page?: string; view?: string; classif?: string }>
 }

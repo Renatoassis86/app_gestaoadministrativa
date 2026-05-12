@@ -27,8 +27,10 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  // Rotas públicas que não precisam de auth
+  // Rotas públicas — Hub é livre, login só protege módulos internos
   const isPublic =
+    pathname === '/' ||
+    pathname.startsWith('/hub') ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/formulario') ||
     pathname.startsWith('/_next') ||
@@ -43,9 +45,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Usuário logado em /login → leva para o Hub (não mais /comercial direto)
   if (user && pathname === '/login') {
     const url = request.nextUrl.clone()
-    url.pathname = '/comercial'
+    url.pathname = '/'
     return NextResponse.redirect(url)
   }
 

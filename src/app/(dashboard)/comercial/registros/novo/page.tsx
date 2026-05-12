@@ -248,15 +248,54 @@ export default async function RegistroNovo({ searchParams }: Props) {
                 <div style={{ fontSize: '.68rem', color: '#94a3b8', marginTop: '.1rem', fontFamily: 'var(--font-inter,sans-serif)' }}>Dados de alunos informados nesta interação (base para cálculo de potencial)</div>
               </div>
             </div>
-            <div style={body}>
+              {/* Segmentos Granulares */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.25rem' }}>
+                
+                {/* Infantil */}
+                <div style={{ background: '#fff7ed', padding: '1rem', borderRadius: 12, border: '1px solid #fed7aa' }}>
+                  <label style={{ ...lbl, color: '#9a3412', marginBottom: '.75rem' }}>Educação Infantil</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '.5rem' }}>
+                    {[
+                      { n: 'qtd_infantil2', l: 'Inf 2' },
+                      { n: 'qtd_infantil3', l: 'Inf 3' },
+                      { n: 'qtd_infantil4', l: 'Inf 4' },
+                      { n: 'qtd_infantil5', l: 'Inf 5' },
+                    ].map(f => (
+                      <div key={f.n}>
+                        <div style={{ fontSize: '.6rem', fontWeight: 700, textAlign: 'center', color: '#ea580c' }}>{f.l}</div>
+                        <input name={f.n} type="number" min="0" defaultValue="0" style={{ ...inp, padding: '.4rem', textAlign: 'center' }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Fund I */}
+                <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: 12, border: '1px solid #bfdbfe' }}>
+                  <label style={{ ...lbl, color: '#1e40af', marginBottom: '.75rem' }}>Fundamental I</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '.5rem' }}>
+                    {[
+                      { n: 'qtd_fund1_ano1', l: '1º A' },
+                      { n: 'qtd_fund1_ano2', l: '2º A' },
+                      { n: 'qtd_fund1_ano3', l: '3º A' },
+                      { n: 'qtd_fund1_ano4', l: '4º A' },
+                      { n: 'qtd_fund1_ano5', l: '5º A' },
+                    ].map(f => (
+                      <div key={f.n}>
+                        <div style={{ fontSize: '.6rem', fontWeight: 700, textAlign: 'center', color: '#2563eb' }}>{f.l}</div>
+                        <input name={f.n} type="number" min="0" defaultValue="0" style={{ ...inp, padding: '.4rem', textAlign: 'center' }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Fund II e Médio */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1.25rem 1.5rem', marginBottom: '1.25rem' }}>
                 {[
-                  ['qtd_infantil', 'Educação Infantil'],
-                  ['qtd_fund1',    'Fundamental I'],
                   ['qtd_fund2',    'Fundamental II'],
                   ['qtd_medio',    'Ensino Médio'],
                 ].map(([name, label]) => (
-                  <div key={name}>
+                  <div key={name} style={{ gridColumn: 'span 2' }}>
                     <label style={lbl}>{label}</label>
                     <input name={name} type="number" min="0" defaultValue="0"
                       style={{ ...inp, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem', fontWeight: 700 }} />

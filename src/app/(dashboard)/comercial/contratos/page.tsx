@@ -105,7 +105,8 @@ export default async function ContratosPage({ searchParams }: Props) {
   /* ── Metas ── */
   const total_alunos  = contratos_geral?.reduce((acc: number, x: any) =>
     acc + ((x.infantil2_qtd ?? 0) + (x.infantil3_qtd ?? 0) + (x.infantil4_qtd ?? 0) +
-           (x.infantil5_qtd ?? 0) + (x.fund1_ano1_qtd ?? 0)), 0) ?? 0
+           (x.infantil5_qtd ?? 0) + (x.fund1_ano1_qtd ?? 0) + (x.fund1_ano2_qtd ?? 0) +
+           (x.fund1_ano3_qtd ?? 0) + (x.fund1_ano4_qtd ?? 0) + (x.fund1_ano5_qtd ?? 0)), 0) ?? 0
   const total_receita = contratos_geral?.reduce((acc: number, x: any) =>
     acc + (x.valor_total_calculado ?? x.valor_total ?? 0), 0) ?? 0
   const pct_alunos   = Math.min(100, Math.round((total_alunos  / META_ALUNOS)  * 100))
@@ -267,6 +268,10 @@ export default async function ContratosPage({ searchParams }: Props) {
                   { label: 'Infantil 4',    qtd: 'infantil4_qtd',  val: 'infantil4_valor' },
                   { label: 'Infantil 5',    qtd: 'infantil5_qtd',  val: 'infantil5_valor' },
                   { label: '1º Ano Fund I', qtd: 'fund1_ano1_qtd', val: 'fund1_ano1_valor' },
+                  { label: '2º Ano Fund I', qtd: 'fund1_ano2_qtd', val: 'fund1_ano2_valor' },
+                  { label: '3º Ano Fund I', qtd: 'fund1_ano3_qtd', val: 'fund1_ano3_valor' },
+                  { label: '4º Ano Fund I', qtd: 'fund1_ano4_qtd', val: 'fund1_ano4_valor' },
+                  { label: '5º Ano Fund I', qtd: 'fund1_ano5_qtd', val: 'fund1_ano5_valor' },
                 ].map(seg => (
                   <div key={seg.qtd} style={{ display: 'grid', gridTemplateColumns: '180px 1fr 1fr', gap: '1rem', alignItems: 'center', padding: '.65rem 0', borderBottom: '1px solid #f1f5f9' }}>
                     <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.82rem', fontWeight: 600, color: '#0f172a' }}>{seg.label}</div>

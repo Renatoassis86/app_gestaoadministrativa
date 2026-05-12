@@ -6,6 +6,8 @@ import { LABEL } from '@/types/database'
 import { EscolaDetailClient } from '@/components/comercial/EscolaDetailClient'
 import { DeleteEscolaBtn } from '@/components/comercial/DeleteEscolaBtn'
 
+export const dynamic = 'force-dynamic'
+
 interface Props { params: Promise<{ id: string }> }
 
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
@@ -563,40 +565,78 @@ export default async function EscolaDetalhe({ params }: Props) {
               </div>
               <div style={cardBodyStyle}>
 
-                {/* KPI boxes */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '.75rem', marginBottom: '1.25rem' }}>
-                  {alunosData.map(({ label, val }, i) => (
-                    <div key={label} style={{
-                      background: i === alunosData.length - 1 ? 'linear-gradient(135deg, #0f172a, #1e293b)' : 'var(--surface-2, #f8fafc)',
-                      border: i === alunosData.length - 1 ? 'none' : '1px solid var(--border, #e2e8f0)',
-                      borderRadius: 10,
-                      padding: '.85rem .5rem',
-                      textAlign: 'center',
-                      position: 'relative',
-                      overflow: 'hidden',
-                    }}>
-                      <div style={{
-                        fontSize: '.65rem',
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '.06em',
-                        fontFamily: 'var(--font-montserrat, sans-serif)',
-                        color: i === alunosData.length - 1 ? 'rgba(255,255,255,.5)' : '#94a3b8',
-                        marginBottom: '.3rem',
-                      }}>
-                        {label}
-                      </div>
-                      <div style={{
-                        fontFamily: 'var(--font-cormorant, serif)',
-                        fontSize: '1.75rem',
-                        fontWeight: 700,
-                        lineHeight: 1,
-                        color: i === alunosData.length - 1 ? '#fff' : '#0f172a',
-                      }}>
-                        {val ?? '—'}
+                {/* KPI boxes — Segmentos Detalhados */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', marginBottom: '1.5rem' }}>
+                  
+                  {/* Infantil */}
+                  <div style={{ background: '#fff7ed', border: '1.5px solid #fed7aa', borderRadius: 14, padding: '1rem' }}>
+                    <div style={{ ...labelStyle, color: '#ea580c', fontSize: '.65rem' }}>Ed. Infantil</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.4rem', marginTop: '.4rem' }}>
+                      {[
+                        { l: 'Inf 2', v: e.qtd_infantil2 },
+                        { l: 'Inf 3', v: e.qtd_infantil3 },
+                        { l: 'Inf 4', v: e.qtd_infantil4 },
+                        { l: 'Inf 5', v: e.qtd_infantil5 },
+                      ].map(s => (
+                        <div key={s.l} style={{ textAlign: 'center', background: 'rgba(255,255,255,.6)', borderRadius: 6, padding: '.3rem' }}>
+                          <div style={{ fontSize: '.6rem', color: '#9a3412', fontWeight: 700 }}>{s.l}</div>
+                          <div style={{ fontSize: '.9rem', fontWeight: 800, color: '#ea580c', fontFamily: 'var(--font-cormorant,serif)' }}>{s.v ?? 0}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ marginTop: '.75rem', textAlign: 'center', borderTop: '1px dashed #fed7aa', paddingTop: '.5rem' }}>
+                      <span style={{ fontSize: '.65rem', fontWeight: 700, color: '#9a3412' }}>Total: {e.qtd_infantil ?? 0}</span>
+                    </div>
+                  </div>
+
+                  {/* Fund I */}
+                  <div style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: 14, padding: '1rem' }}>
+                    <div style={{ ...labelStyle, color: '#2563eb', fontSize: '.65rem' }}>Fund. I (1º-5º)</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '.4rem', marginTop: '.4rem' }}>
+                      {[
+                        { l: '1º A', v: e.qtd_fund1_ano1 },
+                        { l: '2º A', v: e.qtd_fund1_ano2 },
+                        { l: '3º A', v: e.qtd_fund1_ano3 },
+                        { l: '4º A', v: e.qtd_fund1_ano4 },
+                        { l: '5º A', v: e.qtd_fund1_ano5 },
+                      ].map(s => (
+                        <div key={s.l} style={{ textAlign: 'center', background: 'rgba(255,255,255,.6)', borderRadius: 6, padding: '.3rem' }}>
+                          <div style={{ fontSize: '.6rem', color: '#1e40af', fontWeight: 700 }}>{s.l}</div>
+                          <div style={{ fontSize: '.9rem', fontWeight: 800, color: '#2563eb', fontFamily: 'var(--font-cormorant,serif)' }}>{s.v ?? 0}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ marginTop: '.75rem', textAlign: 'center', borderTop: '1px dashed #bfdbfe', paddingTop: '.5rem' }}>
+                      <span style={{ fontSize: '.65rem', fontWeight: 700, color: '#1e40af' }}>Total: {e.qtd_fund1 ?? 0}</span>
+                    </div>
+                  </div>
+
+                  {/* Fund II e Médio (Resumo) */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
+                    <div style={{ background: '#f5f3ff', border: '1.5px solid #ddd6fe', borderRadius: 12, padding: '.85rem', flex: 1 }}>
+                      <div style={{ ...labelStyle, color: '#7c3aed', fontSize: '.6rem', marginBottom: '.25rem' }}>Fund. II (6º-9º)</div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#7c3aed', fontFamily: 'var(--font-cormorant,serif)', textAlign: 'center' }}>
+                        {e.qtd_fund2 ?? 0}
                       </div>
                     </div>
-                  ))}
+                    <div style={{ background: '#fef2f2', border: '1.5px solid #fca5a5', borderRadius: 12, padding: '.85rem', flex: 1 }}>
+                      <div style={{ ...labelStyle, color: '#dc2626', fontSize: '.6rem', marginBottom: '.25rem' }}>Ens. Médio (1-3)</div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#dc2626', fontFamily: 'var(--font-cormorant,serif)', textAlign: 'center' }}>
+                        {e.qtd_medio ?? 0}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Total Geral */}
+                  <div style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', borderRadius: 14, padding: '1rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                    <div style={{ ...labelStyle, color: 'rgba(255,255,255,.5)', fontSize: '.65rem' }}>Total de Alunos</div>
+                    <div style={{ fontSize: '2.4rem', fontWeight: 800, color: '#fff', fontFamily: 'var(--font-cormorant,serif)', lineHeight: 1 }}>
+                      {totalAlunos}
+                    </div>
+                    <div style={{ fontSize: '.6rem', color: 'rgba(255,255,255,.4)', marginTop: '.5rem', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+                      Capacidade Total
+                    </div>
+                  </div>
                 </div>
 
                 {/* Potencial financeiro bar */}

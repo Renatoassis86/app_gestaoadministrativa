@@ -226,64 +226,83 @@ export default async function EscolaNova({ searchParams }: Props) {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1.5rem' }}>
 
                 {/* Infantil */}
-                <div style={{ background: '#fff7ed', border: '1.5px solid #fed7aa', borderRadius: 12, padding: '1.1rem 1rem', textAlign: 'center' }}>
-                  <div style={{ width: 4, height: 16, background: '#f97316', borderRadius: 2, margin: '0 auto .6rem' }} />
-                  <label style={{ ...label, color: '#ea580c', textAlign: 'center', display: 'block', marginBottom: '.6rem', fontSize: '.68rem' }}>
-                    Ed. Infantil
-                  </label>
-                  <input name="qtd_infantil" type="number" min="0" defaultValue="0"
-                    style={{ ...input, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.4rem', fontWeight: 800, padding: '.6rem', background: '#fff' }} />
-                  <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.4rem', fontFamily: 'var(--font-inter,sans-serif)' }}>Inf. 2 ao Inf. 5</div>
+                <div style={{ background: '#fff7ed', border: '1.5px solid #fed7aa', borderRadius: 12, padding: '1.1rem 1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', marginBottom: '.8rem' }}>
+                    <div style={{ width: 4, height: 16, background: '#f97316', borderRadius: 2 }} />
+                    <label style={{ ...label, color: '#ea580c', marginBottom: 0, fontSize: '.68rem' }}>Ed. Infantil</label>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.5rem' }}>
+                    <TurmaField name="qtd_infantil2" label="Inf. 2" />
+                    <TurmaField name="qtd_infantil3" label="Inf. 3" />
+                    <TurmaField name="qtd_infantil4" label="Inf. 4" />
+                    <TurmaField name="qtd_infantil5" label="Inf. 5" />
+                  </div>
+                  <div style={{ marginTop: '.8rem', borderTop: '1px dashed #fed7aa', paddingTop: '.6rem' }}>
+                    <label style={{ ...label, fontSize: '.6rem', color: '#94a3b8', textAlign: 'center' }}>Total (Opcional)</label>
+                    <input name="qtd_infantil" type="number" min="0" defaultValue="0"
+                      style={{ ...input, textAlign: 'center', padding: '.4rem', background: '#fff', fontSize: '.9rem', fontWeight: 700 }} />
+                  </div>
                 </div>
 
                 {/* Fund I */}
-                <div style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: 12, padding: '1.1rem 1rem', textAlign: 'center' }}>
-                  <div style={{ width: 4, height: 16, background: '#2563eb', borderRadius: 2, margin: '0 auto .6rem' }} />
-                  <label style={{ ...label, color: '#2563eb', textAlign: 'center', display: 'block', marginBottom: '.6rem', fontSize: '.68rem' }}>
-                    Fund. I
-                  </label>
-                  <input name="qtd_fund1" type="number" min="0" defaultValue="0"
-                    style={{ ...input, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.4rem', fontWeight: 800, padding: '.6rem', background: '#fff' }} />
-                  <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.4rem', fontFamily: 'var(--font-inter,sans-serif)' }}>1º ao 5º Ano</div>
+                <div style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: 12, padding: '1.1rem 1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', marginBottom: '.8rem' }}>
+                    <div style={{ width: 4, height: 16, background: '#2563eb', borderRadius: 2 }} />
+                    <label style={{ ...label, color: '#2563eb', marginBottom: 0, fontSize: '.68rem' }}>Fund. I</label>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '.4rem' }}>
+                    <TurmaField name="qtd_fund1_ano1" label="1º Ano" />
+                    <TurmaField name="qtd_fund1_ano2" label="2º Ano" />
+                    <TurmaField name="qtd_fund1_ano3" label="3º Ano" />
+                    <TurmaField name="qtd_fund1_ano4" label="4º Ano" />
+                    <TurmaField name="qtd_fund1_ano5" label="5º Ano" />
+                  </div>
+                  <div style={{ marginTop: '.8rem', borderTop: '1px dashed #bfdbfe', paddingTop: '.6rem' }}>
+                    <label style={{ ...label, fontSize: '.6rem', color: '#94a3b8', textAlign: 'center' }}>Total (Opcional)</label>
+                    <input name="qtd_fund1" type="number" min="0" defaultValue="0"
+                      style={{ ...input, textAlign: 'center', padding: '.4rem', background: '#fff', fontSize: '.9rem', fontWeight: 700 }} />
+                  </div>
                 </div>
 
                 {/* Fund II */}
-                <div style={{ background: '#f5f3ff', border: '1.5px solid #ddd6fe', borderRadius: 12, padding: '1.1rem 1rem', textAlign: 'center' }}>
-                  <div style={{ width: 4, height: 16, background: '#7c3aed', borderRadius: 2, margin: '0 auto .6rem' }} />
-                  <label style={{ ...label, color: '#7c3aed', textAlign: 'center', display: 'block', marginBottom: '.6rem', fontSize: '.68rem' }}>
-                    Fund. II
-                  </label>
-                  <input name="qtd_fund2" type="number" min="0" defaultValue="0"
-                    style={{ ...input, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.4rem', fontWeight: 800, padding: '.6rem', background: '#fff' }} />
-                  <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.4rem', fontFamily: 'var(--font-inter,sans-serif)' }}>6º ao 9º Ano</div>
+                <div style={{ background: '#f5f3ff', border: '1.5px solid #ddd6fe', borderRadius: 12, padding: '1.1rem 1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', marginBottom: '.8rem' }}>
+                    <div style={{ width: 4, height: 16, background: '#7c3aed', borderRadius: 2 }} />
+                    <label style={{ ...label, color: '#7c3aed', marginBottom: 0, fontSize: '.68rem' }}>Fund. II</label>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.5rem' }}>
+                    <TurmaField name="qtd_fund2_ano6" label="6º Ano" />
+                    <TurmaField name="qtd_fund2_ano7" label="7º Ano" />
+                    <TurmaField name="qtd_fund2_ano8" label="8º Ano" />
+                    <TurmaField name="qtd_fund2_ano9" label="9º Ano" />
+                  </div>
+                  <div style={{ marginTop: '.8rem', borderTop: '1px dashed #ddd6fe', paddingTop: '.6rem' }}>
+                    <label style={{ ...label, fontSize: '.6rem', color: '#94a3b8', textAlign: 'center' }}>Total (Opcional)</label>
+                    <input name="qtd_fund2" type="number" min="0" defaultValue="0"
+                      style={{ ...input, textAlign: 'center', padding: '.4rem', background: '#fff', fontSize: '.9rem', fontWeight: 700 }} />
+                  </div>
                 </div>
 
                 {/* Médio */}
-                <div style={{ background: '#fef2f2', border: '1.5px solid #fca5a5', borderRadius: 12, padding: '1.1rem 1rem', textAlign: 'center' }}>
-                  <div style={{ width: 4, height: 16, background: '#dc2626', borderRadius: 2, margin: '0 auto .6rem' }} />
-                  <label style={{ ...label, color: '#dc2626', textAlign: 'center', display: 'block', marginBottom: '.6rem', fontSize: '.68rem' }}>
-                    Ens. Médio
-                  </label>
-                  <input name="qtd_medio" type="number" min="0" defaultValue="0"
-                    style={{ ...input, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.4rem', fontWeight: 800, padding: '.6rem', background: '#fff' }} />
-                  <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.4rem', fontFamily: 'var(--font-inter,sans-serif)' }}>1ª à 3ª Série</div>
+                <div style={{ background: '#fef2f2', border: '1.5px solid #fca5a5', borderRadius: 12, padding: '1.1rem 1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', marginBottom: '.8rem' }}>
+                    <div style={{ width: 4, height: 16, background: '#dc2626', borderRadius: 2 }} />
+                    <label style={{ ...label, color: '#dc2626', marginBottom: 0, fontSize: '.68rem' }}>Ens. Médio</label>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '.5rem' }}>
+                    <TurmaField name="qtd_medio_1s" label="1ª S" />
+                    <TurmaField name="qtd_medio_2s" label="2ª S" />
+                    <TurmaField name="qtd_medio_3s" label="3ª S" />
+                  </div>
+                  <div style={{ marginTop: '.8rem', borderTop: '1px dashed #fca5a5', paddingTop: '.6rem' }}>
+                    <label style={{ ...label, fontSize: '.6rem', color: '#94a3b8', textAlign: 'center' }}>Total (Opcional)</label>
+                    <input name="qtd_medio" type="number" min="0" defaultValue="0"
+                      style={{ ...input, textAlign: 'center', padding: '.4rem', background: '#fff', fontSize: '.9rem', fontWeight: 700 }} />
+                  </div>
                 </div>
 
               </div>
 
-              {/* Campos ocultos para manter compatibilidade com upsertEscola */}
-              <input type="hidden" name="qtd_fund1_ano1" value="0" />
-              <input type="hidden" name="qtd_fund1_ano2" value="0" />
-              <input type="hidden" name="qtd_fund1_ano3" value="0" />
-              <input type="hidden" name="qtd_fund1_ano4" value="0" />
-              <input type="hidden" name="qtd_fund1_ano5" value="0" />
-              <input type="hidden" name="qtd_fund2_ano6" value="0" />
-              <input type="hidden" name="qtd_fund2_ano7" value="0" />
-              <input type="hidden" name="qtd_fund2_ano8" value="0" />
-              <input type="hidden" name="qtd_fund2_ano9" value="0" />
-              <input type="hidden" name="qtd_medio_1s" value="0" />
-              <input type="hidden" name="qtd_medio_2s" value="0" />
-              <input type="hidden" name="qtd_medio_3s" value="0" />
             </div>
           </div>
 

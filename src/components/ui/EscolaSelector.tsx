@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useState, useRef, useEffect } from 'react'
 
 interface Escola {
   id: string
@@ -20,49 +21,209 @@ interface EscolaSelectorProps {
 
 export function EscolaSelector({ escolas, escolaId, basePath, placeholder, extraButton }: EscolaSelectorProps) {
   const router = useRouter()
+  const [busca, setBusca] = useState('')
+  const [dropdownAberto, setDropdownAberto] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Separa CRM e leads do banco para agrupamento visual
   const escolasCRM  = escolas.filter(e => e.origem !== 'lead' || !e.id.startsWith('lead:'))
   const escolasLead = escolas.filter(e => e.origem === 'lead' || e.id.startsWith('lead:'))
+
+  // Filtra escolas baseado no texto de busca
+  const filtrarEscolas = (lista: Escola[]) => {
+    if (!busca.trim()) return lista
+    const q = busca.toLowerCase()
+    return lista.filter(e =>
+      e.nome.toLowerCase().includes(q) ||
+      e.cidade?.toLowerCase().includes(q) ||
+      e.estado?.toLowerCase().includes(q)
+    )
+  }
+
+  const crm_filtrado = filtrarEscolas(escolasCRM)
+  const lead_filtrado = filtrarEscolas(escolasLead)
+  const escolaSelecionada = escolas.find(e => e.id === escolaId)
+
+  const handleSelecion = (id: string) => {
+    if (id) router.push(`${basePath}?escola=${encodeURIComponent(id)}`)
+    setBusca('')
+    setDropdownAberto(false)
+  }
+
+  useEffect(() => {
+    const handleClickFora = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setDropdownAberto(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickFora)
+    return () => document.removeEventListener('mousedown', handleClickFora)
+  }, [])
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', flexWrap: 'wrap' }}>
       <label style={{ fontSize: '.82rem', fontWeight: 700, color: 'var(--text-m)', whiteSpace: 'nowrap', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
         Selecionar Escola:
       </label>
-      <select
-        className="form-control"
-        style={{ maxWidth: 480, minWidth: 280 }}
-        value={escolaId}
-        onChange={e => {
-          const val = e.target.value
-          if (val) router.push(`${basePath}?escola=${encodeURIComponent(val)}`)
-        }}
-      >
-        <option value="">{placeholder ?? '— Escolha uma escola —'}</option>
 
-        {/* Escolas cadastradas no CRM */}
-        {escolasCRM.length > 0 && (
-          <optgroup label={`✓ Escolas no CRM (${escolasCRM.length})`}>
-            {escolasCRM.map(e => (
-              <option key={e.id} value={e.id}>
-                {e.nome}{e.cidade ? ` — ${e.cidade}` : ''}{e.estado ? `/${e.estado}` : ''}
-              </option>
-            ))}
-          </optgroup>
-        )}
+      <div ref={containerRef} style={{ position: 'relative', minWidth: 280, maxWidth: 480 }}>
+        {/* Input de busca */}
+        <input
+          type="text"
+          placeholder={placeholder ?? 'Buscar escola, cidade, estado...'}
+          value={dropdownAberto ? busca : (escolaSelecionada?.nome ?? '')}
+          onChange={e => {
+            setBusca(e.target.value)
+            setDropdownAberto(true)
+          }}
+          onFocus={() => setDropdownAberto(true)}
+          className="form-control"
+          style={{
+            width: '100%',
+            padding: '.6rem .75rem',
+            paddingRight: '2rem',
+            fontSize: '.85rem',
+            fontFamily: 'var(--font-inter, sans-serif)',
+          }}
+        />
 
-        {/* Leads do banco (não cadastrados formalmente) */}
-        {escolasLead.length > 0 && (
-          <optgroup label={`◈ Banco de Leads (${escolasLead.length})`}>
-            {escolasLead.map(e => (
-              <option key={e.id} value={e.id}>
-                {e.nome}{e.cidade ? ` — ${e.cidade}` : ''}{e.estado ? `/${e.estado}` : ''}
-              </option>
-            ))}
-          </optgroup>
+        {/* Ícone dropdown */}
+        <svg
+          style={{
+            position: 'absolute',
+            right: '.65rem',
+            top: '50%',
+            transform: `translateY(-50%) rotate(${dropdownAberto ? 180 : 0}deg)`,
+            width: 16,
+            height: 16,
+            color: '#64748b',
+            transition: 'transform .2s',
+            pointerEvents: 'none',
+          }}
+          xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        >
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+
+        {/* Dropdown de resultados */}
+        {dropdownAberto && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            marginTop: '.4rem',
+            background: '#fff',
+            border: '1px solid #e2e8f0',
+            borderRadius: 10,
+            boxShadow: '0 8px 24px rgba(0,0,0,.12)',
+            zIndex: 1000,
+            maxHeight: 320,
+            overflowY: 'auto',
+          }}>
+            {/* CRM */}
+            {crm_filtrado.length > 0 && (
+              <div>
+                <div style={{
+                  padding: '.6rem .75rem',
+                  fontSize: '.72rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  color: '#94a3b8',
+                  letterSpacing: '.05em',
+                  background: '#f1f5f9',
+                  borderBottom: '1px solid #e2e8f0',
+                  fontFamily: 'var(--font-montserrat,sans-serif)',
+                }}>
+                  ✓ Escolas no CRM ({crm_filtrado.length})
+                </div>
+                {crm_filtrado.map(e => (
+                  <div
+                    key={e.id}
+                    onClick={() => handleSelecion(e.id)}
+                    style={{
+                      padding: '.6rem .75rem',
+                      cursor: 'pointer',
+                      fontSize: '.85rem',
+                      color: '#0f172a',
+                      borderBottom: '1px solid #f1f5f9',
+                      transition: 'all .15s',
+                      background: escolaId === e.id ? '#eff6ff' : 'transparent',
+                      borderLeft: escolaId === e.id ? '3px solid #0ea5e9' : '3px solid transparent',
+                      paddingLeft: '0.55rem',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
+                    onMouseLeave={e => (e.currentTarget.style.background = escolaId === e.id ? '#eff6ff' : 'transparent')}
+                  >
+                    <div style={{ fontWeight: 600, color: '#0f172a' }}>{e.nome}</div>
+                    <div style={{ fontSize: '.75rem', color: '#64748b', marginTop: '.2rem' }}>
+                      {e.cidade && e.estado ? `${e.cidade}/${e.estado}` : e.cidade ?? e.estado ?? ''}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Leads */}
+            {lead_filtrado.length > 0 && (
+              <div>
+                <div style={{
+                  padding: '.6rem .75rem',
+                  fontSize: '.72rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  color: '#94a3b8',
+                  letterSpacing: '.05em',
+                  background: '#f1f5f9',
+                  borderBottom: '1px solid #e2e8f0',
+                  fontFamily: 'var(--font-montserrat,sans-serif)',
+                }}>
+                  ◈ Banco de Leads ({lead_filtrado.length})
+                </div>
+                {lead_filtrado.map(e => (
+                  <div
+                    key={e.id}
+                    onClick={() => handleSelecion(e.id)}
+                    style={{
+                      padding: '.6rem .75rem',
+                      cursor: 'pointer',
+                      fontSize: '.85rem',
+                      color: '#0f172a',
+                      borderBottom: '1px solid #f1f5f9',
+                      transition: 'all .15s',
+                      background: escolaId === e.id ? '#eff6ff' : 'transparent',
+                      borderLeft: escolaId === e.id ? '3px solid #0ea5e9' : '3px solid transparent',
+                      paddingLeft: '0.55rem',
+                      opacity: 0.8,
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
+                    onMouseLeave={e => (e.currentTarget.style.background = escolaId === e.id ? '#eff6ff' : 'transparent')}
+                  >
+                    <div style={{ fontWeight: 600, color: '#0f172a' }}>{e.nome}</div>
+                    <div style={{ fontSize: '.75rem', color: '#64748b', marginTop: '.2rem' }}>
+                      {e.cidade && e.estado ? `${e.cidade}/${e.estado}` : e.cidade ?? e.estado ?? ''}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Vazio */}
+            {crm_filtrado.length === 0 && lead_filtrado.length === 0 && (
+              <div style={{
+                padding: '1.5rem',
+                textAlign: 'center',
+                fontSize: '.82rem',
+                color: '#94a3b8',
+                fontFamily: 'var(--font-inter,sans-serif)',
+              }}>
+                Nenhuma escola encontrada
+              </div>
+            )}
+          </div>
         )}
-      </select>
+      </div>
+
       {extraButton}
     </div>
   )

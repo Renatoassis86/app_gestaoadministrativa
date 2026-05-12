@@ -9,8 +9,11 @@ export default async function AdminpanelPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: me }       = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  const { data: profiles } = await supabase.from('profiles').select('*').order('full_name')
+  const [{ data: me }, { data: profiles }, { data: logs }] = await Promise.all([
+    supabase.from('profiles').select('role').eq('id', user.id).single(),
+    supabase.from('profiles').select('*').order('full_name'),
+    supabase.from('audit_log').select('*').order('created_at', { ascending: false }).limit(20)
+  ])
 
   const isGerente = me?.role === 'gerente'
   const ativos    = profiles?.filter((p: any) => p.is_active)?.length  ?? 0
@@ -50,12 +53,12 @@ export default async function AdminpanelPage() {
 
         {isGerente ? (
           /* Layout 2 colunas: criar (esq) + lista com editar inline (dir) */
-          <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: '1.5rem', alignItems: 'start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: '1.5rem', alignItems: 'start', marginBottom: '3rem' }}>
             <AdminActions roleOptions={ROLE_OPTIONS} profiles={profiles ?? []} />
           </div>
         ) : (
           /* Só visualização */
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 8px rgba(15,23,42,.05)' }}>
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 8px rgba(15,23,42,.05)', marginBottom: '3rem' }}>
             <div style={{ background: '#0f172a', padding: '1rem 1.5rem' }}>
               <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>
                 {profiles?.length ?? 0} usuários cadastrados
@@ -74,6 +77,64 @@ export default async function AdminpanelPage() {
                   <span style={{ fontSize: '.65rem', fontWeight: 700, background: '#dbeafe', color: '#1e3a8a', border: '1px solid #93c5fd', padding: '.2rem .6rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)', textTransform: 'uppercase' }}>{p.role}</span>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Audit Log (Gerente Only) */}
+        {isGerente && (
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 8px rgba(15,23,42,.05)' }}>
+            <div style={{ background: '#0f172a', padding: '1rem 1.75rem', display: 'flex', alignItems: 'center', gap: '.75rem' }}>
+              <div style={{ width: 30, height: 30, background: '#d97706', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.07em', color: '#fff' }}>Registro de Atividades (Audit Log)</div>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                    <th style={{ padding: '.75rem 1.25rem', textAlign: 'left', fontSize: '.65rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Data</th>
+                    <th style={{ padding: '.75rem 1.25rem', textAlign: 'left', fontSize: '.65rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Usuário</th>
+                    <th style={{ padding: '.75rem 1.25rem', textAlign: 'left', fontSize: '.65rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Ação</th>
+                    <th style={{ padding: '.75rem 1.25rem', textAlign: 'left', fontSize: '.65rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Tabela</th>
+                    <th style={{ padding: '.75rem 1.25rem', textAlign: 'left', fontSize: '.65rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', fontFamily: 'var(--font-montserrat,sans-serif)' }}>ID do Registro</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs?.map((log: any) => (
+                    <tr key={log.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '.85rem 1.25rem', fontSize: '.75rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                        {new Date(log.created_at).toLocaleString('pt-BR')}
+                      </td>
+                      <td style={{ padding: '.85rem 1.25rem', fontSize: '.8rem', fontWeight: 600, color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                        {log.user_email || 'Sistema'}
+                      </td>
+                      <td style={{ padding: '.85rem 1.25rem' }}>
+                        <span style={{ 
+                          fontSize: '.65rem', fontWeight: 800, 
+                          color: log.action === 'INSERT' ? '#16a34a' : log.action === 'UPDATE' ? '#2563eb' : '#dc2626',
+                          background: log.action === 'INSERT' ? '#f0fdf4' : log.action === 'UPDATE' ? '#eff6ff' : '#fef2f2',
+                          padding: '.2rem .5rem', borderRadius: 4, textTransform: 'uppercase'
+                        }}>
+                          {log.action}
+                        </span>
+                      </td>
+                      <td style={{ padding: '.85rem 1.25rem', fontSize: '.78rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                        {log.table_name}
+                      </td>
+                      <td style={{ padding: '.85rem 1.25rem', fontSize: '.72rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                        <code>{log.record_id?.slice(0, 8) || '—'}</code>
+                      </td>
+                    </tr>
+                  ))}
+                  {(!logs || logs.length === 0) && (
+                    <tr>
+                      <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8', fontSize: '.8rem' }}>Nenhuma atividade registrada.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

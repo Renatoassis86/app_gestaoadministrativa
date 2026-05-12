@@ -6,6 +6,34 @@ import Link from 'next/link'
 import { PERFIL_OPTIONS, ORIGEM_OPTIONS, CARGO_CONTATO_OPTIONS } from '@/types/database'
 import { CheckboxPaideia } from '@/components/ui/CheckboxPaideia'
 
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontFamily: 'var(--font-montserrat,sans-serif)',
+  fontSize: '.7rem', fontWeight: 700, textTransform: 'uppercase',
+  letterSpacing: '.06em', color: '#64748b', marginBottom: '.4rem',
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '.65rem .9rem', fontSize: '.875rem',
+  fontFamily: 'var(--font-inter,sans-serif)',
+  border: '1.5px solid #e2e8f0', borderRadius: 8,
+  background: '#f8fafc', color: '#0f172a', outline: 'none',
+  boxSizing: 'border-box',
+}
+
+function TurmaField({ name, label, value }: { name: string; label: string; value: number }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '.35rem' }}>
+      <label style={{ ...labelStyle, textTransform: 'none', fontSize: '.72rem', color: '#475569', fontWeight: 600, marginBottom: 0 }}>
+        {label}
+      </label>
+      <input
+        name={name} type="number" min="0" defaultValue={value}
+        style={{ ...inputStyle, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '.95rem', fontWeight: 700, padding: '.45rem' }}
+      />
+    </div>
+  )
+}
+
 interface Props { params: Promise<{ id: string }> }
 
 export default async function EscolaEditar({ params }: Props) {
@@ -118,29 +146,72 @@ export default async function EscolaEditar({ params }: Props) {
             <div className="card-header"><span className="card-title">Quantidade de Alunos por Segmento</span></div>
             <div className="card-body">
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
-                {[
-                  { name: 'qtd_infantil', label: 'Ed. Infantil',   sub: 'Inf. 2 ao Inf. 5', cor: '#ea580c', bg: '#fff7ed', border: '#fed7aa' },
-                  { name: 'qtd_fund1',    label: 'Fund. I',        sub: '1º ao 5º Ano',     cor: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
-                  { name: 'qtd_fund2',    label: 'Fund. II',       sub: '6º ao 9º Ano',     cor: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
-                  { name: 'qtd_medio',    label: 'Ens. Médio',     sub: '1ª à 3ª Série',    cor: '#dc2626', bg: '#fef2f2', border: '#fca5a5' },
-                ].map(seg => (
-                  <div key={seg.name} style={{ background: seg.bg, border: `1.5px solid ${seg.border}`, borderRadius: 12, padding: '1rem', textAlign: 'center' }}>
-                    <label style={{ display: 'block', fontSize: '.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: seg.cor, marginBottom: '.5rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
-                      {seg.label}
-                    </label>
-                    <input name={seg.name} type="number" min="0"
-                      style={{ width: '100%', padding: '.6rem', textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.4rem', fontWeight: 800, border: '1.5px solid #e2e8f0', borderRadius: 8, outline: 'none', background: '#fff', boxSizing: 'border-box' as const, color: '#0f172a' }}
-                      defaultValue={(e as any)[seg.name] ?? 0} />
-                    <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.35rem', fontFamily: 'var(--font-inter,sans-serif)' }}>{seg.sub}</div>
+                
+                {/* Infantil */}
+                <div style={{ background: '#fff7ed', border: '1.5px solid #fed7aa', borderRadius: 12, padding: '1rem' }}>
+                  <label style={{ ...labelStyle, color: '#ea580c', fontSize: '.68rem' }}>Ed. Infantil</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.4rem' }}>
+                    <TurmaField name="qtd_infantil2" label="Inf. 2" value={e.qtd_infantil2 ?? 0} />
+                    <TurmaField name="qtd_infantil3" label="Inf. 3" value={e.qtd_infantil3 ?? 0} />
+                    <TurmaField name="qtd_infantil4" label="Inf. 4" value={e.qtd_infantil4 ?? 0} />
+                    <TurmaField name="qtd_infantil5" label="Inf. 5" value={e.qtd_infantil5 ?? 0} />
                   </div>
-                ))}
+                  <div style={{ marginTop: '.8rem', borderTop: '1px dashed #fed7aa', paddingTop: '.6rem' }}>
+                    <label style={{ ...labelStyle, fontSize: '.6rem', color: '#94a3b8', textAlign: 'center' }}>Total (Opcional)</label>
+                    <input name="qtd_infantil" type="number" min="0" defaultValue={e.qtd_infantil ?? 0}
+                      style={{ ...inputStyle, textAlign: 'center', padding: '.4rem', background: '#fff', fontSize: '.9rem', fontWeight: 700 }} />
+                  </div>
+                </div>
+
+                {/* Fund I */}
+                <div style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: 12, padding: '1rem' }}>
+                  <label style={{ ...labelStyle, color: '#2563eb', fontSize: '.68rem' }}>Fund. I</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '.4rem' }}>
+                    <TurmaField name="qtd_fund1_ano1" label="1º Ano" value={e.qtd_fund1_ano1 ?? 0} />
+                    <TurmaField name="qtd_fund1_ano2" label="2º Ano" value={e.qtd_fund1_ano2 ?? 0} />
+                    <TurmaField name="qtd_fund1_ano3" label="3º Ano" value={e.qtd_fund1_ano3 ?? 0} />
+                    <TurmaField name="qtd_fund1_ano4" label="4º Ano" value={e.qtd_fund1_ano4 ?? 0} />
+                    <TurmaField name="qtd_fund1_ano5" label="5º Ano" value={e.qtd_fund1_ano5 ?? 0} />
+                  </div>
+                  <div style={{ marginTop: '.8rem', borderTop: '1px dashed #bfdbfe', paddingTop: '.6rem' }}>
+                    <label style={{ ...labelStyle, fontSize: '.6rem', color: '#94a3b8', textAlign: 'center' }}>Total (Opcional)</label>
+                    <input name="qtd_fund1" type="number" min="0" defaultValue={e.qtd_fund1 ?? 0}
+                      style={{ ...inputStyle, textAlign: 'center', padding: '.4rem', background: '#fff', fontSize: '.9rem', fontWeight: 700 }} />
+                  </div>
+                </div>
+
+                {/* Fund II */}
+                <div style={{ background: '#f5f3ff', border: '1.5px solid #ddd6fe', borderRadius: 12, padding: '1rem' }}>
+                  <label style={{ ...labelStyle, color: '#7c3aed', fontSize: '.68rem' }}>Fund. II</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.4rem' }}>
+                    <TurmaField name="qtd_fund2_ano6" label="6º Ano" value={e.qtd_fund2_ano6 ?? 0} />
+                    <TurmaField name="qtd_fund2_ano7" label="7º Ano" value={e.qtd_fund2_ano7 ?? 0} />
+                    <TurmaField name="qtd_fund2_ano8" label="8º Ano" value={e.qtd_fund2_ano8 ?? 0} />
+                    <TurmaField name="qtd_fund2_ano9" label="9º Ano" value={e.qtd_fund2_ano9 ?? 0} />
+                  </div>
+                  <div style={{ marginTop: '.8rem', borderTop: '1px dashed #ddd6fe', paddingTop: '.6rem' }}>
+                    <label style={{ ...labelStyle, fontSize: '.6rem', color: '#94a3b8', textAlign: 'center' }}>Total (Opcional)</label>
+                    <input name="qtd_fund2" type="number" min="0" defaultValue={e.qtd_fund2 ?? 0}
+                      style={{ ...inputStyle, textAlign: 'center', padding: '.4rem', background: '#fff', fontSize: '.9rem', fontWeight: 700 }} />
+                  </div>
+                </div>
+
+                {/* Médio */}
+                <div style={{ background: '#fef2f2', border: '1.5px solid #fca5a5', borderRadius: 12, padding: '1rem' }}>
+                  <label style={{ ...labelStyle, color: '#dc2626', fontSize: '.68rem' }}>Ens. Médio</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '.4rem' }}>
+                    <TurmaField name="qtd_medio_1s" label="1ª S" value={e.qtd_medio_1s ?? 0} />
+                    <TurmaField name="qtd_medio_2s" label="2ª S" value={e.qtd_medio_2s ?? 0} />
+                    <TurmaField name="qtd_medio_3s" label="3ª S" value={e.qtd_medio_3s ?? 0} />
+                  </div>
+                  <div style={{ marginTop: '.8rem', borderTop: '1px dashed #fca5a5', paddingTop: '.6rem' }}>
+                    <label style={{ ...labelStyle, fontSize: '.6rem', color: '#94a3b8', textAlign: 'center' }}>Total (Opcional)</label>
+                    <input name="qtd_medio" type="number" min="0" defaultValue={e.qtd_medio ?? 0}
+                      style={{ ...inputStyle, textAlign: 'center', padding: '.4rem', background: '#fff', fontSize: '.9rem', fontWeight: 700 }} />
+                  </div>
+                </div>
+
               </div>
-              {/* Hidden fields para compatibilidade com a action */}
-              {(['qtd_fund1_ano1','qtd_fund1_ano2','qtd_fund1_ano3','qtd_fund1_ano4','qtd_fund1_ano5',
-                 'qtd_fund2_ano6','qtd_fund2_ano7','qtd_fund2_ano8','qtd_fund2_ano9',
-                 'qtd_medio_1s','qtd_medio_2s','qtd_medio_3s'] as const).map(f => (
-                <input key={f} type="hidden" name={f} value={(e as any)[f] ?? 0} />
-              ))}
             </div>
           </div>
 

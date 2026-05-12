@@ -62,7 +62,16 @@ export interface Escola {
   contato_cargo: string | null
   diretor_nome: string | null
   qtd_infantil: number
+  qtd_infantil2: number
+  qtd_infantil3: number
+  qtd_infantil4: number
+  qtd_infantil5: number
   qtd_fund1: number
+  qtd_fund1_ano1: number
+  qtd_fund1_ano2: number
+  qtd_fund1_ano3: number
+  qtd_fund1_ano4: number
+  qtd_fund1_ano5: number
   qtd_fund2: number
   qtd_medio: number
   origem_lead: OrigemLead | null
@@ -198,8 +207,17 @@ export interface Contrato {
   infantil5_valor: number
   fund1_ano1_qtd: number
   fund1_ano1_valor: number
+  fund1_ano2_qtd: number
+  fund1_ano2_valor: number
+  fund1_ano3_qtd: number
+  fund1_ano3_valor: number
+  fund1_ano4_qtd: number
+  fund1_ano4_valor: number
+  fund1_ano5_qtd: number
+  fund1_ano5_valor: number
   tempo_contrato: number
   valor_total: number
+  valor_total_calculado: number
   created_at: string
   updated_at: string
   escola?: Escola
@@ -223,6 +241,10 @@ export interface Formulario {
   infantil4_qtd: number
   infantil5_qtd: number
   fund1_ano1_qtd: number
+  fund1_ano2_qtd: number
+  fund1_ano3_qtd: number
+  fund1_ano4_qtd: number
+  fund1_ano5_qtd: number
   data_inicio_letivo: string | null
   data_fim_letivo: string | null
   formato_ano_letivo: string | null
@@ -252,6 +274,30 @@ export interface Formulario {
   ped_orgao: string | null
   ped_email: string | null
   ped_celular: string | null
+}
+
+export interface AuditLog {
+  id: string
+  user_id: string | null
+  user_email: string | null
+  action: string
+  table_name: string
+  record_id: string | null
+  old_data: any
+  new_data: any
+  ip_address: string | null
+  created_at: string
+}
+
+export interface Notificacao {
+  id: string
+  user_id: string
+  titulo: string
+  mensagem: string | null
+  tipo: 'info' | 'warning' | 'success' | 'danger'
+  lida: boolean
+  link: string | null
+  created_at: string
 }
 
 // ─── Labels / Options ─────────────────────────────────────────────────────────

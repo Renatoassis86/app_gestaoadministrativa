@@ -6,6 +6,8 @@ import { formatDate, formatCurrency } from '@/lib/utils'
 import { LABEL } from '@/types/database'
 import { EscolaSelector } from '@/components/ui/EscolaSelector'
 
+export const dynamic = 'force-dynamic'
+
 interface Props { searchParams: Promise<{ escola?: string }> }
 
 // ── Etapas do funil em 2 linhas de 5 ────────────────────────────────────────

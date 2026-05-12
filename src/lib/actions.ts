@@ -22,6 +22,24 @@ export async function signOut() {
   redirect('/login')
 }
 
+// ─── Audit Log Helper ─────────────────────────────────────────────────────────
+
+async function createAuditLog(action: 'INSERT' | 'UPDATE' | 'DELETE', tableName: string, recordId: string | null, newData: any = null, oldData: any = null) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  await supabase.from('audit_log').insert({
+    user_id: user.id,
+    user_email: user.email,
+    action,
+    table_name: tableName,
+    record_id: recordId,
+    new_data: newData,
+    old_data: oldData,
+  })
+}
+
 // ─── Escola ────────────────────────────────────────────────────────────────────
 
 export async function upsertEscola(formData: FormData) {
@@ -49,7 +67,10 @@ export async function upsertEscola(formData: FormData) {
     contato_nome:       formData.get('contato_nome') as string || null,
     contato_cargo:      formData.get('contato_cargo') as string || null,
     diretor_nome:       formData.get('diretor_nome') as string || null,
-    qtd_infantil: parseInt(formData.get('qtd_infantil') as string) || 0,
+    qtd_infantil2: parseInt(formData.get('qtd_infantil2') as string) || 0,
+    qtd_infantil3: parseInt(formData.get('qtd_infantil3') as string) || 0,
+    qtd_infantil4: parseInt(formData.get('qtd_infantil4') as string) || 0,
+    qtd_infantil5: parseInt(formData.get('qtd_infantil5') as string) || 0,
 
     qtd_fund1_ano1: parseInt(formData.get('qtd_fund1_ano1') as string) || 0,
     qtd_fund1_ano2: parseInt(formData.get('qtd_fund1_ano2') as string) || 0,
@@ -67,6 +88,14 @@ export async function upsertEscola(formData: FormData) {
     qtd_medio_3s: parseInt(formData.get('qtd_medio_3s') as string) || 0,
 
     // Totais por segmento: usa valor direto (formulário simplificado) ou soma das turmas
+    get qtd_infantil() {
+      const direto = parseInt(formData.get('qtd_infantil') as string) || 0
+      const soma   = (parseInt(formData.get('qtd_infantil2') as string) || 0)
+                   + (parseInt(formData.get('qtd_infantil3') as string) || 0)
+                   + (parseInt(formData.get('qtd_infantil4') as string) || 0)
+                   + (parseInt(formData.get('qtd_infantil5') as string) || 0)
+      return soma > 0 ? soma : direto
+    },
     get qtd_fund1() {
       const direto = parseInt(formData.get('qtd_fund1') as string) || 0
       const soma   = (parseInt(formData.get('qtd_fund1_ano1') as string) || 0)
@@ -105,6 +134,9 @@ export async function upsertEscola(formData: FormData) {
   if (id) {
     const { error } = await supabase.from('escolas').update(payload).eq('id', id)
     if (error) throw new Error(error.message)
+    
+    await createAuditLog('UPDATE', 'escolas', id, payload)
+    
     revalidatePath(`/comercial/escolas/${id}`)
     redirect(`/comercial/escolas/${id}`)
   } else {
@@ -114,6 +146,9 @@ export async function upsertEscola(formData: FormData) {
       .select('id')
       .single()
     if (error) throw new Error(error.message)
+
+    await createAuditLog('INSERT', 'escolas', data.id, payload)
+
     revalidatePath('/comercial/escolas')
     redirect(`/comercial/escolas/${data.id}`)
   }
@@ -126,14 +161,11 @@ export async function deletarEscola(id: string): Promise<ActionResult> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Não autenticado' }
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (!['gerente', 'supervisor'].includes(profile?.role ?? '')) {
-    return { success: false, error: 'Sem permissão para excluir escolas' }
-  }
-
   // Soft delete: marca como inativa em vez de deletar
   const { error } = await supabase.from('escolas').update({ ativa: false, updated_by: user.id }).eq('id', id)
   if (error) return { success: false, error: error.message }
+
+  await createAuditLog('DELETE', 'escolas', id, { ativa: false })
 
   revalidatePath('/comercial/escolas')
   revalidatePath('/comercial/leads')
@@ -151,10 +183,23 @@ export async function upsertRegistro(formData: FormData) {
   const id         = formData.get('id') as string | null
   const escola_id  = formData.get('escola_id') as string
   const enc        = formData.getAll('encaminhamentos') as string[]
-  const qtd_inf    = parseInt(formData.get('qtd_infantil') as string) || 0
-  const qtd_f1     = parseInt(formData.get('qtd_fund1') as string) || 0
+  
+  // Granulares
+  const q_i2 = parseInt(formData.get('qtd_infantil2') as string) || 0
+  const q_i3 = parseInt(formData.get('qtd_infantil3') as string) || 0
+  const q_i4 = parseInt(formData.get('qtd_infantil4') as string) || 0
+  const q_i5 = parseInt(formData.get('qtd_infantil5') as string) || 0
+  const q_f1_a1 = parseInt(formData.get('qtd_fund1_ano1') as string) || 0
+  const q_f1_a2 = parseInt(formData.get('qtd_fund1_ano2') as string) || 0
+  const q_f1_a3 = parseInt(formData.get('qtd_fund1_ano3') as string) || 0
+  const q_f1_a4 = parseInt(formData.get('qtd_fund1_ano4') as string) || 0
+  const q_f1_a5 = parseInt(formData.get('qtd_fund1_ano5') as string) || 0
+
+  const qtd_inf    = q_i2 + q_i3 + q_i4 + q_i5
+  const qtd_f1     = q_f1_a1 + q_f1_a2 + q_f1_a3 + q_f1_a4 + q_f1_a5
   const qtd_f2     = parseInt(formData.get('qtd_fund2') as string) || 0
   const qtd_med    = parseInt(formData.get('qtd_medio') as string) || 0
+  
   const interesse  = formData.get('interesse') as string || 'medio'
   const prontidao  = formData.get('prontidao') as string || 'esperando_retorno'
   const abertura   = formData.get('abertura') as string || 'media'
@@ -188,19 +233,46 @@ export async function upsertRegistro(formData: FormData) {
     notas_internas:       formData.get('notas_internas') as string || null,
   }
 
+  // 1. Salvar o registro
+  let registroId = id
   if (id) {
     const { error } = await supabase.from('registros').update(payload).eq('id', id)
     if (error) throw new Error(error.message)
   } else {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('registros')
       .insert({ ...payload, created_by: user.id })
+      .select('id')
+      .single()
     if (error) throw new Error(error.message)
+    registroId = data.id
   }
 
-  revalidatePath(`/comercial/escolas/${escola_id}`)
-  revalidatePath('/comercial')
-  redirect(`/comercial/escolas/${escola_id}`)
+  // 2. Atualizar a escola com os novos dados (se houver alteração significativa ou for novo registro)
+  // Sincronizamos os granulares também para manter a integridade
+  if (qtd_inf > 0 || qtd_f1 > 0 || qtd_f2 > 0 || qtd_med > 0) {
+    await supabase.from('escolas').update({
+      qtd_infantil:   qtd_inf,
+      qtd_infantil2:  q_i2,
+      qtd_infantil3:  q_i3,
+      qtd_infantil4:  q_i4,
+      qtd_infantil5:  q_i5,
+      qtd_fund1:      qtd_f1,
+      qtd_fund1_ano1: q_f1_a1,
+      qtd_fund1_ano2: q_f1_a2,
+      qtd_fund1_ano3: q_f1_a3,
+      qtd_fund1_ano4: q_f1_a4,
+      qtd_fund1_ano5: q_f1_a5,
+      qtd_fund2:      qtd_f2,
+      qtd_medio:      qtd_med,
+    }).eq('id', escola_id)
+  }
+
+  await createAuditLog(id ? 'UPDATE' : 'INSERT', 'registros', registroId, payload)
+
+  revalidatePath(`/comercial/escolas/${escola_id}`, 'layout')
+  revalidatePath('/comercial', 'layout')
+  redirect(`/comercial/escolas/${escola_id}?t=${Date.now()}`)
 }
 
 /**
@@ -237,9 +309,10 @@ export async function deleteRegistro(id: string): Promise<ActionResult> {
     return { success: false, error: 'Sem permissão para deletar este registro' }
   }
 
-  const { error } = await supabase.from('registros').delete().eq('id', id)
+  const { error: deleteError } = await supabase.from('registros').delete().eq('id', id)
+  if (deleteError) return { success: false, error: deleteError.message }
 
-  if (error) return { success: false, error: error.message }
+  await createAuditLog('DELETE', 'registros', id, null, registro)
 
   revalidatePath(`/comercial/escolas/${registro.escola_id}`)
   revalidatePath('/comercial')
@@ -295,10 +368,10 @@ export async function upsertNegociacao(formData: FormData) {
     if (error) throw new Error(error.message)
   }
 
-  revalidatePath(`/comercial/escolas/${escola_id}`)
-  revalidatePath('/comercial/pipeline')
-  revalidatePath('/comercial')
-  redirect(`/comercial/escolas/${escola_id}`)
+  revalidatePath(`/comercial/escolas/${escola_id}`, 'layout')
+  revalidatePath('/comercial/pipeline', 'layout')
+  revalidatePath('/comercial', 'layout')
+  redirect(`/comercial/escolas/${escola_id}?t=${Date.now()}`)
 }
 
 /**
