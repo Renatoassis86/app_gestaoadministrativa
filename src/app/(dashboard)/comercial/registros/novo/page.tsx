@@ -248,6 +248,7 @@ export default async function RegistroNovo({ searchParams }: Props) {
                 <div style={{ fontSize: '.68rem', color: '#94a3b8', marginTop: '.1rem', fontFamily: 'var(--font-inter,sans-serif)' }}>Dados de alunos informados nesta interação (base para cálculo de potencial)</div>
               </div>
             </div>
+            <div style={body}>
               {/* Segmentos Granulares */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.25rem' }}>
                 

@@ -150,10 +150,16 @@ export async function upsertEscola(formData: FormData) {
       .single()
     if (error) throw new Error(error.message)
 
-    await createAuditLog('INSERT', 'escolas', data.id, payload)
+    const newId = data.id
 
+    await createAuditLog('INSERT', 'escolas', newId, payload)
+
+    // Garante que a escola seja visível imediatamente (força refresh)
     revalidatePath('/comercial/escolas', 'layout')
-    redirect(`/comercial/escolas/${data.id}?t=${Date.now()}`)
+    revalidatePath('/comercial', 'layout')
+    revalidatePath('/', 'layout')
+
+    redirect(`/comercial/escolas/${newId}?t=${Date.now()}`)
   }
 }
 

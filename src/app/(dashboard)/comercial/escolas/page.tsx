@@ -32,9 +32,9 @@ export default async function EscolasPage({ searchParams }: Props) {
 
   const supabase = await createClient()
 
-  // Query principal
+  // Query principal — busca diretamente da tabela escolas para garantir dados frescos
   let query = supabase
-    .from('escolas_resumo')
+    .from('escolas')
     .select('*', { count: 'exact' })
     .eq('ativa', true)
     .range(from, to)
@@ -46,16 +46,16 @@ export default async function EscolasPage({ searchParams }: Props) {
 
   const { data: escolas, count } = await query
 
-  // KPIs e estados em paralelo
+  // KPIs e estados em paralelo — usando tabela escolas direto
   const [
     { count: nQ },
     { count: nM },
     { count: nF },
     { data: estadosRaw },
   ] = await Promise.all([
-    supabase.from('escolas_resumo').select('*', { count: 'exact', head: true }).eq('ativa', true).eq('classificacao_atual', 'quente'),
-    supabase.from('escolas_resumo').select('*', { count: 'exact', head: true }).eq('ativa', true).eq('classificacao_atual', 'morno'),
-    supabase.from('escolas_resumo').select('*', { count: 'exact', head: true }).eq('ativa', true).eq('classificacao_atual', 'frio'),
+    supabase.from('escolas').select('*', { count: 'exact', head: true }).eq('ativa', true).eq('classificacao_atual', 'quente'),
+    supabase.from('escolas').select('*', { count: 'exact', head: true }).eq('ativa', true).eq('classificacao_atual', 'morno'),
+    supabase.from('escolas').select('*', { count: 'exact', head: true }).eq('ativa', true).eq('classificacao_atual', 'frio'),
     supabase.from('escolas').select('estado').eq('ativa', true).not('estado', 'is', null),
   ])
 

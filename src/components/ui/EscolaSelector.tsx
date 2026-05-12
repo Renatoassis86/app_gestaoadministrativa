@@ -152,8 +152,8 @@ export function EscolaSelector({ escolas, escolaId, basePath, placeholder, extra
                       borderLeft: escolaId === e.id ? '3px solid #0ea5e9' : '3px solid transparent',
                       paddingLeft: '0.55rem',
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
-                    onMouseLeave={e => (e.currentTarget.style.background = escolaId === e.id ? '#eff6ff' : 'transparent')}
+                    onMouseEnter={(evt) => (evt.currentTarget.style.background = '#f8fafc')}
+                    onMouseLeave={(evt) => (evt.currentTarget.style.background = escolaId === e.id ? '#eff6ff' : 'transparent')}
                   >
                     <div style={{ fontWeight: 600, color: '#0f172a' }}>{e.nome}</div>
                     <div style={{ fontSize: '.75rem', color: '#64748b', marginTop: '.2rem' }}>
@@ -196,8 +196,8 @@ export function EscolaSelector({ escolas, escolaId, basePath, placeholder, extra
                       paddingLeft: '0.55rem',
                       opacity: 0.8,
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
-                    onMouseLeave={e => (e.currentTarget.style.background = escolaId === e.id ? '#eff6ff' : 'transparent')}
+                    onMouseEnter={(evt) => (evt.currentTarget.style.background = '#f8fafc')}
+                    onMouseLeave={(evt) => (evt.currentTarget.style.background = escolaId === e.id ? '#eff6ff' : 'transparent')}
                   >
                     <div style={{ fontWeight: 600, color: '#0f172a' }}>{e.nome}</div>
                     <div style={{ fontSize: '.75rem', color: '#64748b', marginTop: '.2rem' }}>
