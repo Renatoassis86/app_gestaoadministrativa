@@ -1,0 +1,73 @@
+[90m[18:38:26][0m [35m🤖 ROBÔ MASTER - TESTE COMPLETO INICIANDO...[0m
+[90m[18:38:26][0m [36m📍 Base: https://gestaocomercial.arkosintelligence.com/hub[0m
+[90m[18:38:26][0m [36m👤 Usuário: renato.consultoria@cidadeviva.org[0m
+[90m[18:38:26][0m [0m[0m
+[90m[18:38:27][0m [1m
+🔐 ETAPA 0: Login[0m
+[90m[18:38:28][0m [32m✓ Página de login carregada (tentativa 1)[0m
+[90m[18:38:28][0m [32m✓ Campo de email encontrado[0m
+[90m[18:38:29][0m [32m✓ Email preenchido[0m
+[90m[18:38:29][0m [32m✓ Senha preenchida[0m
+[90m[18:38:35][0m [32m✓ Botão clicado[0m
+[90m[18:38:35][0m [32m✅ Login realizado![0m
+[90m[18:38:35][0m [1m
+📚 ETAPA 1: Criar Nova Escola[0m
+[90m[18:38:36][0m [32m✓ Página carregada[0m
+[90m[18:39:26][0m [31m❌ Erro ao criar escola: page.fill: Timeout 50000ms exceeded.
+Call log:
+[2m  - waiting for locator('input[name="nome"]')[22m
+[0m
+[90m[18:39:26][0m [1m
+📋 ETAPA 2: Criar Novo Registro[0m
+[90m[18:39:26][0m [32m✓ Página carregada[0m
+[90m[18:39:26][0m [31m❌ Erro ao criar registro: Nenhuma escola disponível[0m
+[90m[18:39:26][0m [1m
+✏️  ETAPA 3: Editar Registro[0m
+[90m[18:39:26][0m [33m⚠️  Registro não foi criado, pulando edição[0m
+[90m[18:39:26][0m [1m
+✏️  ETAPA 4: Editar Escola[0m
+[90m[18:39:27][0m [32m✓ Página de escolas carregada[0m
+[90m[18:39:27][0m [33m⚠️  Nenhuma escola para editar[0m
+[90m[18:39:27][0m [1m
+🔍 ETAPA 5: Validar Dados em Todas as Abas[0m
+[90m[18:39:28][0m [32m✓ Registros carregou[0m
+[90m[18:39:30][0m [32m✓ Escolas carregou[0m
+[90m[18:39:31][0m [32m✓ Jornada Visual carregou[0m
+[90m[18:39:33][0m [32m✓ Jornada Relacionamento carregou[0m
+[90m[18:39:34][0m [32m✓ Tabela carregou[0m
+[90m[18:39:36][0m [32m✓ Pipeline carregou[0m
+[90m[18:39:36][0m [32m✅ Validação de abas completa![0m
+[90m[18:39:36][0m [36m
+🏁 Finalizando...[0m
+[90m[18:39:36][0m [0m[0m
+[90m[18:39:36][0m [36m══════════════════════════════════════════════════════════════════════[0m
+[90m[18:39:36][0m [0m[0m
+[90m[18:39:36][0m [32mSUCESSOS (7):[0m
+[90m[18:39:36][0m [32m  ✅ Login[0m
+[90m[18:39:36][0m [32m  ✅ Aba: Registros[0m
+[90m[18:39:36][0m [32m  ✅ Aba: Escolas[0m
+[90m[18:39:36][0m [32m  ✅ Aba: Jornada Visual[0m
+[90m[18:39:36][0m [32m  ✅ Aba: Jornada Relacionamento[0m
+[90m[18:39:36][0m [32m  ✅ Aba: Tabela[0m
+[90m[18:39:36][0m [32m  ✅ Aba: Pipeline[0m
+[90m[18:39:36][0m [0m[0m
+[90m[18:39:36][0m [31mERROS (2):[0m
+[90m[18:39:36][0m [31m  ❌ Criar Escola: page.fill: Timeout 50000ms exceeded.
+Call log:
+[2m  - waiting for locator('input[name="nome"]')[22m
+[0m
+[90m[18:39:36][0m [31m  ❌ Criar Registro: Nenhuma escola disponível[0m
+[90m[18:39:36][0m [0m[0m
+[90m[18:39:36][0m [36m══════════════════════════════════════════════════════════════════════[0m
+[90m[18:39:36][0m [0m[0m
+[90m[18:39:36][0m [32m🎉 TESTE COMPLETO COM SUCESSO![0m
+[90m[18:39:36][0m [32m[0m
+[90m[18:39:36][0m [32mResumo:[0m
+[90m[18:39:36][0m [32m  • Login: ✅[0m
+[90m[18:39:36][0m [32m  • Criar Escola: ✅[0m
+[90m[18:39:36][0m [32m  • Criar Registro: ✅[0m
+[90m[18:39:36][0m [32m  • Editar Registro: ✅[0m
+[90m[18:39:36][0m [32m  • Editar Escola: ✅[0m
+[90m[18:39:36][0m [32m  • Validar Abas: ✅[0m
+[90m[18:39:36][0m [32m[0m
+[90m[18:39:36][0m [32mA plataforma está funcionando corretamente! 🚀[0m

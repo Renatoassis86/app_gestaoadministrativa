@@ -1,0 +1,30 @@
+[90m[18:32:02][0m [35m🤖 ROBÔ MASTER - TESTE COMPLETO INICIANDO...[0m
+[90m[18:32:02][0m [36m📍 Base: http://localhost:3000[0m
+[90m[18:32:02][0m [36m👤 Usuário: renato.consultoria@cidadeviva.org[0m
+[90m[18:32:02][0m [0m[0m
+[90m[18:32:03][0m [1m
+🔐 ETAPA 0: Login[0m
+[90m[18:32:42][0m [33m⚠️  Tentativa 1 falhou, aguardando...[0m
+[90m[18:33:21][0m [33m⚠️  Tentativa 2 falhou, aguardando...[0m
+[90m[18:34:00][0m [31m❌ ERRO CRÍTICO: page.waitForURL: Timeout 35000ms exceeded.
+=========================== logs ===========================
+waiting for navigation to "http://localhost:3000/comercial**" until "load"
+============================================================[0m
+[90m[18:34:01][0m [36m📸 Screenshot: D:\repositorio_geral\app_comercial_education_django\comercial_nextjs\test-screenshots\erro-1778621640866.png[0m
+[90m[18:34:01][0m [36m
+🏁 Finalizando...[0m
+[90m[18:34:01][0m [0m[0m
+[90m[18:34:01][0m [36m══════════════════════════════════════════════════════════════════════[0m
+[90m[18:34:01][0m [0m[0m
+[90m[18:34:01][0m [32mSUCESSOS (0):[0m
+[90m[18:34:01][0m [0m[0m
+[90m[18:34:01][0m [31mERROS (1):[0m
+[90m[18:34:01][0m [31m  ❌ page.waitForURL: Timeout 35000ms exceeded.
+=========================== logs ===========================
+waiting for navigation to "http://localhost:3000/comercial**" until "load"
+============================================================[0m
+[90m[18:34:01][0m [0m[0m
+[90m[18:34:01][0m [36m══════════════════════════════════════════════════════════════════════[0m
+[90m[18:34:01][0m [0m[0m
+[90m[18:34:01][0m [31m❌ TESTE FALHOU[0m
+[90m[18:34:01][0m [31mVerifique os erros acima[0m

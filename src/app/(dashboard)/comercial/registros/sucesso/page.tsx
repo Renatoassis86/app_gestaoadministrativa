@@ -26,7 +26,34 @@ export default async function RegistroSucessoPage({ searchParams }: Props) {
   // IMPORTANTE: Usar RLS com usuario autenticado
   const { data: registro, error } = await supabase
     .from('registros')
-    .select('*, escola:escolas(id,nome,cidade,estado)')
+    .select(`
+      id,
+      escola_id,
+      data_contato,
+      hora_contato,
+      meio_contato,
+      responsavel_id,
+      contato_nome,
+      contato_cargo,
+      resumo,
+      notas_internas,
+      interesse,
+      prontidao,
+      abertura,
+      encaminhamentos,
+      qtd_infantil,
+      qtd_fund1,
+      qtd_fund2,
+      qtd_medio,
+      proximo_contato,
+      potencial_financeiro,
+      probabilidade,
+      classificacao,
+      created_by,
+      created_at,
+      updated_at,
+      escola:escolas(id,nome,cidade,estado)
+    `)
     .eq('id', registroId)
     .single()
 

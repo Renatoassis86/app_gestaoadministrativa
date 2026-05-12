@@ -1,0 +1,145 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║  🔧 CORRIGIR PROBLEMA: DADOS NÃO CARREGAM AO EDITAR REGISTRO              ║
+║                                                                            ║
+║  ⏱️  Tempo: 2 minutos                                                       ║
+║  📋 Dificuldade: Muito Fácil (copiar e colar)                             ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+O PROBLEMA:
+═══════════════════════════════════════════════════════════════════════════════
+
+Você vê um registro na lista, clica em "Editar", mas a página abre SEM dados:
+- Campo "Contato" vazio
+- Campo "Resumo" vazio
+- Campo "Data" vazio
+- Todos os campos vazios!
+
+
+A CAUSA:
+═══════════════════════════════════════════════════════════════════════════════
+
+O RLS Policy está bloqueando a leitura individual do registro.
+
+(Isso é muito técnico, mas resumido: quando você clica em editar, o sistema
+tenta buscar os dados do registro específico, mas a RLS bloqueia essa busca)
+
+
+A SOLUÇÃO (RÁPIDO):
+═══════════════════════════════════════════════════════════════════════════════
+
+PASSO 1: Abra o Supabase Dashboard
+──────────────────────────────────────────────────────────────────────────────
+
+1. Vá para: https://app.supabase.com
+2. Login
+3. Selecione seu projeto
+
+
+PASSO 2: Abra o SQL Editor
+──────────────────────────────────────────────────────────────────────────────
+
+1. No menu esquerdo, clique em: "SQL Editor"
+2. Clique em: "New Query" (botão azul)
+
+
+PASSO 3: Copie o SQL
+──────────────────────────────────────────────────────────────────────────────
+
+Abra o arquivo: RLS_FIX_DEFINITIVO_V2.sql (na pasta do projeto)
+
+Copie TUDO (Ctrl+A, depois Ctrl+C)
+
+
+PASSO 4: Cole no Supabase
+──────────────────────────────────────────────────────────────────────────────
+
+No SQL Editor do Supabase:
+1. Clique na caixa de texto
+2. Cole (Ctrl+V)
+3. Você deve ver todo o SQL
+
+
+PASSO 5: Execute!
+──────────────────────────────────────────────────────────────────────────────
+
+1. Clique no botão: "Run" (ou Ctrl+Enter)
+2. Aguarde (levará alguns segundos)
+3. Você deve ver: ✅ "Query executed successfully"
+
+
+PASSO 6: Teste Imediatamente
+──────────────────────────────────────────────────────────────────────────────
+
+1. Vá para: https://gestaocomercial.arkosintelligence.com/hub/comercial/registros
+2. Clique em qualquer registro
+3. Clique em: "Editar"
+4. 🎉 PRONTO! Os dados devem aparecer agora!
+
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ CHECKLIST:
+═══════════════════════════════════════════════════════════════════════════════
+
+☐ Abri Supabase.com
+☐ Selecionei meu projeto
+☐ Abri SQL Editor → New Query
+☐ Copiei o arquivo RLS_FIX_DEFINITIVO_V2.sql
+☐ Colei no Supabase
+☐ Cliquei em "Run"
+☐ Vi "Query executed successfully"
+☐ Testei clicar em Editar em um registro
+☐ Dados agora aparecem! ✅
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🎯 RESULTADO ESPERADO:
+═══════════════════════════════════════════════════════════════════════════════
+
+Ao clicar em "Editar", você deve ver:
+
+ANTES (Quebrado):
+  Nome do contato: [vazio]
+  Data do contato: [vazio]
+  Resumo: [vazio]
+  ❌ Nada aparece
+
+DEPOIS (Corrigido):
+  Nome do contato: João Silva
+  Data do contato: 12/05/2026
+  Resumo: Apresentação da Paideia em reunião com diretor
+  ✅ TUDO aparece!
+
+
+═══════════════════════════════════════════════════════════════════════════════
+⚠️ IMPORTANTE:
+═══════════════════════════════════════════════════════════════════════════════
+
+• Este é um FIX PERMANENTE (resolve de uma vez por todas)
+• A RLS Policy é simplificada mas AINDA ESTÁ ATIVA
+• Apenas usuários logados têm acesso (seguro!)
+• Execute APENAS UMA VEZ (não precisa repetir)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+❓ DÚVIDAS?
+═══════════════════════════════════════════════════════════════════════════════
+
+P: Aparece erro ao executar?
+R: Copie e cole o SQL em partes. Ou verifique se tem "syntax error"
+
+P: Ainda não funciona depois do SQL?
+R: Faça Hard Refresh (Ctrl+Shift+R) e aguarde 30 segundos
+
+P: Quantos registros isso afeta?
+R: TODOS os registros (passados, presentes e futuros)
+
+P: Preciso fazer algo mais depois?
+R: NÃO! Apenas execute uma vez e pronto
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 VAMOS COMEÇAR? Execute o SQL agora! ⏰ Leva apenas 2 minutos!

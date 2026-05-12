@@ -47,7 +47,31 @@ export default async function RegistroEditar({ params }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const [{ data: registro }, { data: profiles }] = await Promise.all([
-    supabase.from('registros').select('*, escola:escolas(id,nome)').eq('id', id).single(),
+    supabase.from('registros').select(`
+      id,
+      escola_id,
+      data_contato,
+      hora_contato,
+      meio_contato,
+      responsavel_id,
+      contato_nome,
+      contato_cargo,
+      resumo,
+      notas_internas,
+      interesse,
+      prontidao,
+      abertura,
+      encaminhamentos,
+      qtd_infantil,
+      qtd_fund1,
+      qtd_fund2,
+      qtd_medio,
+      proximo_contato,
+      created_by,
+      created_at,
+      updated_at,
+      escola:escolas(id,nome)
+    `).eq('id', id).single(),
     supabase.from('profiles').select('id, full_name').eq('is_active', true).order('full_name'),
   ])
 

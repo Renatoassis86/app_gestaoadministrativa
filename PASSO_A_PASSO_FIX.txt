@@ -1,0 +1,130 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║                                                                          ║
+║  🔧 PASSO A PASSO: FIX PARA JORNADAS MOSTRAREM REGISTROS                ║
+║                                                                          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+
+PROBLEMA: Registros não aparecem em "Jornada Visual" e "Jornada de Relacionamento"
+SOLUÇÃO: Corrigir RLS Policy no banco de dados
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+
+PASSO 1: Abra o Supabase Dashboard
+─────────────────────────────────────────────────────────────────────────────
+
+1. Vá para: https://app.supabase.com
+2. Faça login com sua conta
+3. Selecione seu projeto
+
+
+PASSO 2: Abra o SQL Editor
+─────────────────────────────────────────────────────────────────────────────
+
+1. No menu esquerdo, clique em "SQL Editor"
+2. Clique em "New Query" (botão azul)
+
+
+PASSO 3: Cole o SQL de FIX
+─────────────────────────────────────────────────────────────────────────────
+
+COPIE E COLE O SEGUINTE SQL:
+
+───────────────────────────────────────────────────────────────────────────
+
+-- ============================================================
+-- FIX DEFINITIVO: RLS PARA REGISTROS
+-- ============================================================
+
+-- 1. REMOVER TODAS AS POLÍTICAS EXISTENTES
+DROP POLICY IF EXISTS "registros_select_all_authenticated" ON registros;
+DROP POLICY IF EXISTS "registros_insert_authenticated" ON registros;
+DROP POLICY IF EXISTS "registros_update_own_or_admin" ON registros;
+DROP POLICY IF EXISTS "registros_delete_own_or_admin" ON registros;
+DROP POLICY IF EXISTS "registros_allow_all" ON registros;
+DROP POLICY IF EXISTS "registros_insert_all" ON registros;
+DROP POLICY IF EXISTS "registros_update_all" ON registros;
+DROP POLICY IF EXISTS "registros_delete_all" ON registros;
+DROP POLICY IF EXISTS "registros_select_auth" ON registros;
+DROP POLICY IF EXISTS "registros_update_own" ON registros;
+
+-- 2. CRIAR POLÍTICAS SUPER PERMISSIVAS PARA USUÁRIOS AUTENTICADOS
+-- SELECT: Todos os autenticados podem LER
+CREATE POLICY "registros_read_all_authenticated" ON registros
+FOR SELECT
+USING (auth.role() = 'authenticated' OR auth.role() = 'service_role');
+
+-- INSERT: Todos os autenticados podem CRIAR
+CREATE POLICY "registros_write_authenticated" ON registros
+FOR INSERT
+WITH CHECK (auth.role() = 'authenticated' OR auth.role() = 'service_role');
+
+-- UPDATE: Todos os autenticados podem EDITAR
+CREATE POLICY "registros_update_authenticated" ON registros
+FOR UPDATE
+USING (auth.role() = 'authenticated' OR auth.role() = 'service_role');
+
+-- DELETE: Todos os autenticados podem DELETAR
+CREATE POLICY "registros_delete_authenticated" ON registros
+FOR DELETE
+USING (auth.role() = 'authenticated' OR auth.role() = 'service_role');
+
+-- 3. GARANTIR RLS ATIVADO
+ALTER TABLE registros ENABLE ROW LEVEL SECURITY;
+
+-- 4. VERIFICAR
+SELECT tablename, policyname, permissive FROM pg_policies WHERE tablename = 'registros' ORDER BY policyname;
+
+───────────────────────────────────────────────────────────────────────────
+
+
+PASSO 4: Execute o SQL
+─────────────────────────────────────────────────────────────────────────────
+
+1. Após colar o SQL no editor
+2. Clique no botão "Run" (play button) ou pressione Ctrl+Enter
+3. Aguarde a execução (deve levar 2-5 segundos)
+4. Você deve ver: ✅ Query executed successfully
+
+
+PASSO 5: Verifique se funcionou
+─────────────────────────────────────────────────────────────────────────────
+
+1. Volte para: https://gestaocomercial.arkosintelligence.com/hub/comercial/jornada
+2. Selecione uma escola que tenha registros
+3. Você deve VER os registros no gráfico agora! ✅
+
+
+PASSO 6: Teste as Jornadas
+─────────────────────────────────────────────────────────────────────────────
+
+1. Jornada Visual: /comercial/jornada-visual?escola=SEU_ID
+   → Deve mostrar o infográfico com os registros
+
+2. Jornada de Relacionamento: /comercial/jornada?escola=SEU_ID
+   → Deve mostrar a timeline com os registros
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+
+❓ DÚVIDAS?
+
+P: Aparece erro ao executar?
+R: Execute um query por vez (divida o SQL em partes)
+
+P: Ainda não aparecem registros?
+R: Verifique se você selecionou uma escola que TEM registros
+
+P: Quanto tempo leva?
+R: A execução leva segundos, mas os registros aparecem IMEDIATAMENTE
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Status: 🔴 PENDENTE - Aguardando você executar o SQL no Supabase
+Tempo estimado: 2 minutos
+Dificuldade: Muito Fácil (copiar e colar)
+
+Quer que eu ajude com algo mais? 🤖

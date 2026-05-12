@@ -1,0 +1,199 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║        🤖 SETUP: CRIAR CREDENCIAL PARA ROBÔ DE TESTES                      ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+📋 CREDENCIAIS QUE SERÃO CRIADAS:
+═════════════════════════════════════════════════════════════════════════════
+
+Email:    teste.robo@cidadeviva.org
+Senha:    RoboTeste@2026
+Permissão: Gerente (acesso total)
+
+
+═════════════════════════════════════════════════════════════════════════════
+✅ PASSO 1: Abrir Supabase
+═════════════════════════════════════════════════════════════════════════════
+
+1. Vá para: https://app.supabase.com
+2. Faça login
+3. Selecione seu projeto
+4. Clique em: "Authentication" (lado esquerdo)
+5. Clique em: "Users"
+
+
+═════════════════════════════════════════════════════════════════════════════
+✅ PASSO 2: Criar Novo Usuário
+═════════════════════════════════════════════════════════════════════════════
+
+1. Clique em: "Create a new user" (botão verde)
+2. Preencha:
+
+   Email:              teste.robo@cidadeviva.org
+   Password:           RoboTeste@2026
+   Confirm password:   RoboTeste@2026
+
+3. ✅ MARQUE: "Auto Confirm User" (checkbox abaixo)
+4. Clique em: "Create User"
+
+
+═════════════════════════════════════════════════════════════════════════════
+✅ PASSO 3: Criar Perfil no Banco
+═════════════════════════════════════════════════════════════════════════════
+
+1. Ainda em Supabase, vá para: "SQL Editor"
+2. Clique em: "New Query"
+3. COPIE E COLE isto:
+
+───────────────────────────────────────────────────────────────────────────
+
+INSERT INTO profiles (
+  id,
+  email,
+  full_name,
+  role,
+  is_active,
+  phone
+)
+SELECT
+  u.id,
+  u.email,
+  'Robô de Testes',
+  'gerente',
+  true,
+  NULL
+FROM auth.users u
+WHERE u.email = 'teste.robo@cidadeviva.org'
+ON CONFLICT (id) DO UPDATE SET
+  full_name = 'Robô de Testes',
+  role = 'gerente',
+  is_active = true;
+
+───────────────────────────────────────────────────────────────────────────
+
+4. Clique em: "Run" ou Ctrl+Enter
+5. Você deve ver: ✅ "Query executed successfully"
+
+
+═════════════════════════════════════════════════════════════════════════════
+✅ PASSO 4: Os Scripts Já Estão Configurados!
+═════════════════════════════════════════════════════════════════════════════
+
+Não precisa fazer mais nada! Os arquivos já foram atualizados:
+
+✅ EXECUTE_TESTE.ps1
+   → Agora usa teste.robo@cidadeviva.org automaticamente
+
+✅ TESTE_COMPLETO.ps1
+   → Agora usa teste.robo@cidadeviva.org automaticamente
+
+✅ test-robo-master.js
+   → Agora usa teste.robo@cidadeviva.org como padrão
+
+✅ test-robo-completo.js
+   → Agora usa teste.robo@cidadeviva.org como padrão
+
+
+═════════════════════════════════════════════════════════════════════════════
+✅ PASSO 5: Testar o Robô
+═════════════════════════════════════════════════════════════════════════════
+
+Abra PowerShell e execute:
+
+   cd "D:\repositorio_geral\app_comercial_education_django\comercial_nextjs"
+   .\EXECUTE_TESTE.ps1
+
+Você deve ver:
+
+   ✓ Configuração:
+     - URL: https://gestaocomercial.arkosintelligence.com/hub
+     - Usuário: teste.robo@cidadeviva.org
+     - Chrome: Visível
+
+   🚀 Iniciando robô...
+
+   [após alguns segundos]
+
+   ✅ LOGIN BEM-SUCEDIDO! ✅
+
+
+═════════════════════════════════════════════════════════════════════════════
+🔍 VERIFICAR SE FUNCIONOU (opcional)
+═════════════════════════════════════════════════════════════════════════════
+
+1. Vá para: https://gestaocomercial.arkosintelligence.com/hub/comercial/login
+2. Digite:
+   Email:    teste.robo@cidadeviva.org
+   Senha:    RoboTeste@2026
+3. Clique em "Entrar"
+4. Você deve conseguir acessar a plataforma normalmente ✅
+
+
+═════════════════════════════════════════════════════════════════════════════
+📊 AGORA O ROBÔ PODE FAZER:
+═════════════════════════════════════════════════════════════════════════════
+
+✅ Login automático
+✅ Criar registros
+✅ Editar registros
+✅ Validar dados em todas as abas
+✅ Testar jornadas (visual + relacionamento)
+✅ Verificar sincronização de dados
+✅ Executar teste completo sem erros
+
+
+═════════════════════════════════════════════════════════════════════════════
+🚀 COMANDOS ÚTEIS:
+═════════════════════════════════════════════════════════════════════════════
+
+# Teste rápido (3 min)
+.\EXECUTE_TESTE.ps1
+
+# Teste completo (5 min)
+.\TESTE_COMPLETO.ps1
+
+# Ver Chrome executando em tempo real
+$env:TEST_HEADLESS = "false"
+.\EXECUTE_TESTE.ps1
+
+# Rodar em câmera lenta (1 segundo entre ações)
+$env:TEST_SLOW_MO = "1000"
+.\TESTE_COMPLETO.ps1
+
+# Com mais timeout (em caso de conexão lenta)
+$env:TEST_TIMEOUT = "80000"
+.\EXECUTE_TESTE.ps1
+
+
+═════════════════════════════════════════════════════════════════════════════
+⚠️ IMPORTANTE:
+═════════════════════════════════════════════════════════════════════════════
+
+• Este usuário é APENAS para testes/automação
+• Ele tem role "gerente" (acesso total)
+• Use APENAS para robôs, não para usuário final
+• Você pode criar quantos testes quiser
+
+
+═════════════════════════════════════════════════════════════════════════════
+❓ DÚVIDAS?
+═════════════════════════════════════════════════════════════════════════════
+
+Erro "Email already exists"?
+→ O usuário já foi criado. Execute o SQL do PASSO 3 para garantir
+
+Erro "Connection refused"?
+→ Verifique sua conexão com internet
+
+Erro no login do robô?
+→ Verifique se o usuário foi criado em Supabase (Authentication → Users)
+
+Robô ainda não consegue acessar?
+→ Aguarde 5 minutos após criar o usuário (às vezes demora para sincronizar)
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+PRÓXIMA ETAPA: Execute .\EXECUTE_TESTE.ps1 e veja o robô funcionando! 🎉
