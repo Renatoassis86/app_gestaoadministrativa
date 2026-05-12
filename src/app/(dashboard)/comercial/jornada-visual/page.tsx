@@ -158,9 +158,14 @@ export default async function JornadaVisualPage({ searchParams }: Props) {
   }
 
   const ultimaInteracao = registros[registros.length - 1]
+  const ultimaNegociacao = negociacoes.filter((n: any) => n.ativa).sort((a: any, b: any) =>
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  )[0]
+
   const etapaAtual = contrato?.contrato_arquivado ? 'arquivado'
     : contrato?.contrato_assinado ? 'assinatura'
     : contrato?.formulario_enviado ? 'formulario'
+    : ultimaNegociacao ? ultimaNegociacao.stage
     : ultimaInteracao ? (PRONTIDAO_STAGE[ultimaInteracao.prontidao] ?? 'qualificacao')
     : escolaId ? 'cadastro'
     : ''
@@ -967,6 +972,179 @@ export default async function JornadaVisualPage({ searchParams }: Props) {
                   </div>
                 )}
               </div>
+
+              {/* ── TIMELINE DE NEGOCIAÇÕES ─────────────────────────────── */}
+              {negociacoes && negociacoes.length > 0 && (
+                <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '2px solid #e2e8f0' }}>
+                  <div style={{
+                    display: 'flex', justifyContent: 'space-between',
+                    alignItems: 'center', marginBottom: '1.5rem',
+                  }}>
+                    <h3 style={{
+                      fontFamily: 'var(--font-cormorant,serif)',
+                      fontSize: '1.25rem', fontWeight: 700, color: '#0f172a',
+                      display: 'flex', alignItems: 'baseline', gap: '.5rem',
+                    }}>
+                      Histórico de Negociações
+                      <span style={{
+                        fontSize: '.78rem', fontWeight: 400, color: '#94a3b8',
+                        fontFamily: 'var(--font-inter,sans-serif)',
+                      }}>
+                        {negociacoes.length} negociação{negociacoes.length !== 1 ? 's' : ''}
+                      </span>
+                    </h3>
+                  </div>
+
+                  <div style={{ position: 'relative' }}>
+                    {/* Trilho vertical */}
+                    <div style={{
+                      position: 'absolute', left: 20, top: 20, bottom: 20,
+                      width: 2,
+                      background: 'linear-gradient(to bottom, #e2e8f0 0%, #f1f5f9 100%)',
+                      zIndex: 0,
+                    }} />
+
+                    {negociacoes.map((neg: any, idx: number) => {
+                      const isLast = idx === negociacoes.length - 1
+                      const stageInfo = ETAPAS.find(e => e.id === neg.stage)
+
+                      return (
+                        <div
+                          key={neg.id}
+                          style={{
+                            display: 'flex', gap: '1.1rem',
+                            marginBottom: isLast ? 0 : '1.5rem',
+                            position: 'relative', zIndex: 1,
+                          }}
+                        >
+                          {/* Marcador circular */}
+                          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '.2rem' }}>
+                            <div style={{
+                              width: 42, height: 42, borderRadius: '50%',
+                              background: `${stageInfo?.cor}18`,
+                              border: `2px solid ${stageInfo?.cor}50`,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              boxShadow: `0 4px 10px ${stageInfo?.cor}22`,
+                              color: stageInfo?.cor,
+                              fontSize: '1rem', fontWeight: 700,
+                            }}>
+                              {stageInfo?.num}
+                            </div>
+                            <div style={{
+                              marginTop: '.25rem',
+                              fontSize: '.52rem', fontWeight: 800,
+                              color: '#94a3b8',
+                              fontFamily: 'var(--font-montserrat,sans-serif)',
+                              background: '#f8fafc',
+                              borderRadius: 99, padding: '.05rem .3rem',
+                              border: '1px solid #e2e8f0',
+                            }}>
+                              #{idx + 1}
+                            </div>
+                          </div>
+
+                          {/* Card */}
+                          <div style={{
+                            flex: 1,
+                            background: neg.ativa ? '#fff' : '#f8fafc',
+                            border: `1px solid ${neg.ativa ? '#e2e8f0' : '#cbd5e1'}`,
+                            borderLeft: `4px solid ${stageInfo?.cor}`,
+                            borderRadius: 12,
+                            padding: '1rem 1.25rem',
+                            boxShadow: '0 2px 10px rgba(15,23,42,.05)',
+                            opacity: neg.ativa ? 1 : 0.7,
+                          }}>
+                            {/* Header do card */}
+                            <div style={{
+                              display: 'flex', justifyContent: 'space-between',
+                              alignItems: 'flex-start', marginBottom: '.7rem',
+                              flexWrap: 'wrap', gap: '.5rem',
+                            }}>
+                              <div>
+                                <div style={{
+                                  fontWeight: 700, fontSize: '.88rem', color: '#0f172a',
+                                  fontFamily: 'var(--font-montserrat,sans-serif)',
+                                  marginBottom: '.2rem',
+                                }}>
+                                  {neg.titulo || stageInfo?.label}
+                                </div>
+                                <div style={{
+                                  fontSize: '.7rem', color: '#94a3b8',
+                                  fontFamily: 'var(--font-inter,sans-serif)',
+                                }}>
+                                  {new Date(neg.created_at).toLocaleDateString('pt-BR', {
+                                    weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
+                                  })}
+                                </div>
+                              </div>
+
+                              {/* Badges */}
+                              <div style={{ display: 'flex', gap: '.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <span style={{
+                                  fontSize: '.65rem', fontWeight: 700,
+                                  fontFamily: 'var(--font-montserrat,sans-serif)',
+                                  background: `${stageInfo?.cor}15`, color: stageInfo?.cor,
+                                  border: `1px solid ${stageInfo?.cor}40`,
+                                  padding: '.15rem .5rem', borderRadius: 99,
+                                }}>
+                                  {stageInfo?.label}
+                                </span>
+                                {neg.valor_estimado && (
+                                  <span className="badge badge-amber" style={{ fontSize: '.63rem' }}>
+                                    {formatCurrency(neg.valor_estimado)}
+                                  </span>
+                                )}
+                                {!neg.ativa && (
+                                  <span style={{
+                                    fontSize: '.63rem', fontWeight: 700,
+                                    fontFamily: 'var(--font-montserrat,sans-serif)',
+                                    background: '#f5f3ff', color: '#7c3aed',
+                                    border: '1px solid #c4b5fd',
+                                    padding: '.15rem .5rem', borderRadius: 99,
+                                  }}>
+                                    Finalizada
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Conteúdo */}
+                            {neg.observacoes && (
+                              <div style={{
+                                fontSize: '.82rem', color: '#334155',
+                                marginBottom: '.7rem',
+                                fontFamily: 'var(--font-inter,sans-serif)',
+                                lineHeight: 1.5,
+                              }}>
+                                {neg.observacoes}
+                              </div>
+                            )}
+
+                            {/* Footer com métricas */}
+                            <div style={{
+                              display: 'flex', gap: '1rem',
+                              fontSize: '.75rem', color: '#64748b',
+                              fontFamily: 'var(--font-inter,sans-serif)',
+                              borderTop: '1px solid #f1f5f9', paddingTop: '.75rem',
+                            }}>
+                              {neg.probabilidade && (
+                                <div>
+                                  <span style={{ fontWeight: 700, color: '#0f172a' }}>Probabilidade:</span> {neg.probabilidade}%
+                                </div>
+                              )}
+                              {neg.previsao_fechamento && (
+                                <div>
+                                  <span style={{ fontWeight: 700, color: '#0f172a' }}>Prev. fechamento:</span> {formatDate(neg.previsao_fechamento)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* ── SIDEBAR DIREITA ─────────────────────────────────────── */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>

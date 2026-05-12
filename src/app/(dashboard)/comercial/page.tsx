@@ -242,8 +242,10 @@ export default async function ComercialDashboard() {
                 {escolasSemContato.map((e: any, idx: number) => {
                   const dias = diasDesdeData(e.updated_at)
                   return (
-                    <Link key={e.id} href={`/comercial/escolas/${e.id}`}
-                      style={{ display: 'flex', alignItems: 'center', gap: '.85rem', padding: '.65rem .85rem', borderRadius: 10, textDecoration: 'none', marginBottom: idx < escolasSemContato.length - 1 ? '.3rem' : 0, background: idx % 2 === 0 ? '#fafafa' : '#fff', border: '1px solid transparent', transition: 'border-color .15s' }}
+                    <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: '.85rem', padding: '.65rem .85rem', borderRadius: 10, marginBottom: idx < escolasSemContato.length - 1 ? '.3rem' : 0, background: idx % 2 === 0 ? '#fafafa' : '#fff', border: '1px solid transparent', transition: 'all .15s', cursor: 'pointer' }}
+                      onMouseEnter={(el) => { el.currentTarget.style.background = '#f1f5f9'; el.currentTarget.style.borderColor = '#e2e8f0' }}
+                      onMouseLeave={(el) => { el.currentTarget.style.background = idx % 2 === 0 ? '#fafafa' : '#fff'; el.currentTarget.style.borderColor = 'transparent' }}
+                      onClick={() => window.location.href = `/comercial/escolas/${e.id}`}
                     >
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: 700, fontSize: '.82rem', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-montserrat,sans-serif)' }}>{e.nome}</div>
@@ -256,10 +258,10 @@ export default async function ComercialDashboard() {
                           {dias}d sem contato
                         </span>
                       )}
-                      <Link href={`/comercial/registros/novo?escola=${e.id}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 7, background: '#d97706', color: '#fff', textDecoration: 'none', fontSize: '1rem', fontWeight: 700, flexShrink: 0 }} title="Registrar contato">
+                      <a href={`/comercial/registros/novo?escola=${e.id}`} onClick={(evt) => evt.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 7, background: '#d97706', color: '#fff', textDecoration: 'none', fontSize: '1rem', fontWeight: 700, flexShrink: 0 }} title="Registrar contato">
                         +
-                      </Link>
-                    </Link>
+                      </a>
+                    </div>
                   )
                 })}
               </div>
