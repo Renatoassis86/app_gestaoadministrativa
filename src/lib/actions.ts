@@ -197,13 +197,20 @@ export async function deletarEscola(id: string): Promise<ActionResult> {
 // ─── Registro ──────────────────────────────────────────────────────────────────
 
 export async function upsertRegistro(formData: FormData) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) redirect('/login')
 
-  const id         = formData.get('id') as string | null
-  const escola_id  = formData.get('escola_id') as string
-  const enc        = formData.getAll('encaminhamentos') as string[]
+    const id         = formData.get('id') as string | null
+    const escola_id  = formData.get('escola_id') as string
+
+    // Validação: escola_id é obrigatório
+    if (!escola_id) {
+      throw new Error('❌ Escola é obrigatória. Selecione uma escola.')
+    }
+
+    const enc        = formData.getAll('encaminhamentos') as string[]
   
   // Granulares
   const q_i2 = parseInt(formData.get('qtd_infantil2') as string) || 0
@@ -304,6 +311,10 @@ export async function upsertRegistro(formData: FormData) {
   revalidatePath('/comercial/pipeline', 'layout')
 
   redirect(`/comercial/escolas/${escola_id}?t=${Date.now()}`)
+  } catch (err: any) {
+    console.error('❌ Erro ao salvar registro:', err.message)
+    throw err
+  }
 }
 
 /**
