@@ -51,7 +51,6 @@ export default async function ComercialDashboard() {
     supabase.from('tarefas')
       .select('*, escola:escolas(nome,id)')
       .eq('status', 'pendente')
-      .lt('vencimento', hoje)
       .limit(5),
     supabase.from('escolas')
       .select('id, nome, cidade, estado, updated_at')
@@ -61,14 +60,11 @@ export default async function ComercialDashboard() {
     supabase.from('tarefas')
       .select('*, escola:escolas(nome,id)')
       .eq('status', 'pendente')
-      .eq('vencimento', hoje)
       .limit(3),
-    // Todas as escolas ativas para calcular quais não têm registro
     supabase.from('escolas')
       .select('id, nome, cidade, estado, created_at, responsavel_id, responsavel:profiles(full_name)')
       .eq('ativa', true)
       .order('created_at', { ascending: false }),
-    // Escolas que já têm pelo menos 1 registro
     supabase.from('registros')
       .select('escola_id'),
   ])
