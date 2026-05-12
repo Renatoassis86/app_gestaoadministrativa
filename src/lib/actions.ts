@@ -291,8 +291,13 @@ export async function upsertRegistro(formData: FormData) {
 
   await createAuditLog(id ? 'UPDATE' : 'INSERT', 'registros', registroId, payload)
 
+  // Revalida todos os paths que usam registros
   revalidatePath(`/comercial/escolas/${escola_id}`, 'layout')
   revalidatePath('/comercial', 'layout')
+  revalidatePath('/comercial/jornada', 'layout')
+  revalidatePath('/comercial/jornada-visual', 'layout')
+  revalidatePath('/comercial/registros', 'layout')
+
   redirect(`/comercial/escolas/${escola_id}?t=${Date.now()}`)
 }
 
@@ -335,9 +340,12 @@ export async function deleteRegistro(id: string): Promise<ActionResult> {
 
   await createAuditLog('DELETE', 'registros', id, null, registro)
 
-  revalidatePath(`/comercial/escolas/${registro.escola_id}`)
-  revalidatePath('/comercial')
-  revalidatePath('/comercial/registros')
+  // Revalida todos os paths que usam registros
+  revalidatePath(`/comercial/escolas/${registro.escola_id}`, 'layout')
+  revalidatePath('/comercial', 'layout')
+  revalidatePath('/comercial/registros', 'layout')
+  revalidatePath('/comercial/jornada', 'layout')
+  revalidatePath('/comercial/jornada-visual', 'layout')
 
   return { success: true, id }
 }
