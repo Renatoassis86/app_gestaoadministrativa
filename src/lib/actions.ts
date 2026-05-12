@@ -205,6 +205,8 @@ export async function upsertRegistro(formData: FormData) {
     const id         = formData.get('id') as string | null
     const escola_id  = formData.get('escola_id') as string
 
+    console.log('📝 [upsertRegistro] Iniciando... user:', user.email, 'id:', id, 'escola_id:', escola_id)
+
     // Validação: escola_id é obrigatório
     if (!escola_id) {
       throw new Error('❌ Escola é obrigatória. Selecione uma escola.')
@@ -264,22 +266,37 @@ export async function upsertRegistro(formData: FormData) {
   // 1. Salvar o registro
   let registroId = id
   if (id) {
+    console.log('📝 [upsertRegistro] Atualizando registro existente:', id)
     const { error } = await supabase.from('registros').update(payload).eq('id', id)
-    if (error) throw new Error(error.message)
+    if (error) {
+      console.error('❌ Erro ao atualizar:', error.message)
+      throw new Error(`Erro ao atualizar registro: ${error.message}`)
+    }
+    console.log('✅ Registro atualizado com sucesso')
   } else {
+    console.log('📝 [upsertRegistro] Inserindo novo registro...')
     const { data, error } = await supabase
       .from('registros')
       .insert({ ...payload, created_by: user.id })
       .select('id')
       .single()
-    if (error) throw new Error(error.message)
+    if (error) {
+      console.error('❌ Erro ao inserir:', error.message, error.details)
+      throw new Error(`Erro ao salvar registro: ${error.message}`)
+    }
+    if (!data) {
+      console.error('❌ Nenhum ID retornado após insert')
+      throw new Error('Falha ao obter ID do novo registro')
+    }
     registroId = data.id
+    console.log('✅ Novo registro criado:', registroId)
   }
 
   // 2. Atualizar a escola com os novos dados (se houver alteração significativa ou for novo registro)
   // Sincronizamos os granulares também para manter a integridade
   if (qtd_inf > 0 || qtd_f1 > 0 || qtd_f2 > 0 || qtd_med > 0) {
-    await supabase.from('escolas').update({
+    console.log('📝 [upsertRegistro] Atualizando quantitativos da escola...')
+    const { error: updateSchoolError } = await supabase.from('escolas').update({
       qtd_infantil:   qtd_inf,
       qtd_infantil2:  q_i2,
       qtd_infantil3:  q_i3,
@@ -294,11 +311,18 @@ export async function upsertRegistro(formData: FormData) {
       qtd_fund2:      qtd_f2,
       qtd_medio:      qtd_med,
     }).eq('id', escola_id)
+
+    if (updateSchoolError) {
+      console.warn('⚠️ Erro ao atualizar escola (não crítico):', updateSchoolError.message)
+    } else {
+      console.log('✅ Escola atualizada com dados de quantitativos')
+    }
   }
 
   await createAuditLog(id ? 'UPDATE' : 'INSERT', 'registros', registroId, payload)
 
   // Revalida todos os paths que usam registros
+  console.log('📝 [upsertRegistro] Revalidando cache...')
   revalidatePath(`/comercial/escolas/${escola_id}`, 'layout')
   revalidatePath(`/comercial/escolas/${escola_id}/editar`, 'layout')
   revalidatePath('/comercial', 'layout')
@@ -309,12 +333,19 @@ export async function upsertRegistro(formData: FormData) {
   revalidatePath('/comercial/leads', 'layout')
   revalidatePath('/comercial/tabela', 'layout')
   revalidatePath('/comercial/pipeline', 'layout')
+  console.log('✅ Cache revalidado')
 
   // Redirecionar para página de sucesso com resumo
+  console.log('✅ Redirecionando para sucesso com ID:', registroId)
   redirect(`/comercial/registros/sucesso?id=${registroId}`)
   } catch (err: any) {
-    console.error('❌ Erro ao salvar registro:', err.message)
-    throw err
+    console.error('❌ [upsertRegistro] Erro Fatal:', {
+      message: err.message,
+      stack: err.stack,
+      code: err.code,
+      details: err.details,
+    })
+    throw new Error(`Falha ao salvar registro: ${err.message}. Por favor, tente novamente.`)
   }
 }
 

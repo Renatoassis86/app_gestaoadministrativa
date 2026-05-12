@@ -7,6 +7,7 @@ import { LABEL } from '@/types/database'
 import { EscolaSelector } from '@/components/ui/EscolaSelector'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 5
 
 interface Props { searchParams: Promise<{ escola?: string }> }
 
