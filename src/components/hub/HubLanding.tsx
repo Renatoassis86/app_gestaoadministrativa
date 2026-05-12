@@ -11,7 +11,7 @@ const MODULES = [
     tagline: 'CRM completo para parcerias com escolas',
     description:
       'Cadastro de escolas, pipeline Kanban, registros de negociação, contratos, dashboard e indicadores em tempo real.',
-    href: '/login',
+    href: '/hub/comercial/login',
     color: '#d97706',
     bg: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
     icon: (
