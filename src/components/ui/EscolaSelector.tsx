@@ -67,16 +67,21 @@ export function EscolaSelector({ escolas, escolaId, basePath, placeholder, extra
       </label>
 
       <div ref={containerRef} style={{ position: 'relative', minWidth: 280, maxWidth: 480 }}>
-        {/* Input de busca */}
+        {/* Input de busca com autocompletar */}
         <input
           type="text"
-          placeholder={placeholder ?? 'Buscar escola, cidade, estado...'}
+          placeholder={placeholder ?? 'Digite para buscar escola, cidade ou estado...'}
           value={dropdownAberto ? busca : (escolaSelecionada?.nome ?? '')}
           onChange={e => {
             setBusca(e.target.value)
             setDropdownAberto(true)
           }}
           onFocus={() => setDropdownAberto(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+              e.preventDefault()
+            }
+          }}
           className="form-control"
           style={{
             width: '100%',
@@ -84,7 +89,10 @@ export function EscolaSelector({ escolas, escolaId, basePath, placeholder, extra
             paddingRight: '2rem',
             fontSize: '.85rem',
             fontFamily: 'var(--font-inter, sans-serif)',
+            transition: 'border-color .15s',
+            borderColor: busca.trim() && dropdownAberto ? '#0ea5e9' : '#e2e8f0',
           }}
+          autoComplete="off"
         />
 
         {/* Ícone dropdown */}
@@ -105,7 +113,7 @@ export function EscolaSelector({ escolas, escolaId, basePath, placeholder, extra
           <polyline points="6 9 12 15 18 9"></polyline>
         </svg>
 
-        {/* Dropdown de resultados */}
+        {/* Dropdown de resultados com autocompletar */}
         {dropdownAberto && (
           <div style={{
             position: 'absolute',
@@ -114,12 +122,13 @@ export function EscolaSelector({ escolas, escolaId, basePath, placeholder, extra
             right: 0,
             marginTop: '.4rem',
             background: '#fff',
-            border: '1px solid #e2e8f0',
+            border: `1.5px solid ${busca.trim() ? '#0ea5e9' : '#e2e8f0'}`,
             borderRadius: 10,
-            boxShadow: '0 8px 24px rgba(0,0,0,.12)',
+            boxShadow: busca.trim() ? '0 8px 24px rgba(14,165,233,.15)' : '0 8px 24px rgba(0,0,0,.12)',
             zIndex: 1000,
             maxHeight: 320,
             overflowY: 'auto',
+            transition: 'border-color .15s, box-shadow .15s',
           }}>
             {/* CRM */}
             {crm_filtrado.length > 0 && (
@@ -129,13 +138,17 @@ export function EscolaSelector({ escolas, escolaId, basePath, placeholder, extra
                   fontSize: '.72rem',
                   fontWeight: 700,
                   textTransform: 'uppercase',
-                  color: '#94a3b8',
+                  color: '#0ea5e9',
                   letterSpacing: '.05em',
-                  background: '#f1f5f9',
-                  borderBottom: '1px solid #e2e8f0',
+                  background: '#f0f9ff',
+                  borderBottom: '1px solid #bfdbfe',
                   fontFamily: 'var(--font-montserrat,sans-serif)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                 }}>
-                  ✓ Escolas no CRM ({crm_filtrado.length})
+                  <span>✓ Escolas no CRM</span>
+                  <span style={{ background: '#0ea5e9', color: '#fff', borderRadius: 99, padding: '.1rem .5rem', fontSize: '.65rem' }}>{crm_filtrado.length}</span>
                 </div>
                 {crm_filtrado.map(e => (
                   <div
@@ -172,13 +185,17 @@ export function EscolaSelector({ escolas, escolaId, basePath, placeholder, extra
                   fontSize: '.72rem',
                   fontWeight: 700,
                   textTransform: 'uppercase',
-                  color: '#94a3b8',
+                  color: '#d97706',
                   letterSpacing: '.05em',
-                  background: '#f1f5f9',
-                  borderBottom: '1px solid #e2e8f0',
+                  background: '#fef3c7',
+                  borderBottom: '1px solid #fcd34d',
                   fontFamily: 'var(--font-montserrat,sans-serif)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                 }}>
-                  ◈ Banco de Leads ({lead_filtrado.length})
+                  <span>◈ Banco de Leads</span>
+                  <span style={{ background: '#d97706', color: '#fff', borderRadius: 99, padding: '.1rem .5rem', fontSize: '.65rem' }}>{lead_filtrado.length}</span>
                 </div>
                 {lead_filtrado.map(e => (
                   <div
@@ -217,7 +234,20 @@ export function EscolaSelector({ escolas, escolaId, basePath, placeholder, extra
                 color: '#94a3b8',
                 fontFamily: 'var(--font-inter,sans-serif)',
               }}>
-                Nenhuma escola encontrada
+                {busca.trim()
+                  ? <>
+                      <div style={{ marginBottom: '.5rem' }}>🔍 Nenhuma escola encontrada</div>
+                      <div style={{ fontSize: '.7rem', color: '#cbd5e1' }}>
+                        Tente outro nome, cidade ou estado
+                      </div>
+                    </>
+                  : <>
+                      <div style={{ marginBottom: '.5rem' }}>Carregando escolas...</div>
+                      <div style={{ fontSize: '.7rem', color: '#cbd5e1' }}>
+                        Digite para buscar ou escolha abaixo
+                      </div>
+                    </>
+                }
               </div>
             )}
           </div>
