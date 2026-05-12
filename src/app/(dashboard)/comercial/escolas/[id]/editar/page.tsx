@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { PERFIL_OPTIONS, ORIGEM_OPTIONS, CARGO_CONTATO_OPTIONS } from '@/types/database'
 import { CheckboxPaideia } from '@/components/ui/CheckboxPaideia'
 
+export const dynamic = 'force-dynamic'
+
 const labelStyle: React.CSSProperties = {
   display: 'block', fontFamily: 'var(--font-montserrat,sans-serif)',
   fontSize: '.7rem', fontWeight: 700, textTransform: 'uppercase',

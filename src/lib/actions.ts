@@ -132,25 +132,28 @@ export async function upsertEscola(formData: FormData) {
   }
 
   if (id) {
+    // EDIÇÃO: atualiza escola existente
     const { error } = await supabase.from('escolas').update(payload).eq('id', id)
     if (error) throw new Error(error.message)
-    
+
     await createAuditLog('UPDATE', 'escolas', id, payload)
-    
-    revalidatePath(`/comercial/escolas/${id}`)
-    redirect(`/comercial/escolas/${id}`)
+
+    revalidatePath(`/comercial/escolas/${id}`, 'layout')
+    revalidatePath('/comercial/escolas', 'layout')
+    redirect(`/comercial/escolas/${id}?t=${Date.now()}`)
   } else {
+    // NOVO CADASTRO: insere nova escola no CRM (tabela escolas)
     const { data, error } = await supabase
       .from('escolas')
-      .insert({ ...payload, created_by: user.id })
+      .insert({ ...payload, created_by: user.id, ativa: true })
       .select('id')
       .single()
     if (error) throw new Error(error.message)
 
     await createAuditLog('INSERT', 'escolas', data.id, payload)
 
-    revalidatePath('/comercial/escolas')
-    redirect(`/comercial/escolas/${data.id}`)
+    revalidatePath('/comercial/escolas', 'layout')
+    redirect(`/comercial/escolas/${data.id}?t=${Date.now()}`)
   }
 }
 
@@ -161,16 +164,28 @@ export async function deletarEscola(id: string): Promise<ActionResult> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Não autenticado' }
 
-  // Soft delete: marca como inativa em vez de deletar
-  const { error } = await supabase.from('escolas').update({ ativa: false, updated_by: user.id }).eq('id', id)
-  if (error) return { success: false, error: error.message }
+  try {
+    // Soft delete: marca como inativa em vez de deletar (preserva histórico)
+    const { error } = await supabase
+      .from('escolas')
+      .update({ ativa: false, updated_by: user.id })
+      .eq('id', id)
 
-  await createAuditLog('DELETE', 'escolas', id, { ativa: false })
+    if (error) return { success: false, error: error.message }
 
-  revalidatePath('/comercial/escolas')
-  revalidatePath('/comercial/leads')
-  revalidatePath('/comercial')
-  return { success: true, id }
+    await createAuditLog('DELETE', 'escolas', id, { ativa: false })
+
+    // Revalida múltiplos paths para garantir dados frescos
+    revalidatePath('/comercial/escolas', 'layout')
+    revalidatePath('/comercial/escolas/[id]', 'layout')
+    revalidatePath('/comercial/pipeline', 'layout')
+    revalidatePath('/comercial/leads', 'layout')
+    revalidatePath('/comercial', 'layout')
+
+    return { success: true, id }
+  } catch (err: any) {
+    return { success: false, error: err.message ?? 'Erro ao excluir escola' }
+  }
 }
 
 // ─── Registro ──────────────────────────────────────────────────────────────────
