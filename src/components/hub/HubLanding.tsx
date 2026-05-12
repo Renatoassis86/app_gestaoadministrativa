@@ -92,7 +92,7 @@ export default function HubLanding() {
             <Image
               src="/images/logo-education.png"
               alt="Cidade Viva Education"
-              width={44}
+              width={160}
               height={44}
               priority
               style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)', opacity: 0.95 }}
