@@ -6,6 +6,9 @@ import { Plus, Search } from 'lucide-react'
 import { LABEL } from '@/types/database'
 import { DeleteRegistroBtn } from '@/components/comercial/DeleteRegistroBtn'
 
+// Revalidar a cada 10 segundos (dados sempre frescos)
+export const revalidate = 10
+
 interface Props { searchParams: Promise<{ q?: string; classif?: string; page?: string }> }
 
 export default async function RegistrosPage({ searchParams }: Props) {
