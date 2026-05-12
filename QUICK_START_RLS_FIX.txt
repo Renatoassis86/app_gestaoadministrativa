@@ -1,0 +1,103 @@
+═══════════════════════════════════════════════════════════════════════════════
+  QUICK START — RLS FIX (2 MINUTOS)
+═══════════════════════════════════════════════════════════════════════════════
+
+PROBLEMA:
+  ❌ Não consegue deletar escolas
+  ❌ Não remove negociações do pipeline
+  ❌ Consultores não conseguem editar
+
+SOLUÇÃO:
+
+1. Abra: https://supabase.com/dashboard/project/lyisdsnocroocxfblvqf/sql/new
+
+2. Cole TODO este conteúdo:
+
+═══════════════════════════════════════════════════════════════════════════════
+create or replace function is_supervisor()
+returns boolean language sql security definer stable as $$
+  select coalesce(
+    (select role in ('gerente','supervisor') from profiles where id = auth.uid()),
+    false
+  )
+$$;
+
+create or replace function can_view_all()
+returns boolean language sql security definer stable as $$
+  select coalesce(
+    (select role in ('gerente','supervisor','consultor') from profiles where id = auth.uid()),
+    false
+  )
+$$;
+
+drop policy if exists "Deletar escolas (apenas gerente)" on escolas;
+create policy "Deletar escolas (apenas supervisor)" on escolas
+for delete using (is_supervisor());
+
+drop policy if exists "Deletar negociações" on negociacoes;
+create policy "Deletar negociações" on negociacoes
+for delete using (
+  is_supervisor() or responsavel_id = auth.uid() or created_by = auth.uid()
+);
+
+drop policy if exists "Atualizar escolas" on escolas;
+create policy "Atualizar escolas" on escolas
+for update using (
+  is_supervisor() or responsavel_id = auth.uid() or responsavel_id is null
+);
+
+drop policy if exists "Atualizar negociações" on negociacoes;
+create policy "Atualizar negociações" on negociacoes
+for update using (
+  is_supervisor() or responsavel_id = auth.uid() or created_by = auth.uid()
+);
+
+drop policy if exists "Atualizar registros" on registros;
+create policy "Atualizar registros" on registros
+for update using (
+  is_supervisor() or responsavel_id = auth.uid() or created_by = auth.uid()
+);
+
+drop policy if exists "Atualizar tarefas" on tarefas;
+create policy "Atualizar tarefas" on tarefas
+for update using (
+  is_supervisor() or responsavel_id = auth.uid() or created_by = auth.uid()
+);
+
+drop policy if exists "Deletar registros" on registros;
+create policy "Deletar registros" on registros
+for delete using (is_supervisor() or created_by = auth.uid());
+
+drop policy if exists "Deletar tarefas" on tarefas;
+create policy "Deletar tarefas" on tarefas
+for delete using (is_supervisor() or created_by = auth.uid());
+
+drop policy if exists "Deletar notas" on notas_escola;
+create policy "Deletar notas" on notas_escola
+for delete using (is_supervisor() or created_by = auth.uid());
+
+drop policy if exists "Deletar contatos" on contatos_escola;
+create policy "Deletar contatos" on contatos_escola
+for delete using (is_supervisor() or created_by = auth.uid());
+
+select 'RLS FIXADO ✅' as resultado;
+═══════════════════════════════════════════════════════════════════════════════
+
+3. Clique em RUN (Ctrl+Enter ou ⌘+Enter)
+
+4. Verifique a resposta: "RLS FIXADO ✅"
+
+5. Reinicie o Next.js:
+   npm run dev
+
+6. Logout e Login novamente
+
+✅ PRONTO! Agora funciona tudo:
+   • Deletar escolas
+   • Remover do pipeline
+   • Editar como consultor
+   • Buscar com autocomplete
+
+═══════════════════════════════════════════════════════════════════════════════
+Para mais detalhes: ../IMPLEMENTACAO_COMPLETA.md
+═══════════════════════════════════════════════════════════════════════════════
