@@ -16,14 +16,33 @@ export default async function RegistroSucessoPage({ searchParams }: Props) {
 
   const supabase = await createClient()
 
+  // Validar autenticação
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  console.log('📝 [RegistroSucessoPage] Carregando registro:', registroId, 'para user:', user.email)
+
   // Buscar os dados do registro que foi salvo
+  // IMPORTANTE: Usar RLS com usuario autenticado
   const { data: registro, error } = await supabase
     .from('registros')
     .select('*, escola:escolas(id,nome,cidade,estado)')
     .eq('id', registroId)
     .single()
 
-  if (error || !registro) redirect('/comercial/registros')
+  if (error) {
+    console.error('❌ Erro ao buscar registro:', error.message)
+    console.error('Detalhes:', error)
+    // Em vez de redirecionar silenciosamente, mostrar o erro
+    redirect(`/comercial/registros?error=Não foi possível carregar o registro. Tente novamente.`)
+  }
+
+  if (!registro) {
+    console.warn('⚠️ Registro não encontrado:', registroId)
+    redirect('/comercial/registros?error=Registro não encontrado')
+  }
+
+  console.log('✅ Registro carregado com sucesso:', registroId)
 
   const CLASSIF_COR: Record<string, { bg: string; text: string; dot: string }> = {
     quente: { bg: '#fef2f2', text: '#dc2626', dot: '#dc2626' },
