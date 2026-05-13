@@ -1,0 +1,22 @@
+# Arquivos de teste/diagnóstico não precisam em produção
+test-robo-*.js
+test_*.js
+apply_rls_fix.js
+nuke_rls_policies.js
+fix_rls_final.sql
+verify_rls.sql
+RLS_FIX_*.sql
+SQL_FIX_*.sql
+
+# Documentação interna
+DIAGNOSTICO_*.txt
+CORRIGIR_*.txt
+SETUP_*.txt
+STATUS_*.txt
+PROBLEMA_*.md
+GUIA_*.md
+INDICE_*.md
+CRIAR_USER_*.md
+CI_CD_*.md
+EXECUTE_TESTE.ps1
+TESTE_COMPLETO.ps1
