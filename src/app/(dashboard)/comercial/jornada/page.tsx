@@ -269,7 +269,7 @@ export default async function JornadaPage({ searchParams }: Props) {
   if (escolaId) {
     const [r0, r1, r2, r3, r4] = await Promise.all([
       supabase.from('escolas_resumo').select('*').eq('id', escolaId).single(),
-      supabase.from('registros').select('*, responsavel:profiles(full_name)').eq('escola_id', escolaId).order('data_contato'),
+      supabase.from('registros').select('*, responsavel:profiles!responsavel_id(full_name)').eq('escola_id', escolaId).order('data_contato'),
       supabase.from('tarefas').select('*').eq('escola_id', escolaId).eq('status', 'pendente').order('vencimento'),
       supabase.from('negociacoes').select('*').eq('escola_id', escolaId).eq('ativa', true),
       supabase.from('contratos').select('contrato_assinado, contrato_arquivado').eq('escola_id', escolaId).single(),

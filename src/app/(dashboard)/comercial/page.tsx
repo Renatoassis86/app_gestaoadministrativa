@@ -46,7 +46,7 @@ export default async function ComercialDashboard() {
       .order('data_contato', { ascending: false })
       .limit(8),
     supabase.from('escolas')
-      .select('id, nome, cidade, estado, created_at, responsavel_id, responsavel:profiles(full_name)')
+      .select('id, nome, cidade, estado, created_at, responsavel_id, responsavel:profiles!responsavel_id(full_name)')
       .eq('ativa', true)
       .order('created_at', { ascending: false }),
     supabase.from('registros')

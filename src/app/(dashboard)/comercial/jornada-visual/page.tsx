@@ -151,7 +151,7 @@ export default async function JornadaVisualPage({ searchParams }: Props) {
   if (escolaId) {
     const [{ data: e }, { data: r }, { data: c }, { data: n }] = await Promise.all([
       supabase.from('escolas_resumo').select('*').eq('id', escolaId).single(),
-      supabase.from('registros').select('*, responsavel:profiles(full_name)').eq('escola_id', escolaId).order('data_contato'),
+      supabase.from('registros').select('*, responsavel:profiles!responsavel_id(full_name)').eq('escola_id', escolaId).order('data_contato'),
       supabase.from('contratos').select('*').eq('escola_id', escolaId).single(),
       supabase.from('negociacoes').select('*').eq('escola_id', escolaId).order('created_at'),
     ])

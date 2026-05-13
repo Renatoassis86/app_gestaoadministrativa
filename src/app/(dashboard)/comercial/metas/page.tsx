@@ -97,7 +97,7 @@ export default async function MetasPage() {
       .order('created_at', { ascending: false }),
 
     supabase.from('registros')
-      .select('escola_id, data_contato, classificacao, responsavel:profiles(full_name), escola:escolas(nome)')
+      .select('escola_id, data_contato, classificacao, responsavel:profiles!responsavel_id(full_name), escola:escolas(nome)')
       .order('data_contato', { ascending: false }),
 
     // ✅ NOVAS ESCOLAS PARCEIRAS = contrato assinado por ambas as partes
