@@ -140,13 +140,14 @@ export default function HubLanding() {
       <section style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
         {/* Vídeo de fundo (YouTube embed sem branding/controles) */}
         <div style={{
-          position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none',
+          position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden',
         }}>
           <iframe
-            src="https://www.youtube-nocookie.com/embed/gU00NwWoG8w?autoplay=1&mute=1&loop=1&playlist=gU00NwWoG8w&controls=0&showinfo=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&fs=0&playsinline=1&start=35&cc_load_policy=0"
+            src="https://www.youtube-nocookie.com/embed/gU00NwWoG8w?autoplay=1&mute=1&loop=1&playlist=gU00NwWoG8w&controls=0&showinfo=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&fs=0&playsinline=1&start=35&cc_load_policy=0&enablejsapi=0"
             title=""
             frameBorder={0}
             allow="autoplay; encrypted-media; picture-in-picture"
+            tabIndex={-1}
             style={{
               position: 'absolute',
               top: '50%', left: '50%',
@@ -161,15 +162,25 @@ export default function HubLanding() {
           />
         </div>
 
+        {/* Camada de bloqueio: captura todos os eventos do mouse antes que cheguem ao iframe,
+            impedindo que o YouTube renderize os controles em hover/click/touch */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute', inset: 0, zIndex: 1, background: 'transparent',
+            cursor: 'default',
+          }}
+        />
+
         {/* Overlay escuro */}
         <div style={{
-          position: 'absolute', inset: 0, zIndex: 1,
+          position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
           background: 'linear-gradient(180deg, rgba(15,23,42,.88) 0%, rgba(15,23,42,.7) 50%, rgba(15,23,42,.95) 100%)',
         }} />
 
         {/* Conteúdo do hero */}
         <div style={{
-          position: 'relative', zIndex: 2, maxWidth: 1280, margin: '0 auto',
+          position: 'relative', zIndex: 3, maxWidth: 1280, margin: '0 auto',
           padding: '7rem 1.75rem 4rem', width: '100%',
         }}>
           <div style={{ maxWidth: 780 }}>
