@@ -237,35 +237,6 @@ export default function HubLanding() {
             </div>
           </div>
 
-          {/* Estatísticas no hero */}
-          <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-            gap: '1.25rem', marginTop: '4rem', maxWidth: 720,
-          }}>
-            {[
-              ['+282', 'Escolas parceiras'],
-              ['3', 'Módulos integrados'],
-              ['Real-time', 'Indicadores'],
-              ['100%', 'Centralizado'],
-            ].map(([val, sub]) => (
-              <div key={val} style={{ borderLeft: '2px solid rgba(217,119,6,.5)', paddingLeft: '.85rem' }}>
-                <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.85rem', fontWeight: 800, color: '#fbbf24', lineHeight: 1 }}>{val}</div>
-                <div style={{ fontSize: '.7rem', color: 'rgba(255,255,255,.55)', fontFamily: 'var(--font-montserrat,sans-serif)', marginTop: '.3rem', textTransform: 'uppercase', letterSpacing: '.07em' }}>{sub}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Indicador de scroll */}
-          <div style={{
-            position: 'absolute', bottom: '2.5rem', left: '50%', transform: 'translateX(-50%)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '.4rem',
-            color: 'rgba(255,255,255,.4)', fontSize: '.65rem',
-            fontFamily: 'var(--font-montserrat,sans-serif)', letterSpacing: '.15em',
-            textTransform: 'uppercase', animation: 'bounce 2s infinite',
-          }}>
-            Role para baixo
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
-          </div>
         </div>
       </section>
 
