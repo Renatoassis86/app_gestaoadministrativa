@@ -138,16 +138,28 @@ export default function HubLanding() {
 
       {/* ══════════ HERO COM VÍDEO ══════════ */}
       <section style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
-        {/* Vídeo de fundo */}
-        <video
-          autoPlay muted loop playsInline
-          style={{
-            position: 'absolute', inset: 0, width: '100%', height: '100%',
-            objectFit: 'cover', zIndex: 0,
-          }}
-        >
-          <source src="/videos/institucional.mp4" type="video/mp4" />
-        </video>
+        {/* Vídeo de fundo (YouTube embed sem branding/controles) */}
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none',
+        }}>
+          <iframe
+            src="https://www.youtube-nocookie.com/embed/gU00NwWoG8w?autoplay=1&mute=1&loop=1&playlist=gU00NwWoG8w&controls=0&showinfo=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&fs=0&playsinline=1&start=35&cc_load_policy=0"
+            title=""
+            frameBorder={0}
+            allow="autoplay; encrypted-media; picture-in-picture"
+            style={{
+              position: 'absolute',
+              top: '50%', left: '50%',
+              width: '177.78vh',      // 16:9 calculado pela altura do viewport
+              height: '56.25vw',      // 16:9 calculado pela largura do viewport
+              minWidth: '100%',
+              minHeight: '100%',
+              transform: 'translate(-50%, -50%) scale(1.35)', // escala para esconder marcas residuais do YouTube
+              pointerEvents: 'none',
+              border: 0,
+            }}
+          />
+        </div>
 
         {/* Overlay escuro */}
         <div style={{
