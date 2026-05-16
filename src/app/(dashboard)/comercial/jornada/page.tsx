@@ -316,6 +316,128 @@ export default async function JornadaPage({ searchParams }: Props) {
           animation: pulseRing 2s ease-in-out infinite;
           pointer-events: none;
         }
+
+        /* ============ TIMELINE INFOGRÁFICA — JORNADA DE RELACIONAMENTO ============ */
+        /* Mobile-first: linha à esquerda, card único à direita */
+        .jornada-timeline { position: relative }
+        .jornada-rail {
+          position: absolute;
+          top: 0; bottom: 0;
+          left: 24px;
+          width: 2px;
+          background: linear-gradient(to bottom, transparent 0%, #e2e8f0 6%, #cbd5e1 50%, #e2e8f0 94%, transparent 100%);
+          z-index: 0;
+        }
+        .jornada-row {
+          display: grid;
+          grid-template-columns: 48px 1fr;
+          align-items: start;
+          gap: 0;
+          animation: fadeInUp .45s ease both;
+        }
+        .jornada-row:nth-child(1) { animation-delay: .05s }
+        .jornada-row:nth-child(2) { animation-delay: .10s }
+        .jornada-row:nth-child(3) { animation-delay: .15s }
+        .jornada-row:nth-child(4) { animation-delay: .20s }
+        .jornada-row:nth-child(5) { animation-delay: .25s }
+        .jornada-row:nth-child(6) { animation-delay: .30s }
+        .jornada-row:nth-child(n+7) { animation-delay: .35s }
+
+        .jornada-marker-slot {
+          grid-column: 1 / 2;
+          grid-row: 1 / 2;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding-top: 14px;
+          position: relative;
+          z-index: 2;
+        }
+        .jornada-marker {
+          width: 44px; height: 44px;
+          border-radius: 50%;
+          background: #ffffff;
+          border-style: solid;
+          border-width: 3px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: var(--font-montserrat, sans-serif);
+          font-weight: 800;
+          font-size: .9rem;
+          transition: transform .2s ease;
+        }
+        .jornada-marker--last { animation: pulseRing 2s ease-in-out infinite }
+        .jornada-progress-badge {
+          margin-top: 8px;
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          background: #ffffff;
+          border-style: solid;
+          border-width: 1px;
+          border-radius: 999px;
+          padding: 2px 7px;
+          font-size: .62rem;
+          font-weight: 800;
+          font-family: var(--font-montserrat, sans-serif);
+          white-space: nowrap;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        .jornada-card-slot {
+          grid-column: 2 / 3;
+          grid-row: 1 / 2;
+          padding-left: 16px;
+          min-width: 0;
+        }
+        .jornada-card {
+          background: #ffffff;
+          border-radius: 14px;
+          border-style: solid;
+          border-width: 1px;
+          overflow: hidden;
+          transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .jornada-card:hover {
+          transform: translateY(-2px);
+        }
+        .jornada-card-stripe { height: 4px }
+        .jornada-card-header {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 1rem 1.25rem .65rem;
+        }
+
+        /* Desktop (≥ 900px): timeline com cards alternados esq/dir, linha central */
+        @media (min-width: 900px) {
+          .jornada-rail {
+            left: 50%;
+            transform: translateX(-50%);
+          }
+          .jornada-row {
+            grid-template-columns: 1fr 80px 1fr;
+          }
+          .jornada-marker-slot {
+            grid-column: 2 / 3;
+          }
+          .jornada-row--esquerda .jornada-card-slot {
+            grid-column: 1 / 2;
+            justify-self: end;
+            padding-left: 0;
+            padding-right: 24px;
+            max-width: 100%;
+          }
+          .jornada-row--direita .jornada-card-slot {
+            grid-column: 3 / 4;
+            justify-self: start;
+            padding-left: 24px;
+            padding-right: 0;
+            max-width: 100%;
+          }
+        }
       `}</style>
 
       <PageHeader
@@ -600,252 +722,279 @@ export default async function JornadaPage({ searchParams }: Props) {
                 </div>
               )}
 
-              {/* Linha do tempo com registros */}
+              {/* Linha do tempo com registros — INFOGRÁFICO VERTICAL SEM SOBREPOSIÇÃO */}
               {totalRegistros > 0 && (
-                <div style={{ position: 'relative' }}>
+                <div className="jornada-timeline" style={{ position: 'relative', paddingTop: 8, paddingBottom: 8 }}>
 
-                  {/* Linha vertical central */}
-                  <div style={{
-                    position: 'absolute', left: '50%', top: 0, bottom: 0,
-                    width: 2, background: 'linear-gradient(to bottom, #e2e8f0 0%, #cbd5e1 50%, #e2e8f0 100%)',
-                    transform: 'translateX(-50%)', zIndex: 0,
-                  }}/>
+                  {/* Linha vertical contínua (único elemento absolute do container) */}
+                  <div className="jornada-rail" aria-hidden="true" />
 
-                  <div style={{ position: 'relative', zIndex: 1 }}>
+                  {/* Lista de capítulos em fluxo natural (flex column + gap) */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem', position: 'relative', zIndex: 1 }}>
                     {registros.map((r: any, idx: number) => {
                       const prev = idx > 0 ? registros[idx - 1] : null
-                      const corAcual = corClassificacao(r.classificacao)
+                      const corAtual = corClassificacao(r.classificacao)
                       const bgAtual = bgClassificacao(r.classificacao)
                       const isLast = idx === registros.length - 1
-                      const lado = idx % 2 === 0 ? 'left' : 'right'
+                      const lado: 'esquerda' | 'direita' = idx % 2 === 0 ? 'esquerda' : 'direita'
                       const dt = dataFormatada(r.data_contato)
 
-                      // Indicador de progressão
+                      // Progressão da probabilidade vs registro anterior
                       let progressao: 'subiu' | 'caiu' | 'igual' = 'igual'
-                      if (prev) {
-                        if (r.probabilidade > prev.probabilidade) progressao = 'subiu'
-                        else if (r.probabilidade < prev.probabilidade) progressao = 'caiu'
-                      }
-
-                      const cardStyle: React.CSSProperties = {
-                        background: '#ffffff',
-                        border: `1px solid ${corAcual}30`,
-                        borderTop: `3px solid ${corAcual}`,
-                        borderRadius: 12,
-                        padding: '1.25rem',
-                        boxShadow: '0 2px 12px rgba(15,23,42,0.06)',
-                        width: 'calc(50% - 48px)',
-                        position: 'absolute',
-                        top: 0,
-                        ...(lado === 'left'
-                          ? { left: 0 }
-                          : { right: 0 }),
+                      let delta = 0
+                      if (prev && typeof r.probabilidade === 'number' && typeof prev.probabilidade === 'number') {
+                        delta = r.probabilidade - prev.probabilidade
+                        if (delta > 0) progressao = 'subiu'
+                        else if (delta < 0) progressao = 'caiu'
                       }
 
                       return (
                         <div
                           key={r.id}
-                          className="jornada-chapter"
-                          style={{ position: 'relative', marginBottom: '2.5rem', minHeight: 160 }}
+                          className={`jornada-row jornada-row--${lado}`}
                         >
-                          {/* Conector indicador entre capítulos */}
-                          {idx > 0 && (
-                            <div style={{
-                              position: 'absolute', top: -28, left: '50%',
-                              transform: 'translateX(-50%)',
-                              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-                              zIndex: 2,
-                            }}>
-                              {progressao === 'subiu' && (
-                                <>
-                                  <IconArrowUp size={12} cor="#10b981"/>
-                                  <span style={{ fontSize: '.64rem', color: '#10b981', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 700 }}>Avançou</span>
-                                </>
-                              )}
-                              {progressao === 'caiu' && (
-                                <>
-                                  <IconArrowDown size={12} cor="#ef4444"/>
-                                  <span style={{ fontSize: '.64rem', color: '#ef4444', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 700 }}>Recuou</span>
-                                </>
-                              )}
-                              {progressao === 'igual' && (
-                                <div style={{ width: 16, height: 2, background: '#94a3b8', borderRadius: 2 }}/>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Marcador central */}
-                          <div style={{
-                            position: 'absolute', left: '50%', top: 20,
-                            transform: 'translateX(-50%)',
-                            zIndex: 3,
-                          }}>
-                            {isLast && (
-                              <div
-                                className="pulse-ring"
-                                style={{ color: corAcual, position: 'absolute', inset: -6, borderRadius: '50%', border: `2px solid ${corAcual}` }}
-                              />
-                            )}
-                            <div style={{
-                              width: 36, height: 36, borderRadius: '50%',
-                              background: corAcual,
-                              border: '3px solid #ffffff',
-                              boxShadow: `0 0 0 3px ${corAcual}30, 0 2px 8px rgba(0,0,0,0.15)`,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontFamily: 'var(--font-montserrat,sans-serif)',
-                              fontSize: '.75rem', fontWeight: 800, color: '#ffffff',
-                              position: 'relative',
-                            }}>
+                          {/* ============ MARCADOR CENTRAL (numero do capitulo) ============ */}
+                          <div className="jornada-marker-slot">
+                            <div
+                              className={isLast ? 'jornada-marker jornada-marker--last' : 'jornada-marker'}
+                              style={{
+                                borderColor: corAtual,
+                                color: corAtual,
+                                boxShadow: isLast
+                                  ? `0 0 0 4px ${bgAtual}, 0 0 0 8px ${corAtual}33, 0 8px 20px ${corAtual}33`
+                                  : `0 2px 6px rgba(15,23,42,0.10)`,
+                              }}
+                            >
                               {idx + 1}
                             </div>
+
+                            {/* Badge de progressão (logo abaixo do marcador) */}
+                            {prev && progressao !== 'igual' && (
+                              <div
+                                className="jornada-progress-badge"
+                                style={{
+                                  borderColor: progressao === 'subiu' ? '#10b981' : '#ef4444',
+                                  color: progressao === 'subiu' ? '#10b981' : '#ef4444',
+                                }}
+                              >
+                                {progressao === 'subiu' ? <IconArrowUp size={10} cor="#10b981"/> : <IconArrowDown size={10} cor="#ef4444"/>}
+                                {delta > 0 ? '+' : ''}{delta}%
+                              </div>
+                            )}
                           </div>
 
-                          {/* Card do capítulo */}
-                          <div style={cardStyle}>
-                            {/* Cabeçalho */}
-                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '.75rem' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem' }}>
-                                {/* Data em destaque */}
-                                <div style={{
-                                  display: 'flex', flexDirection: 'column', alignItems: 'center',
-                                  background: bgAtual,
-                                  border: `1px solid ${corAcual}25`,
-                                  borderRadius: 8, padding: '.35rem .6rem',
-                                  minWidth: 48,
-                                }}>
-                                  <span style={{ fontSize: '1.3rem', fontWeight: 800, color: corAcual, fontFamily: 'var(--font-cormorant,serif)', lineHeight: 1 }}>
-                                    {dt.dia}
-                                  </span>
-                                  <span style={{ fontSize: '.6rem', color: '#64748b', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 600, textTransform: 'uppercase', lineHeight: 1.2 }}>
-                                    {dt.mesAno}
-                                  </span>
-                                </div>
-                                <div>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '.35rem', marginBottom: '.2rem' }}>
-                                    <IconMeio tipo={r.meio_contato} size={14} cor="#64748b"/>
-                                    <span style={{ fontSize: '.72rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                                      {dt.semana}
+                          {/* ============ CARD DO CAPÍTULO ============ */}
+                          <div className="jornada-card-slot">
+                            <article
+                              className="jornada-card"
+                              style={{
+                                border: `1px solid ${corAtual}33`,
+                                boxShadow: `0 1px 3px rgba(0,0,0,0.04), 0 12px 30px -10px ${corAtual}24`,
+                              }}
+                            >
+                              {/* Faixa colorida superior */}
+                              <div
+                                className="jornada-card-stripe"
+                                style={{ background: `linear-gradient(90deg, ${corAtual} 0%, ${corAtual}88 100%)` }}
+                              />
+
+                              {/* CABEÇALHO: data + meio + responsável + badge classificação */}
+                              <div className="jornada-card-header">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', flexWrap: 'wrap', flex: 1 }}>
+                                  {/* Data em destaque */}
+                                  <div style={{
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                    background: bgAtual,
+                                    border: `1px solid ${corAtual}30`,
+                                    borderRadius: 10, padding: '.4rem .65rem',
+                                    minWidth: 52, lineHeight: 1,
+                                  }}>
+                                    <span style={{ fontSize: '1.35rem', fontWeight: 800, color: corAtual, fontFamily: 'var(--font-cormorant,serif)' }}>
+                                      {dt.dia}
+                                    </span>
+                                    <span style={{ fontSize: '.58rem', color: '#475569', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 700, textTransform: 'uppercase', marginTop: 2, letterSpacing: '.04em' }}>
+                                      {dt.mesAno}
                                     </span>
                                   </div>
-                                  {r.responsavel?.full_name && (
-                                    <span style={{ fontSize: '.72rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                                      por {r.responsavel.full_name}
-                                    </span>
-                                  )}
+
+                                  {/* Meio + dia da semana + responsável */}
+                                  <div style={{ minWidth: 0 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem', marginBottom: '.15rem' }}>
+                                      <IconMeio tipo={r.meio_contato} size={14} cor={corAtual}/>
+                                      <span style={{ fontSize: '.78rem', fontWeight: 600, color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)', textTransform: 'capitalize' }}>
+                                        {r.meio_contato}
+                                      </span>
+                                      <span style={{ color: '#cbd5e1' }}>·</span>
+                                      <span style={{ fontSize: '.72rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)', textTransform: 'capitalize' }}>
+                                        {dt.semana}
+                                      </span>
+                                    </div>
+                                    {r.responsavel?.full_name && (
+                                      <span style={{ fontSize: '.72rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                                        por <span style={{ color: '#334155', fontWeight: 600 }}>{r.responsavel.full_name}</span>
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Badge classificação */}
+                                <div style={{
+                                  background: bgAtual,
+                                  border: `1px solid ${corAtual}44`,
+                                  borderRadius: 999, padding: '.25rem .7rem',
+                                  fontSize: '.68rem', fontWeight: 800,
+                                  color: corAtual,
+                                  fontFamily: 'var(--font-montserrat,sans-serif)',
+                                  whiteSpace: 'nowrap',
+                                  textTransform: 'uppercase', letterSpacing: '.06em',
+                                  flexShrink: 0,
+                                }}>
+                                  {labelClassificacao(r.classificacao)}
                                 </div>
                               </div>
-                              {/* Badge classificação */}
-                              <div style={{
-                                background: bgAtual,
-                                border: `1px solid ${corAcual}40`,
-                                borderRadius: 20, padding: '.2rem .65rem',
-                                fontSize: '.7rem', fontWeight: 700,
-                                color: corAcual,
-                                fontFamily: 'var(--font-montserrat,sans-serif)',
-                                whiteSpace: 'nowrap',
-                              }}>
-                                {labelClassificacao(r.classificacao)}
-                              </div>
-                            </div>
 
-                            {/* Título narrativo */}
-                            <h4 style={{
-                              fontFamily: 'var(--font-cormorant,serif)',
-                              fontSize: '1.05rem', fontWeight: 700,
-                              color: '#0f172a', marginBottom: '.6rem', lineHeight: 1.3,
-                            }}>
-                              {tituloInteracao(r, idx)}
-                            </h4>
+                              {/* Título narrativo */}
+                              <h4 style={{
+                                fontFamily: 'var(--font-cormorant,serif)',
+                                fontSize: '1.15rem', fontWeight: 700,
+                                color: '#0f172a', lineHeight: 1.3,
+                                padding: '0 1.25rem',
+                                margin: '0 0 .25rem 0',
+                              }}>
+                                {tituloInteracao(r, idx)}
+                              </h4>
 
-                            {/* Corpo — resumo */}
-                            {r.resumo && (
-                              <p style={{
-                                fontSize: '.82rem', color: '#475569',
-                                fontFamily: 'var(--font-inter,sans-serif)',
-                                lineHeight: 1.55,
-                                background: bgAtual,
-                                borderRadius: 8, padding: '.65rem .75rem',
-                                marginBottom: '.75rem',
-                                border: `1px solid ${corAcual}15`,
-                              }}>
-                                {r.resumo}
-                              </p>
-                            )}
+                              {/* BARRA DE PROBABILIDADE */}
+                              {typeof r.probabilidade === 'number' && (
+                                <div style={{ padding: '0 1.25rem .75rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                                    <span style={{ fontSize: '.64rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                                      Probabilidade de fechamento
+                                    </span>
+                                    <span style={{ fontSize: '1rem', fontWeight: 800, color: corAtual, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                                      {r.probabilidade}%
+                                    </span>
+                                  </div>
+                                  <div style={{ height: 6, background: '#f1f5f9', borderRadius: 999, overflow: 'hidden' }}>
+                                    <div style={{
+                                      height: '100%',
+                                      width: `${r.probabilidade}%`,
+                                      background: `linear-gradient(90deg, ${corAtual}aa 0%, ${corAtual} 100%)`,
+                                      borderRadius: 999,
+                                    }}/>
+                                  </div>
+                                </div>
+                              )}
 
-                            {/* Métricas inline */}
-                            <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap', marginBottom: '.55rem' }}>
-                              <div style={{
-                                background: `${corAcual}15`, borderRadius: 20,
-                                padding: '.2rem .65rem',
-                                fontSize: '.72rem', fontWeight: 700,
-                                color: corAcual, fontFamily: 'var(--font-montserrat,sans-serif)',
-                              }}>
-                                {r.probabilidade}%
-                              </div>
-                              <div style={{
-                                background: '#f1f5f9', borderRadius: 20,
-                                padding: '.2rem .65rem',
-                                fontSize: '.72rem', color: '#475569',
-                                fontFamily: 'var(--font-inter,sans-serif)',
-                              }}>
-                                Interesse: {LABEL.interesse?.[r.interesse] ?? r.interesse}
-                              </div>
-                              <div style={{
-                                background: '#f1f5f9', borderRadius: 20,
-                                padding: '.2rem .65rem',
-                                fontSize: '.72rem', color: '#475569',
-                                fontFamily: 'var(--font-inter,sans-serif)',
-                              }}>
-                                {LABEL.prontidao?.[r.prontidao] ?? r.prontidao}
-                              </div>
-                            </div>
+                              {/* RESUMO em destaque */}
+                              {r.resumo && (
+                                <div style={{
+                                  padding: '.85rem 1.25rem',
+                                  background: '#fafbfc',
+                                  borderTop: '1px solid #f1f5f9',
+                                  borderBottom: '1px solid #f1f5f9',
+                                  fontSize: '.85rem',
+                                  color: '#475569',
+                                  lineHeight: 1.6,
+                                  fontFamily: 'var(--font-inter,sans-serif)',
+                                  whiteSpace: 'pre-wrap',
+                                }}>
+                                  <span style={{ color: corAtual, fontWeight: 800, marginRight: 4, fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem' }}>“</span>
+                                  {r.resumo}
+                                  <span style={{ color: corAtual, fontWeight: 800, marginLeft: 4, fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem' }}>”</span>
+                                </div>
+                              )}
 
-                            {/* Contato */}
-                            {r.contato_nome && (
-                              <div style={{
-                                fontSize: '.72rem', color: '#64748b',
-                                fontFamily: 'var(--font-inter,sans-serif)',
-                                marginBottom: '.45rem',
-                                display: 'flex', alignItems: 'center', gap: '.35rem',
-                              }}>
-                                <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="#94a3b8" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                                </svg>
-                                {r.contato_nome}{r.contato_cargo ? ` — ${r.contato_cargo}` : ''}
-                              </div>
-                            )}
+                              {/* GRID DE MÉTRICAS: interesse + prontidão */}
+                              {(r.interesse || r.prontidao) && (
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: '#f1f5f9' }}>
+                                  {r.interesse && (
+                                    <div style={{ background: '#fff', padding: '.7rem 1.25rem' }}>
+                                      <div style={{ fontSize: '.6rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                                        Interesse
+                                      </div>
+                                      <div style={{ fontSize: '.85rem', fontWeight: 700, color: '#0f172a', textTransform: 'capitalize', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                                        {LABEL.interesse?.[r.interesse] ?? r.interesse}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {r.prontidao && (
+                                    <div style={{ background: '#fff', padding: '.7rem 1.25rem' }}>
+                                      <div style={{ fontSize: '.6rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                                        Prontidão
+                                      </div>
+                                      <div style={{ fontSize: '.85rem', fontWeight: 700, color: '#0f172a', textTransform: 'capitalize', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                                        {LABEL.prontidao?.[r.prontidao] ?? r.prontidao}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
 
-                            {/* Encaminhamentos */}
-                            {r.encaminhamentos?.length > 0 && (
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.3rem', marginBottom: '.45rem' }}>
-                                {r.encaminhamentos.map((enc: string, ei: number) => (
-                                  <span key={ei} style={{
-                                    background: '#fef3c7', border: '1px solid #fcd34d',
-                                    borderRadius: 20, padding: '.15rem .55rem',
-                                    fontSize: '.67rem', color: '#92400e',
-                                    fontFamily: 'var(--font-inter,sans-serif)',
+                              {/* CONTATO (avatar com inicial + nome + cargo) */}
+                              {(r.contato_nome || r.contato_cargo) && (
+                                <div style={{
+                                  padding: '.75rem 1.25rem',
+                                  borderTop: '1px solid #f1f5f9',
+                                  display: 'flex', alignItems: 'center', gap: '.7rem',
+                                }}>
+                                  <div style={{
+                                    width: 34, height: 34, borderRadius: '50%',
+                                    background: `${corAtual}1a`, color: corAtual,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontWeight: 800, fontSize: '.85rem',
+                                    fontFamily: 'var(--font-montserrat,sans-serif)',
+                                    flexShrink: 0,
                                   }}>
-                                    {enc}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
+                                    {(r.contato_nome || '?').charAt(0).toUpperCase()}
+                                  </div>
+                                  <div style={{ minWidth: 0, flex: 1 }}>
+                                    <div style={{ fontSize: '.82rem', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                                      {r.contato_nome || '—'}
+                                    </div>
+                                    {r.contato_cargo && (
+                                      <div style={{ fontSize: '.7rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                                        {r.contato_cargo}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
 
-                            {/* Próximo contato */}
-                            {r.proximo_contato && (
-                              <div style={{
-                                display: 'flex', alignItems: 'center', gap: '.4rem',
-                                fontSize: '.75rem', color: '#2563eb',
-                                fontFamily: 'var(--font-inter,sans-serif)',
-                                fontWeight: 600,
-                                background: '#eff6ff', borderRadius: 8,
-                                padding: '.4rem .65rem',
-                                border: '1px solid #bfdbfe',
-                              }}>
-                                <IconCalendar size={12} cor="#3b82f6"/>
-                                Próximo contato: {formatDate(r.proximo_contato)}
-                              </div>
-                            )}
+                              {/* ENCAMINHAMENTOS (lista com bullets) */}
+                              {r.encaminhamentos?.length > 0 && (
+                                <div style={{ padding: '.75rem 1.25rem', borderTop: '1px solid #f1f5f9' }}>
+                                  <div style={{ fontSize: '.6rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '.5rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                                    Encaminhamentos
+                                  </div>
+                                  <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '.35rem' }}>
+                                    {r.encaminhamentos.map((enc: string, ei: number) => (
+                                      <li key={ei} style={{ display: 'flex', alignItems: 'flex-start', gap: '.5rem', fontSize: '.78rem', color: '#334155', lineHeight: 1.5, fontFamily: 'var(--font-inter,sans-serif)' }}>
+                                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: corAtual, marginTop: 7, flexShrink: 0 }}/>
+                                        <span style={{ flex: 1 }}>{enc}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                              {/* PRÓXIMO CONTATO (footer destacado) */}
+                              {r.proximo_contato && (
+                                <div style={{
+                                  padding: '.65rem 1.25rem',
+                                  background: `${corAtual}0d`,
+                                  borderTop: `1px dashed ${corAtual}55`,
+                                  display: 'flex', alignItems: 'center', gap: '.5rem',
+                                  fontSize: '.78rem', fontFamily: 'var(--font-inter,sans-serif)',
+                                }}>
+                                  <IconCalendar size={13} cor={corAtual}/>
+                                  <span style={{ color: '#64748b' }}>Próximo contato:</span>
+                                  <span style={{ fontWeight: 700, color: corAtual, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                                    {formatDate(r.proximo_contato)}
+                                  </span>
+                                </div>
+                              )}
+                            </article>
                           </div>
                         </div>
                       )
