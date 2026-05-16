@@ -357,8 +357,6 @@ export default async function RegistroSucessoPage({ searchParams }: Props) {
               fontSize: '.9rem',
               transition: 'background 0.2s',
             }}
-            onMouseOver={(e) => (e.currentTarget.style.background = '#b45309')}
-            onMouseOut={(e) => (e.currentTarget.style.background = '#d97706')}
           >
             Ver Detalhes da Escola <ChevronRight size={16} />
           </Link>
@@ -380,8 +378,6 @@ export default async function RegistroSucessoPage({ searchParams }: Props) {
               fontSize: '.9rem',
               transition: 'all 0.2s',
             }}
-            onMouseOver={(e) => (e.currentTarget.style.background = '#e2e8f0')}
-            onMouseOut={(e) => (e.currentTarget.style.background = '#f1f5f9')}
           >
             ← Voltar para Registros
           </Link>
