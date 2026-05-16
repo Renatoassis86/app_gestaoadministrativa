@@ -68,9 +68,16 @@ export function PipelineKanban({ negociacoes, stages, userId, onUpdate }: Props)
   const dragStageRef = useRef<string | null>(null)
 
   async function handleRemover(negId: string) {
+    if (!confirm('Remover esta escola do quadro? Você poderá reativá-la depois pelo banco de leads.')) return
     setRemoving(negId)
+    const snapshot = negs
     setNegs(prev => prev.filter(n => n.id !== negId))
-    await removerDoQuadro(negId)
+    const result = await removerDoQuadro(negId)
+    if (!result.success) {
+      // Rollback otimista em caso de erro
+      setNegs(snapshot)
+      alert(`Não foi possível remover: ${result.error ?? 'erro desconhecido'}`)
+    }
     setRemoving(null)
     onUpdate?.()
   }

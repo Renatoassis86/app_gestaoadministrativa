@@ -29,53 +29,138 @@ const METAS = {
 function BarraMeta({ pct, cor, height = 10 }: { pct: number; cor: string; height?: number }) {
   const p = Math.min(100, Math.max(0, pct))
   return (
-    <div style={{ height, background: '#f1f5f9', borderRadius: height, overflow: 'hidden' }}>
+    <div style={{ height, background: 'rgba(255,255,255,.06)', borderRadius: height, overflow: 'hidden' }}>
       <div style={{
         height: '100%', width: `${p}%`, borderRadius: height,
         background: p >= 100 ? '#16a34a' : cor,
         transition: 'width .8s ease',
-        boxShadow: p > 0 ? `0 0 8px ${cor}55` : 'none',
+        boxShadow: p > 0 ? `0 0 12px ${cor}66` : 'none',
       }} />
     </div>
   )
 }
 
-function KpiCard({ label, valor, meta, pct, cor, bg, border, sub, icon }: {
-  label: string; valor: string | number; meta?: string | number
-  pct: number; cor: string; bg: string; border: string; sub?: string
-  icon: React.ReactNode
+function BarraMetaClara({ pct, cor, height = 10 }: { pct: number; cor: string; height?: number }) {
+  const p = Math.min(100, Math.max(0, pct))
+  return (
+    <div style={{ height, background: '#f1f5f9', borderRadius: height, overflow: 'hidden' }}>
+      <div style={{
+        height: '100%', width: `${p}%`, borderRadius: height,
+        background: p >= 100 ? '#16a34a' : cor,
+        transition: 'width .8s ease',
+      }} />
+    </div>
+  )
+}
+
+/**
+ * Donut SVG de progresso (anel circular). Renderiza % no centro.
+ */
+function DonutMeta({ pct, cor, size = 160, stroke = 14, label, sublabel }: {
+  pct: number; cor: string; size?: number; stroke?: number; label: string; sublabel?: string
+}) {
+  const p = Math.min(100, Math.max(0, pct))
+  const r = (size - stroke) / 2
+  const c = 2 * Math.PI * r
+  const offset = c - (p / 100) * c
+  const center = size / 2
+  return (
+    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx={center} cy={center} r={r} fill="none" stroke="rgba(255,255,255,.08)" strokeWidth={stroke} />
+        <circle
+          cx={center} cy={center} r={r} fill="none"
+          stroke={p >= 100 ? '#16a34a' : cor} strokeWidth={stroke}
+          strokeDasharray={c} strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{ transition: 'stroke-dashoffset 1s ease', filter: `drop-shadow(0 0 8px ${cor}88)` }}
+        />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
+        <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: size * 0.30, fontWeight: 800, color: '#fff' }}>
+          {p}<span style={{ fontSize: size * 0.14, color: 'rgba(255,255,255,.6)' }}>%</span>
+        </div>
+        <div style={{ fontSize: '.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.1em', color: 'rgba(255,255,255,.55)', fontFamily: 'var(--font-montserrat,sans-serif)', marginTop: 4, textAlign: 'center', padding: '0 .5rem' }}>
+          {label}
+        </div>
+        {sublabel && (
+          <div style={{ fontSize: '.62rem', color: 'rgba(255,255,255,.45)', fontFamily: 'var(--font-inter,sans-serif)', marginTop: 2 }}>
+            {sublabel}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Card de "Big Number" estilo dashboard executivo (fundo escuro/premium).
+ */
+function BigNumberCard({ label, valor, sub, cor, icon, pct, meta }: {
+  label: string; valor: string | number; sub?: string; cor: string; icon: React.ReactNode
+  pct: number; meta: string
 }) {
   return (
     <div style={{
-      background: bg, border: `1.5px solid ${border}`,
-      borderRadius: 16, padding: '1.25rem 1.4rem',
-      borderTop: `3px solid ${cor}`,
-      display: 'flex', flexDirection: 'column', gap: '.65rem',
+      position: 'relative',
+      background: 'linear-gradient(155deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.01) 100%)',
+      border: '1px solid rgba(255,255,255,.10)',
+      borderRadius: 20,
+      padding: '1.5rem 1.6rem',
+      overflow: 'hidden',
+      backdropFilter: 'blur(8px)',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.08em', color: cor, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
-          {label}
+      {/* Glow decorativo */}
+      <div style={{
+        position: 'absolute', top: -40, right: -40, width: 160, height: 160,
+        background: `radial-gradient(circle, ${cor}33 0%, transparent 70%)`,
+        pointerEvents: 'none',
+      }}/>
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem' }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: `${cor}22`, border: `1px solid ${cor}55`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {icon}
+            </div>
+            <span style={{ fontSize: '.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.12em', color: 'rgba(255,255,255,.55)', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+              {label}
+            </span>
+          </div>
+          <span style={{
+            fontSize: '.65rem', fontWeight: 800,
+            color: pct >= 100 ? '#16a34a' : cor,
+            background: pct >= 100 ? 'rgba(22,163,74,.15)' : `${cor}22`,
+            border: `1px solid ${pct >= 100 ? '#16a34a' : cor}55`,
+            padding: '.2rem .55rem', borderRadius: 999,
+            fontFamily: 'var(--font-montserrat,sans-serif)',
+          }}>
+            {Math.min(100, pct)}%
+          </span>
         </div>
-        <div style={{ width: 30, height: 30, borderRadius: 8, background: cor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          {icon}
-        </div>
-      </div>
-      <div>
-        <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '2.2rem', fontWeight: 800, lineHeight: 1, color: '#0f172a' }}>
+
+        <div style={{
+          fontFamily: 'var(--font-cormorant,serif)',
+          fontSize: '3.2rem', fontWeight: 800, lineHeight: 1,
+          color: '#fff', marginBottom: '.4rem',
+          letterSpacing: '-.01em',
+        }}>
           {valor}
         </div>
-        {meta !== undefined && (
-          <div style={{ fontSize: '.72rem', color: '#64748b', marginTop: '.2rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
-            meta: {meta}
+
+        <div style={{ fontSize: '.72rem', color: 'rgba(255,255,255,.65)', marginBottom: '.15rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
+          de <strong style={{ color: '#fff', fontWeight: 700 }}>{meta}</strong>
+        </div>
+        {sub && (
+          <div style={{ fontSize: '.68rem', color: 'rgba(255,255,255,.4)', marginBottom: '.85rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
+            {sub}
           </div>
         )}
-        {sub && <div style={{ fontSize: '.7rem', color: '#94a3b8', marginTop: '.1rem', fontFamily: 'var(--font-inter,sans-serif)' }}>{sub}</div>}
-      </div>
-      <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '.3rem' }}>
-          <span style={{ fontSize: '.65rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>progresso</span>
-          <span style={{ fontSize: '.7rem', fontWeight: 700, color: pct >= 100 ? '#16a34a' : cor, fontFamily: 'var(--font-montserrat,sans-serif)' }}>{Math.min(100, pct)}%</span>
-        </div>
+
         <BarraMeta pct={pct} cor={cor} height={6} />
       </div>
     </div>
@@ -168,79 +253,119 @@ export default async function MetasPage() {
   // Escolas novas recentes = as que assinaram contrato mais recentemente
   const escolasNovasRecentes = (contratosAssinados ?? []).slice(0, 8)
 
+  // Progresso global ponderado (média simples dos 3 KPIs principais)
+  const pctGlobal = Math.round((pctReunioes + pctEscolas + pctAlunos) / 3)
+  const totalProjetadoAlunos = METAS.alunos_atuais + alunosFund1Anteriores + alunosNovasEscolas
+
   return (
-    <div>
+    <div style={{ background: '#f8fafc', minHeight: '100vh' }}>
       <PageHeader
         title="Metas 2027"
         subtitle="Plano estratégico de crescimento CVE Education"
       />
-      <div style={{ padding: '2rem 2.5rem' }}>
 
-        {/* ── Hero de contexto ─────────────────────────────── */}
-        <div style={{
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%)',
-          borderRadius: 18, padding: '1.75rem 2rem',
-          marginBottom: '2rem',
-          display: 'grid', gridTemplateColumns: '1fr auto',
-          gap: '2rem', alignItems: 'center',
-          boxShadow: '0 8px 32px rgba(15,23,42,.2)',
-        }}>
-          <div>
-            <div style={{ fontSize: '.62rem', fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: '#d97706', marginBottom: '.5rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
-              ✦ Planejamento Estratégico
+      {/* ════════════════ HERO PREMIUM ESCURO ════════════════ */}
+      <div style={{
+        background: 'radial-gradient(ellipse at top left, #1e3a5f 0%, #0f172a 40%, #020617 100%)',
+        padding: '3rem 2.5rem 4.5rem',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Padrão de grid sutil no fundo */}
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0, opacity: .04,
+          backgroundImage: 'linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)',
+          backgroundSize: '60px 60px',
+          pointerEvents: 'none',
+        }}/>
+        {/* Glow âmbar canto superior direito */}
+        <div aria-hidden style={{
+          position: 'absolute', top: -120, right: -80, width: 420, height: 420,
+          background: 'radial-gradient(circle, rgba(217,119,6,.18) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }}/>
+
+        <div style={{ position: 'relative', maxWidth: 1280, margin: '0 auto' }}>
+
+          {/* Cabeçalho do hero: título + contador */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '2rem', alignItems: 'center', marginBottom: '2.5rem' }}>
+            <div>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: '.5rem',
+                background: 'rgba(217,119,6,.10)', border: '1px solid rgba(217,119,6,.4)',
+                padding: '.35rem .85rem', borderRadius: 999, marginBottom: '1rem',
+              }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}/>
+                <span style={{ fontSize: '.62rem', fontWeight: 800, letterSpacing: '.18em', textTransform: 'uppercase', color: '#fbbf24', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                  Planejamento Estratégico CVE
+                </span>
+              </div>
+
+              <h1 style={{
+                fontFamily: 'var(--font-cormorant,serif)',
+                fontSize: 'clamp(2rem, 4vw, 3.2rem)', fontWeight: 700,
+                color: '#fff', lineHeight: 1.05, marginBottom: '.75rem',
+                letterSpacing: '-.015em',
+              }}>
+                Crescimento <span style={{ color: '#fbbf24' }}>2027</span> — Currículo Paideia
+              </h1>
+              <p style={{ fontSize: '.95rem', color: 'rgba(255,255,255,.55)', fontFamily: 'var(--font-inter,sans-serif)', maxWidth: 620, lineHeight: 1.6 }}>
+                Acompanhamento em tempo real das metas de prospecção, parcerias e expansão de alunos.
+                Cada operação registrada move os indicadores abaixo.
+              </p>
             </div>
-            <h2 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.8rem', fontWeight: 700, color: '#fff', lineHeight: 1.1, marginBottom: '.6rem' }}>
-              Crescimento 2027 — Currículo Paideia
-            </h2>
-            <p style={{ fontSize: '.85rem', color: 'rgba(255,255,255,.55)', fontFamily: 'var(--font-inter,sans-serif)', maxWidth: 580, lineHeight: 1.6 }}>
-              Acompanhamento em tempo real das metas de prospecção, parcerias e expansão de alunos.
-              Os contadores atualizam automaticamente conforme as operações são registradas.
-            </p>
+
+            {/* Donut de progresso global + contador regressivo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexShrink: 0 }}>
+              <DonutMeta
+                pct={pctGlobal}
+                cor="#fbbf24"
+                size={160}
+                stroke={12}
+                label="Progresso Global"
+                sublabel="média dos 3 pilares"
+              />
+              <div style={{ minWidth: 180 }}>
+                <ContadorRegressivo />
+              </div>
+            </div>
           </div>
-          <div style={{ minWidth: 200 }}>
-            <ContadorRegressivo />
+
+          {/* ════ 3 BIG NUMBERS no estilo dashboard executivo ════ */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1.25rem' }}>
+            <BigNumberCard
+              label="Reuniões com Escolas Únicas"
+              valor={totalReunioes}
+              meta={`${METAS.reunioes_meta} até ${METAS.reunioes_prazo}`}
+              pct={pctReunioes}
+              sub="escolas com ao menos 1 contato registrado"
+              cor="#3b82f6"
+              icon={<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>}
+            />
+            <BigNumberCard
+              label="Novas Escolas Parceiras"
+              valor={qtdEscolasNovas}
+              meta={`${METAS.escolas_novas_meta} novas (${METAS.escolas_total_meta} total)`}
+              pct={pctEscolas}
+              sub={qtdEscolasMinuta > 0 ? `${qtdEscolasMinuta} em minuta no pipeline` : 'nenhuma em minuta ainda'}
+              cor="#f59e0b"
+              icon={<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>}
+            />
+            <BigNumberCard
+              label="Total de Alunos (Projetado)"
+              valor={totalProjetadoAlunos.toLocaleString('pt-BR')}
+              meta={`${METAS.alunos_total_meta.toLocaleString('pt-BR')} alunos`}
+              pct={pctAlunos}
+              sub={`2.000 base + ${alunosFund1Anteriores} Fund.I + ${alunosNovasEscolas} de novos contratos`}
+              cor="#a855f7"
+              icon={<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c084fc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>}
+            />
           </div>
         </div>
+      </div>
 
-        {/* ── KPIs ────────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1.1rem', marginBottom: '2rem' }}>
-
-          <KpiCard
-            label="Reuniões com Escolas Únicas"
-            valor={totalReunioes}
-            meta={`${METAS.reunioes_meta} até ${METAS.reunioes_prazo}`}
-            pct={pctReunioes}
-            cor="#2563eb"
-            bg="#eff6ff"
-            border="#bfdbfe"
-            sub="escolas que receberam ao menos 1 contato registrado"
-            icon={<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>}
-          />
-
-          <KpiCard
-            label="Novas Escolas Parceiras"
-            valor={qtdEscolasNovas}
-            meta={`${METAS.escolas_novas_meta} novas (total: ${METAS.escolas_total_meta})`}
-            pct={pctEscolas}
-            cor="#d97706"
-            bg="#fffbeb"
-            border="#fde68a"
-            sub={`Contratos assinados · ${qtdEscolasMinuta > 0 ? `+${qtdEscolasMinuta} em minuta (pipeline)` : 'nenhuma em minuta ainda'}`}
-            icon={<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>}
-          />
-
-          <KpiCard
-            label="Total de Alunos (Projetado)"
-            valor={(METAS.alunos_atuais + alunosFund1Anteriores + alunosNovasEscolas).toLocaleString('pt-BR')}
-            meta={`${METAS.alunos_total_meta.toLocaleString('pt-BR')} alunos`}
-            pct={pctAlunos}
-            cor="#7c3aed"
-            bg="#f5f3ff"
-            border="#ddd6fe"
-            sub={`2.000 base + ${alunosFund1Anteriores} Fund.I + ${alunosNovasEscolas} contratos assinados`}
-            icon={<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>}
-          />
-        </div>
+      {/* ════════════════ CORPO CLARO ════════════════ */}
+      <div style={{ padding: '2.5rem 2.5rem 3rem', maxWidth: 1280, margin: '0 auto', marginTop: '-2rem', position: 'relative' }}>
 
         {/* ── Detalhamento das metas de alunos ─────────────── */}
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, marginBottom: '2rem', overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,23,42,.06)' }}>
@@ -329,7 +454,7 @@ export default async function MetasPage() {
                       </span>
                     </div>
                     <div style={{ fontSize: '.7rem', color: '#64748b', marginBottom: '.65rem', fontFamily: 'var(--font-inter,sans-serif)' }}>{m.desc}</div>
-                    <BarraMeta pct={p} cor={m.cor} height={7} />
+                    <BarraMetaClara pct={p} cor={m.cor} height={7} />
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '.35rem' }}>
                       <span style={{ fontSize: '.62rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>{m.nota}</span>
                       <span style={{ fontSize: '.68rem', fontWeight: 700, color: p >= 100 ? '#16a34a' : m.cor, fontFamily: 'var(--font-montserrat,sans-serif)' }}>{p}%</span>
@@ -358,7 +483,7 @@ export default async function MetasPage() {
                   <div style={{ fontSize: '.62rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>da meta</div>
                 </div>
               </div>
-              <BarraMeta pct={pctAlunos} cor="#16a34a" height={14} />
+              <BarraMetaClara pct={pctAlunos} cor="#16a34a" height={14} />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '.5rem' }}>
                 <span style={{ fontSize: '.65rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>
                   Faltam <strong style={{ color: '#d97706' }}>{Math.max(0, METAS.alunos_total_meta - (METAS.alunos_atuais + alunosFund1Anteriores + alunosNovasEscolas)).toLocaleString('pt-BR')}</strong> alunos novos para atingir a meta
@@ -478,7 +603,7 @@ export default async function MetasPage() {
                     <span style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{m.atual.toLocaleString('pt-BR')}</span>
                     <span style={{ fontSize: '.7rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>/ {m.meta.toLocaleString('pt-BR')}</span>
                   </div>
-                  <BarraMeta pct={p} cor={m.cor} height={5} />
+                  <BarraMetaClara pct={p} cor={m.cor} height={5} />
                   <div style={{ fontSize: '.62rem', color: '#475569', marginTop: '.3rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
                     Faltam {falta.toLocaleString('pt-BR')} {m.unidade} · <strong style={{ color: m.cor }}>{p}%</strong>
                     {(m as any).sub && <span style={{ color: '#94a3b8', marginLeft: '.3rem' }}>· {(m as any).sub}</span>}
