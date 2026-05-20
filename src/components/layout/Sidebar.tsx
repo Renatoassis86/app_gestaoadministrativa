@@ -24,6 +24,7 @@ const NAV_CRM = [
   { href: '/comercial',           label: 'Dashboard',        icon: LayoutDashboard },
   { href: '/comercial/escolas',   label: 'Escolas',          icon: School          },
   { href: '/comercial/registros', label: 'Registros',        icon: FileText        },
+  { href: '/comercial/proposta',  label: 'Dados Proposta',   icon: ClipboardList   },
 ]
 
 const NAV_PROCESS = [
