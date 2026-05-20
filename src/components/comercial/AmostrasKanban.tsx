@@ -444,12 +444,12 @@ function AmostraDetailModal({
           <Section label="💬 Devolutiva da Escola">
             <textarea value={devolutiva} onChange={e => setDev(e.target.value)} rows={4}
               placeholder="Retorno da escola sobre o material recebido (avaliação pedagógica, intenção de adoção, próximos passos)..."
-              style={{ width: '100%', padding: '.65rem .85rem', fontSize: '.85rem', border: '1.5px solid #e2e8f0', borderRadius: 8, resize: 'vertical', fontFamily: 'var(--font-inter,sans-serif)' }}
+              style={{ width: '100%', padding: '.65rem .85rem', fontSize: '.85rem', border: '1.5px solid #94a3b8', borderRadius: 8, resize: 'vertical', fontFamily: 'var(--font-inter,sans-serif)' }}
             />
             <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginTop: '.5rem' }}>
               <label style={{ fontSize: '.72rem', fontWeight: 600, color: '#475569', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Data do retorno:</label>
               <input type="date" value={devDate} onChange={e => setDevDate(e.target.value)}
-                style={{ padding: '.4rem .6rem', fontSize: '.8rem', border: '1.5px solid #e2e8f0', borderRadius: 6 }}
+                style={{ padding: '.4rem .6rem', fontSize: '.8rem', border: '1.5px solid #94a3b8', borderRadius: 6 }}
               />
             </div>
             <button onClick={salvarDevolutiva} disabled={saving === 'devolutiva'}
@@ -523,7 +523,7 @@ function Input({ label, value, onChange, placeholder, mono }: {
       <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
         style={{
           width: '100%', padding: '.55rem .85rem', fontSize: '.85rem',
-          border: '1.5px solid #e2e8f0', borderRadius: 8, outline: 'none',
+          border: '1.5px solid #94a3b8', borderRadius: 8, outline: 'none',
           fontFamily: mono ? 'ui-monospace, SFMono-Regular, Menlo, monospace' : 'var(--font-inter,sans-serif)',
           letterSpacing: mono ? '.03em' : 'normal',
         }}

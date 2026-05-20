@@ -154,7 +154,7 @@ export function SolicitarAmostraBtn({ escolas }: { escolas: Escola[] }) {
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '.5rem', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
                 <button type="button" onClick={() => setOpen(false)}
-                  style={{ padding: '.6rem 1.2rem', borderRadius: 8, background: '#fff', color: '#64748b', border: '1.5px solid #e2e8f0', fontWeight: 600, fontSize: '.78rem', cursor: 'pointer', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                  style={{ padding: '.6rem 1.2rem', borderRadius: 8, background: '#fff', color: '#64748b', border: '1.5px solid #94a3b8', fontWeight: 600, fontSize: '.78rem', cursor: 'pointer', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
                   Cancelar
                 </button>
                 <button type="submit" disabled={saving}
@@ -200,7 +200,7 @@ function Input({ name, label, type = 'text', required, defaultValue, min }: {
         {label}{required && <span style={{ color: '#dc2626', marginLeft: 4 }}>*</span>}
       </label>
       <input name={name} type={type} required={required} defaultValue={defaultValue} min={min}
-        style={{ width: '100%', padding: '.55rem .85rem', fontSize: '.85rem', border: '1.5px solid #e2e8f0', borderRadius: 8, outline: 'none', fontFamily: 'var(--font-inter,sans-serif)' }}
+        style={{ width: '100%', padding: '.55rem .85rem', fontSize: '.85rem', border: '1.5px solid #94a3b8', borderRadius: 8, outline: 'none', fontFamily: 'var(--font-inter,sans-serif)' }}
       />
     </div>
   )
@@ -215,7 +215,7 @@ function Select({ name, label, children, onChange }: {
         {label}
       </label>
       <select name={name} onChange={e => onChange?.(e.target.value)}
-        style={{ width: '100%', padding: '.55rem .85rem', fontSize: '.85rem', border: '1.5px solid #e2e8f0', borderRadius: 8, outline: 'none', background: '#fff', fontFamily: 'var(--font-inter,sans-serif)' }}>
+        style={{ width: '100%', padding: '.55rem .85rem', fontSize: '.85rem', border: '1.5px solid #94a3b8', borderRadius: 8, outline: 'none', background: '#fff', fontFamily: 'var(--font-inter,sans-serif)' }}>
         {children}
       </select>
     </div>
@@ -231,7 +231,7 @@ function SelectStatic({ name, label, defaultValue, children }: {
         {label}
       </label>
       <select name={name} defaultValue={defaultValue}
-        style={{ width: '100%', padding: '.55rem .85rem', fontSize: '.85rem', border: '1.5px solid #e2e8f0', borderRadius: 8, outline: 'none', background: '#fff', fontFamily: 'var(--font-inter,sans-serif)' }}>
+        style={{ width: '100%', padding: '.55rem .85rem', fontSize: '.85rem', border: '1.5px solid #94a3b8', borderRadius: 8, outline: 'none', background: '#fff', fontFamily: 'var(--font-inter,sans-serif)' }}>
         {children}
       </select>
     </div>
