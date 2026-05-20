@@ -1,7 +1,9 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Search, Mail, Phone, Building2, MapPin, X, Calendar, Users, FileText, ExternalLink } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Search, Mail, Phone, Building2, MapPin, X, Calendar, Users, FileText, Pencil, Trash2, Save } from 'lucide-react'
+import { editarProposta, excluirProposta } from './propostas-actions'
 
 export interface FormularioProposta {
   id: string
@@ -71,8 +73,20 @@ function fmtDateOnly(d: string | null) {
 }
 
 export function PropostasList({ formularios }: { formularios: FormularioProposta[] }) {
+  const router = useRouter()
   const [busca, setBusca] = useState('')
   const [selecionado, setSelecionado] = useState<FormularioProposta | null>(null)
+  const [editando, setEditando]       = useState<FormularioProposta | null>(null)
+  const [excluindoId, setExcluindoId] = useState<string | null>(null)
+
+  async function handleExcluir(f: FormularioProposta) {
+    if (!confirm(`Excluir permanentemente a proposta de "${f.nome_escola}"?\nEssa ação não pode ser desfeita.`)) return
+    setExcluindoId(f.id)
+    const r = await excluirProposta(f.id)
+    setExcluindoId(null)
+    if (!r.success) { alert(`Não foi possível excluir: ${r.error}`); return }
+    router.refresh()
+  }
 
   const filtrados = useMemo(() => {
     const q = busca.trim().toLowerCase()
@@ -128,27 +142,74 @@ export function PropostasList({ formularios }: { formularios: FormularioProposta
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '.85rem' }}>
           {filtrados.map(f => {
             const alunos = totalAlunos(f)
+            const isExcluindo = excluindoId === f.id
             return (
-              <button
+              <div
                 key={f.id}
                 onClick={() => setSelecionado(f)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelecionado(f) } }}
                 style={{
+                  position: 'relative',
                   textAlign: 'left', background: '#fff', border: '1.5px solid #cbd5e1',
                   borderLeft: '4px solid #d97706', borderRadius: 12, padding: '1rem 1.1rem',
                   cursor: 'pointer', transition: 'box-shadow .15s, transform .1s',
                   fontFamily: 'var(--font-inter,sans-serif)', boxShadow: '0 1px 4px rgba(15,23,42,.05)',
+                  opacity: isExcluindo ? .5 : 1,
+                  pointerEvents: isExcluindo ? 'none' : 'auto',
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.boxShadow = '0 8px 24px rgba(15,23,42,.13)'
                   e.currentTarget.style.transform = 'translateY(-2px)'
+                  const actions = e.currentTarget.querySelector('.card-actions') as HTMLElement | null
+                  if (actions) actions.style.opacity = '1'
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.boxShadow = '0 1px 4px rgba(15,23,42,.05)'
                   e.currentTarget.style.transform = 'translateY(0)'
+                  const actions = e.currentTarget.querySelector('.card-actions') as HTMLElement | null
+                  if (actions) actions.style.opacity = '0'
                 }}
               >
+                {/* Botões de ação (aparecem no hover) */}
+                <div className="card-actions" style={{
+                  position: 'absolute', top: 8, right: 8,
+                  display: 'flex', gap: 4,
+                  opacity: 0, transition: 'opacity .15s', zIndex: 2,
+                }}>
+                  <button
+                    type="button"
+                    title="Editar cadastro"
+                    onClick={e => { e.stopPropagation(); setEditando(f) }}
+                    style={{
+                      width: 26, height: 26, borderRadius: 6,
+                      background: '#eff6ff', border: '1px solid #bfdbfe',
+                      color: '#1d4ed8', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: 0,
+                    }}
+                  >
+                    <Pencil size={12} />
+                  </button>
+                  <button
+                    type="button"
+                    title="Excluir cadastro"
+                    onClick={e => { e.stopPropagation(); handleExcluir(f) }}
+                    style={{
+                      width: 26, height: 26, borderRadius: 6,
+                      background: '#fef2f2', border: '1px solid #fca5a5',
+                      color: '#dc2626', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: 0,
+                    }}
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+
                 {/* Data badge */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '.5rem', paddingRight: '4rem' }}>
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', gap: '.3rem',
                     fontSize: '.62rem', fontWeight: 700, color: '#d97706',
@@ -213,14 +274,26 @@ export function PropostasList({ formularios }: { formularios: FormularioProposta
                     </span>
                   </div>
                 </div>
-              </button>
+              </div>
             )
           })}
         </div>
       )}
 
       {selecionado && (
-        <DetalhesModal formulario={selecionado} onClose={() => setSelecionado(null)} />
+        <DetalhesModal
+          formulario={selecionado}
+          onClose={() => setSelecionado(null)}
+          onEditar={() => { setEditando(selecionado); setSelecionado(null) }}
+        />
+      )}
+
+      {editando && (
+        <EditarPropostaModal
+          formulario={editando}
+          onClose={() => setEditando(null)}
+          onSaved={() => { setEditando(null); router.refresh() }}
+        />
       )}
     </>
   )
@@ -228,7 +301,9 @@ export function PropostasList({ formularios }: { formularios: FormularioProposta
 
 // ─── Modal de Detalhes ────────────────────────────────────────────────────────
 
-function DetalhesModal({ formulario: f, onClose }: { formulario: FormularioProposta; onClose: () => void }) {
+function DetalhesModal({ formulario: f, onClose, onEditar }: {
+  formulario: FormularioProposta; onClose: () => void; onEditar: () => void
+}) {
   return (
     <div onClick={onClose} style={{
       position: 'fixed', inset: 0, background: 'rgba(15,23,42,.65)', backdropFilter: 'blur(3px)',
@@ -252,12 +327,25 @@ function DetalhesModal({ formulario: f, onClose }: { formulario: FormularioPropo
               {f.nome_escola}
             </div>
           </div>
-          <button onClick={onClose} style={{
-            background: 'rgba(255,255,255,.1)', color: '#fff', border: '1px solid rgba(255,255,255,.2)',
-            borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0,
-          }}>
-            <X size={16} />
-          </button>
+          <div style={{ display: 'flex', gap: '.4rem', flexShrink: 0 }}>
+            <button onClick={onEditar}
+              title="Editar"
+              style={{
+                background: '#d97706', color: '#fff', border: '1px solid rgba(255,255,255,.2)',
+                borderRadius: 8, padding: '0 .8rem', height: 32,
+                display: 'inline-flex', alignItems: 'center', gap: '.3rem',
+                fontSize: '.72rem', fontWeight: 700, cursor: 'pointer',
+                fontFamily: 'var(--font-montserrat,sans-serif)',
+              }}>
+              <Pencil size={13} /> Editar
+            </button>
+            <button onClick={onClose} style={{
+              background: 'rgba(255,255,255,.1)', color: '#fff', border: '1px solid rgba(255,255,255,.2)',
+              borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+            }}>
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         <div style={{ padding: '1.5rem' }}>
@@ -421,5 +509,260 @@ function Representante({ label, tipo, formulario: f }: {
         ? <div style={{ fontSize: '.78rem', color: '#cbd5e1', fontStyle: 'italic', fontFamily: 'var(--font-inter,sans-serif)' }}>Não preenchido</div>
         : <Grid items={items} />}
     </Section>
+  )
+}
+
+// ─── Modal de Edição ──────────────────────────────────────────────────────────
+
+const UF_LIST = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
+
+function EditarPropostaModal({ formulario: f, onClose, onSaved }: {
+  formulario: FormularioProposta; onClose: () => void; onSaved: () => void
+}) {
+  const [saving, setSaving] = useState(false)
+  const [err, setErr]       = useState<string | null>(null)
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setErr(null); setSaving(true)
+    const fd = new FormData(e.currentTarget)
+    const r = await editarProposta(f.id, fd)
+    setSaving(false)
+    if (!r.success) { setErr(r.error ?? 'Erro ao salvar'); return }
+    onSaved()
+  }
+
+  return (
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, background: 'rgba(15,23,42,.65)', backdropFilter: 'blur(3px)',
+      zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto',
+    }}>
+      <form onClick={e => e.stopPropagation()} onSubmit={handleSubmit}
+        style={{ background: '#fff', borderRadius: 14, maxWidth: 880, width: '100%', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,.4)' }}>
+        {/* Header */}
+        <div style={{
+          padding: '1.1rem 1.5rem', background: '#0f172a', color: '#fff',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem',
+          borderRadius: '14px 14px 0 0',
+        }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: '.62rem', color: '#d97706', fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+              Editar Proposta
+            </div>
+            <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.35rem', fontWeight: 700, lineHeight: 1.2, marginTop: '.15rem' }}>
+              {f.nome_escola}
+            </div>
+          </div>
+          <button type="button" onClick={onClose} style={{
+            background: 'rgba(255,255,255,.1)', color: '#fff', border: '1px solid rgba(255,255,255,.2)',
+            borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0,
+          }}>
+            <X size={16} />
+          </button>
+        </div>
+
+        <div style={{ padding: '1.5rem' }}>
+          {err && (
+            <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', color: '#991b1b', padding: '.6rem 1rem', borderRadius: 8, marginBottom: '1rem', fontSize: '.78rem' }}>
+              ⚠ {err}
+            </div>
+          )}
+
+          <FormSection label="🏫 Dados da Escola">
+            <FormGrid cols={2}>
+              <FormInput name="nome_escola" label="Nome da Escola" defaultValue={f.nome_escola} required />
+              <FormInput name="cnpj" label="CNPJ" defaultValue={f.cnpj ?? ''} />
+            </FormGrid>
+            <FormInput name="email_responsavel" label="E-mail do responsável" type="email" defaultValue={f.email_responsavel ?? ''} required />
+            <FormGrid cols={3}>
+              <div style={{ gridColumn: 'span 2' }}>
+                <FormInput name="rua" label="Logradouro" defaultValue={f.rua ?? ''} />
+              </div>
+              <FormInput name="numero" label="Número" defaultValue={f.numero ?? ''} />
+            </FormGrid>
+            <FormGrid cols={3}>
+              <FormInput name="complemento" label="Complemento" defaultValue={f.complemento ?? ''} />
+              <FormInput name="bairro" label="Bairro" defaultValue={f.bairro ?? ''} />
+              <FormInput name="cep" label="CEP" defaultValue={f.cep ?? ''} />
+            </FormGrid>
+            <FormGrid cols={3}>
+              <div style={{ gridColumn: 'span 2' }}>
+                <FormInput name="cidade" label="Cidade" defaultValue={f.cidade ?? ''} />
+              </div>
+              <FormSelect name="estado" label="UF" defaultValue={f.estado ?? ''}>
+                <option value="">—</option>
+                {UF_LIST.map(u => <option key={u} value={u}>{u}</option>)}
+              </FormSelect>
+            </FormGrid>
+          </FormSection>
+
+          <FormSection label="📚 Informações Acadêmicas">
+            <FormGrid cols={5}>
+              <FormInput name="infantil2_qtd" label="Infantil 2" type="number" min="0" defaultValue={String(f.infantil2_qtd ?? 0)} />
+              <FormInput name="infantil3_qtd" label="Infantil 3" type="number" min="0" defaultValue={String(f.infantil3_qtd ?? 0)} />
+              <FormInput name="infantil4_qtd" label="Infantil 4" type="number" min="0" defaultValue={String(f.infantil4_qtd ?? 0)} />
+              <FormInput name="infantil5_qtd" label="Infantil 5" type="number" min="0" defaultValue={String(f.infantil5_qtd ?? 0)} />
+              <FormInput name="fund1_ano1_qtd" label="1º Fund I" type="number" min="0" defaultValue={String(f.fund1_ano1_qtd ?? 0)} />
+            </FormGrid>
+            <FormGrid cols={5}>
+              <FormInput name="fund1_ano2_qtd" label="2º Fund I" type="number" min="0" defaultValue={String(f.fund1_ano2_qtd ?? 0)} />
+              <FormInput name="fund1_ano3_qtd" label="3º Fund I" type="number" min="0" defaultValue={String(f.fund1_ano3_qtd ?? 0)} />
+              <FormInput name="fund1_ano4_qtd" label="4º Fund I" type="number" min="0" defaultValue={String(f.fund1_ano4_qtd ?? 0)} />
+              <FormInput name="fund1_ano5_qtd" label="5º Fund I" type="number" min="0" defaultValue={String(f.fund1_ano5_qtd ?? 0)} />
+              <div />
+            </FormGrid>
+            <FormGrid cols={3}>
+              <FormInput name="data_inicio_letivo" label="Início ano letivo" type="date" defaultValue={f.data_inicio_letivo ?? ''} />
+              <FormInput name="data_fim_letivo"    label="Fim ano letivo"    type="date" defaultValue={f.data_fim_letivo ?? ''} />
+              <FormSelect name="formato_ano_letivo" label="Formato" defaultValue={f.formato_ano_letivo ?? ''}>
+                <option value="">—</option>
+                <option value="Bimestre">Bimestre</option>
+                <option value="Trimestre">Trimestre</option>
+              </FormSelect>
+            </FormGrid>
+            <FormTextarea name="observacoes" label="Observações" defaultValue={f.observacoes ?? ''} />
+          </FormSection>
+
+          <FormSection label="🪪 Representante Legal">
+            <FormGrid cols={2}>
+              <FormInput name="legal_nome" label="Nome" defaultValue={f.legal_nome ?? ''} />
+              <FormInput name="legal_cpf"  label="CPF"  defaultValue={f.legal_cpf ?? ''} />
+            </FormGrid>
+            <FormGrid cols={2}>
+              <FormInput name="legal_rg"    label="RG"    defaultValue={f.legal_rg ?? ''} />
+              <FormInput name="legal_orgao" label="Órgão Emissor" defaultValue={f.legal_orgao ?? ''} />
+            </FormGrid>
+            <FormGrid cols={3}>
+              <div style={{ gridColumn: 'span 2' }}>
+                <FormInput name="legal_rua" label="Logradouro" defaultValue={f.legal_rua ?? ''} />
+              </div>
+              <FormInput name="legal_numero" label="Número" defaultValue={f.legal_numero ?? ''} />
+            </FormGrid>
+            <FormGrid cols={3}>
+              <FormInput name="legal_complemento" label="Complemento" defaultValue={f.legal_complemento ?? ''} />
+              <FormInput name="legal_bairro"      label="Bairro"      defaultValue={f.legal_bairro ?? ''} />
+              <FormInput name="legal_cep"         label="CEP"         defaultValue={f.legal_cep ?? ''} />
+            </FormGrid>
+            <FormGrid cols={3}>
+              <div style={{ gridColumn: 'span 2' }}>
+                <FormInput name="legal_cidade" label="Cidade" defaultValue={f.legal_cidade ?? ''} />
+              </div>
+              <FormSelect name="legal_estado" label="UF" defaultValue={f.legal_estado ?? ''}>
+                <option value="">—</option>
+                {UF_LIST.map(u => <option key={u} value={u}>{u}</option>)}
+              </FormSelect>
+            </FormGrid>
+            <FormGrid cols={2}>
+              <FormInput name="legal_email"   label="E-mail"  type="email" defaultValue={f.legal_email ?? ''} />
+              <FormInput name="legal_celular" label="Celular" defaultValue={f.legal_celular ?? ''} />
+            </FormGrid>
+          </FormSection>
+
+          <FormSection label="💰 Representante Financeiro">
+            <FormGrid cols={2}>
+              <FormInput name="fin_nome" label="Nome" defaultValue={f.fin_nome ?? ''} />
+              <FormInput name="fin_cpf"  label="CPF"  defaultValue={f.fin_cpf ?? ''} />
+            </FormGrid>
+            <FormGrid cols={2}>
+              <FormInput name="fin_rg"    label="RG"    defaultValue={f.fin_rg ?? ''} />
+              <FormInput name="fin_orgao" label="Órgão Emissor" defaultValue={f.fin_orgao ?? ''} />
+            </FormGrid>
+            <FormGrid cols={2}>
+              <FormInput name="fin_email"   label="E-mail"  type="email" defaultValue={f.fin_email ?? ''} />
+              <FormInput name="fin_celular" label="Celular" defaultValue={f.fin_celular ?? ''} />
+            </FormGrid>
+          </FormSection>
+
+          <FormSection label="🎓 Representante Pedagógico">
+            <FormGrid cols={2}>
+              <FormInput name="ped_nome" label="Nome" defaultValue={f.ped_nome ?? ''} />
+              <FormInput name="ped_cpf"  label="CPF"  defaultValue={f.ped_cpf ?? ''} />
+            </FormGrid>
+            <FormGrid cols={2}>
+              <FormInput name="ped_rg"    label="RG"    defaultValue={f.ped_rg ?? ''} />
+              <FormInput name="ped_orgao" label="Órgão Emissor" defaultValue={f.ped_orgao ?? ''} />
+            </FormGrid>
+            <FormGrid cols={2}>
+              <FormInput name="ped_email"   label="E-mail"  type="email" defaultValue={f.ped_email ?? ''} />
+              <FormInput name="ped_celular" label="Celular" defaultValue={f.ped_celular ?? ''} />
+            </FormGrid>
+          </FormSection>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '.5rem', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #cbd5e1' }}>
+            <button type="button" onClick={onClose}
+              style={{ padding: '.6rem 1.2rem', borderRadius: 8, background: '#fff', color: '#64748b', border: '1.5px solid #cbd5e1', fontWeight: 600, fontSize: '.78rem', cursor: 'pointer', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+              Cancelar
+            </button>
+            <button type="submit" disabled={saving}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '.3rem', padding: '.6rem 1.4rem', borderRadius: 8, background: '#d97706', color: '#fff', border: 'none', fontWeight: 700, fontSize: '.78rem', cursor: 'pointer', fontFamily: 'var(--font-montserrat,sans-serif)', boxShadow: '0 4px 12px rgba(217,119,6,.3)' }}>
+              <Save size={13} /> {saving ? 'Salvando...' : 'Salvar Alterações'}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+// ─── Subcomponentes do form ───────────────────────────────────────────────────
+
+function FormSection({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: '1.5rem' }}>
+      <div style={{ fontSize: '.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.08em', color: '#0f172a', borderBottom: '2px solid #d97706', paddingBottom: '.4rem', marginBottom: '.85rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+        {label}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>{children}</div>
+    </div>
+  )
+}
+
+function FormGrid({ cols, children }: { cols: number; children: React.ReactNode }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: '.75rem' }}>{children}</div>
+  )
+}
+
+function FormInput({ name, label, type = 'text', defaultValue, required, min }: {
+  name: string; label: string; type?: string; defaultValue?: string; required?: boolean; min?: string
+}) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: '.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: '#64748b', marginBottom: '.3rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+        {label}{required && <span style={{ color: '#dc2626', marginLeft: 4 }}>*</span>}
+      </label>
+      <input name={name} type={type} defaultValue={defaultValue} required={required} min={min}
+        style={{ width: '100%', padding: '.5rem .8rem', fontSize: '.85rem', border: '1.5px solid #94a3b8', borderRadius: 8, outline: 'none', fontFamily: 'var(--font-inter,sans-serif)' }}
+      />
+    </div>
+  )
+}
+
+function FormSelect({ name, label, defaultValue, children }: {
+  name: string; label: string; defaultValue?: string; children: React.ReactNode
+}) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: '.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: '#64748b', marginBottom: '.3rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+        {label}
+      </label>
+      <select name={name} defaultValue={defaultValue}
+        style={{ width: '100%', padding: '.5rem .8rem', fontSize: '.85rem', border: '1.5px solid #94a3b8', borderRadius: 8, outline: 'none', background: '#fff', fontFamily: 'var(--font-inter,sans-serif)' }}>
+        {children}
+      </select>
+    </div>
+  )
+}
+
+function FormTextarea({ name, label, defaultValue }: { name: string; label: string; defaultValue?: string }) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: '.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: '#64748b', marginBottom: '.3rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+        {label}
+      </label>
+      <textarea name={name} defaultValue={defaultValue} rows={3}
+        style={{ width: '100%', padding: '.5rem .8rem', fontSize: '.85rem', border: '1.5px solid #94a3b8', borderRadius: 8, outline: 'none', resize: 'vertical', fontFamily: 'var(--font-inter,sans-serif)' }}
+      />
+    </div>
   )
 }
