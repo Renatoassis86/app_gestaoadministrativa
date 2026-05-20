@@ -31,6 +31,7 @@ const NAV_PROCESS = [
   { href: '/comercial/jornada',        label: 'Jornada Relac.',    icon: Activity    },
   { href: '/comercial/contratos',      label: 'Jornada Contrat.',  icon: FileSignature },
   { href: '/comercial/pipeline',       label: 'Pipeline',          icon: Kanban      },
+  { href: '/comercial/amostras',       label: 'Envio Amostras',    icon: Package     },
   { href: '/comercial/tabela',         label: 'Tabela Geral',      icon: Table2      },
   { href: '/comercial/metas',          label: 'Metas 2027',        icon: Target      },
 ]
@@ -46,8 +47,7 @@ const NAV_TOOLS = [
 ]
 
 const NAV_WIP = [
-  { href: '/estoque',    label: 'Estoque',       icon: Package    },
-  { href: '/amostras',   label: 'Amostras',      icon: FlaskConical },
+  { href: '/estoque',    label: 'Estoque',       icon: FlaskConical },
   { href: '/dashboards', label: 'BI / Analytics',icon: BarChart2  },
   { href: '/ai-bob',     label: 'ALMA — IA',     icon: Bot        },
   { href: '/financeiro', label: 'Financeiro',    icon: DollarSign },
