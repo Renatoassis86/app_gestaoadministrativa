@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Eye, EyeOff, ArrowRight, BarChart3, Phone, Mail, MessageCircle } from 'lucide-react'
+import { Eye, EyeOff, ArrowRight, BarChart3, ClipboardList, Phone, Mail, MessageCircle } from 'lucide-react'
 import Image from 'next/image'
 
 export default function ComercialLoginPage() {
@@ -60,21 +60,38 @@ export default function ComercialLoginPage() {
           style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)', opacity: .92 }}
           priority
         />
-        <a href="/" style={{
-          display: 'inline-flex', alignItems: 'center', gap: '.4rem',
-          background: '#d97706', color: '#fff',
-          padding: '.45rem 1.1rem', borderRadius: 9999,
-          fontSize: '.78rem', fontWeight: 700, textDecoration: 'none',
-          letterSpacing: '.03em', boxShadow: '0 4px 14px rgba(217,119,6,.4)',
-          transition: 'all .2s',
-          fontFamily: 'var(--font-montserrat, sans-serif)',
-        }}
-          onMouseEnter={e => { e.currentTarget.style.background = '#b45309'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = '#d97706'; e.currentTarget.style.transform = 'translateY(0)' }}
-        >
-          <ArrowRight size={14} style={{ transform: 'rotate(180deg)' }} />
-          Voltar ao Hub
-        </a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem' }}>
+          <a href="/formulario" style={{
+            display: 'inline-flex', alignItems: 'center', gap: '.4rem',
+            background: '#d97706', color: '#fff',
+            padding: '.45rem 1.1rem', borderRadius: 9999,
+            fontSize: '.78rem', fontWeight: 700, textDecoration: 'none',
+            letterSpacing: '.03em', boxShadow: '0 4px 14px rgba(217,119,6,.4)',
+            transition: 'all .2s',
+            fontFamily: 'var(--font-montserrat, sans-serif)',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#b45309'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#d97706'; e.currentTarget.style.transform = 'translateY(0)' }}
+          >
+            <ClipboardList size={14} />
+            Formulário da Escola
+          </a>
+          <a href="/" style={{
+            display: 'inline-flex', alignItems: 'center', gap: '.4rem',
+            background: 'rgba(255,255,255,.08)', color: '#fff',
+            padding: '.45rem 1.1rem', borderRadius: 9999,
+            fontSize: '.78rem', fontWeight: 700, textDecoration: 'none',
+            letterSpacing: '.03em', border: '1px solid rgba(255,255,255,.15)',
+            transition: 'all .2s',
+            fontFamily: 'var(--font-montserrat, sans-serif)',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.15)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.08)' }}
+          >
+            <ArrowRight size={14} style={{ transform: 'rotate(180deg)' }} />
+            Voltar ao Hub
+          </a>
+        </div>
       </header>
 
       <section style={{
@@ -164,7 +181,7 @@ export default function ComercialLoginPage() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   boxShadow: '0 4px 12px rgba(217,119,6,.4)',
                 }}>
-                  <BarChart3 size={21} color="#fff" />
+                  <ClipboardList size={21} color="#fff" />
                 </div>
 
                 <div style={{ flex: 1 }}>
@@ -174,7 +191,7 @@ export default function ComercialLoginPage() {
                     marginBottom: '.3rem',
                     fontFamily: 'var(--font-montserrat, sans-serif)',
                   }}>
-                    ✦ Acesso ao Módulo Comercial
+                    ✦ Sua escola quer ser parceira CVE?
                   </div>
 
                   <div style={{
@@ -182,7 +199,7 @@ export default function ComercialLoginPage() {
                     fontSize: '1.1rem', fontWeight: 700, color: '#fff',
                     lineHeight: 1.2, marginBottom: '.5rem',
                   }}>
-                    Pipeline e Indicadores
+                    Conheça o Currículo Paideia
                   </div>
 
                   <p style={{
@@ -190,10 +207,10 @@ export default function ComercialLoginPage() {
                     lineHeight: 1.6, marginBottom: '.9rem',
                     fontFamily: 'var(--font-inter, sans-serif)',
                   }}>
-                    Acesse o pipeline Kanban, registros de negociação, dados de escolas e indicadores de desempenho comercial em tempo real.
+                    Preencha o formulário de pré-cadastro e nossa equipe comercial entrará em contato com uma proposta personalizada para a sua escola. Não é necessário login.
                   </p>
 
-                  <a href="/" style={{
+                  <a href="/formulario" style={{
                     display: 'inline-flex', alignItems: 'center', gap: '.45rem',
                     background: '#d97706', color: '#fff',
                     padding: '.55rem 1.25rem', borderRadius: 9999,
@@ -202,7 +219,7 @@ export default function ComercialLoginPage() {
                     fontFamily: 'var(--font-montserrat, sans-serif)',
                     letterSpacing: '.01em',
                   }}>
-                    Voltar ao Hub <ArrowRight size={13} style={{ transform: 'rotate(180deg)' }} />
+                    Acessar Formulário de Pré-Cadastro <ArrowRight size={13} />
                   </a>
                 </div>
               </div>
@@ -336,7 +353,7 @@ export default function ComercialLoginPage() {
               </span>
             </div>
 
-            <a href="/" style={{
+            <a href="/formulario" style={{
               display: 'flex', alignItems: 'center', gap: '.5rem',
               padding: '.7rem 1rem', borderRadius: 10,
               border: '1px solid rgba(217,119,6,.25)',
@@ -349,8 +366,25 @@ export default function ComercialLoginPage() {
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(217,119,6,.15)'; e.currentTarget.style.borderColor = 'rgba(217,119,6,.5)' }}
               onMouseLeave={e => { e.currentTarget.style.background = 'rgba(217,119,6,.08)'; e.currentTarget.style.borderColor = 'rgba(217,119,6,.25)' }}
             >
-              <ArrowRight size={15} style={{ flexShrink: 0, transform: 'rotate(180deg)' }} />
-              <span>Voltar ao Hub Principal →</span>
+              <ClipboardList size={15} style={{ flexShrink: 0 }} />
+              <span>Quero ser escola parceira — Pré-Cadastro →</span>
+            </a>
+            <a href="/" style={{
+              display: 'flex', alignItems: 'center', gap: '.5rem',
+              marginTop: '.6rem',
+              padding: '.7rem 1rem', borderRadius: 10,
+              border: '1px solid rgba(255,255,255,.08)',
+              background: 'rgba(255,255,255,.03)',
+              color: 'rgba(255,255,255,.55)', textDecoration: 'none',
+              fontSize: '.75rem', fontWeight: 600,
+              transition: 'all .2s',
+              fontFamily: 'var(--font-montserrat, sans-serif)',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.07)'; e.currentTarget.style.color = '#fff' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.03)'; e.currentTarget.style.color = 'rgba(255,255,255,.55)' }}
+            >
+              <ArrowRight size={14} style={{ flexShrink: 0, transform: 'rotate(180deg)' }} />
+              <span>Voltar ao Hub Principal</span>
             </a>
           </div>
         </div>
@@ -441,6 +475,7 @@ export default function ComercialLoginPage() {
                 { label: 'Cidade Viva Education', href: 'https://cidadeviva.org/' },
                 { label: 'Hub de Plataformas', href: '/' },
                 { label: 'Gestão de Contratos', href: '/hub/contratos/login' },
+                { label: 'Formulário de Pré-Cadastro', href: '/formulario' },
                 { label: 'FICV Faculdade', href: 'https://ficv.edu.br/' },
               ].map(item => (
                 <a key={item.label} href={item.href} style={{
@@ -454,6 +489,20 @@ export default function ComercialLoginPage() {
                   {item.label}
                 </a>
               ))}
+
+              <div style={{ marginTop: '1.25rem' }}>
+                <a href="/formulario" style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '.4rem',
+                  background: '#d97706', color: '#fff',
+                  padding: '.45rem 1rem', borderRadius: 9999,
+                  fontSize: '.75rem', fontWeight: 700, textDecoration: 'none',
+                  boxShadow: '0 4px 12px rgba(217,119,6,.3)',
+                  fontFamily: 'var(--font-montserrat, sans-serif)',
+                }}>
+                  <ClipboardList size={13} />
+                  Formulário para Escolas
+                </a>
+              </div>
             </div>
           </div>
 
