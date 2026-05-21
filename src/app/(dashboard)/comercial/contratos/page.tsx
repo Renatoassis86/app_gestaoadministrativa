@@ -162,14 +162,14 @@ export default async function ContratosPage({ searchParams }: Props) {
         </div>
 
         {/* ── Seletor de Escola ─────────────────────────────── */}
-        <div style={card}>
+        <div style={{ ...card, overflow: 'visible', position: 'relative', zIndex: 50 }}>
           <div style={secHdr()}>
             <div style={{ ...dot(), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
             </div>
             <div style={secTitle}>Selecionar Escola para Editar Contrato</div>
           </div>
-          <div style={{ padding: '1.25rem 1.75rem' }}>
+          <div style={{ padding: '1.25rem 1.75rem', overflow: 'visible' }}>
             <EscolaSelector
               escolas={escolas ?? []}
               escolaId={escolaId}
