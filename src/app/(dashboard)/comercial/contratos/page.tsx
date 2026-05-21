@@ -77,11 +77,17 @@ export default async function ContratosPage({ searchParams }: Props) {
   const escolaId  = params.escola ?? ''
   const supabase  = await createClient()
 
-  const [escolas, { data: contratos_geral }] = await Promise.all([
+  const [todasEscolas, { data: contratos_geral }, { data: registrosEscolaIds }] = await Promise.all([
     buscarEscolasUnificadas(supabase),
     supabase.from('contratos').select('*, escola:escolas(nome, estado, cidade)')
       .order('updated_at', { ascending: false }),
+    // Só queremos escolas que já têm pelo menos um registro de negociação
+    supabase.from('registros').select('escola_id'),
   ])
+
+  // Filtra escolas mostradas no seletor: somente as que tem registros
+  const escolasComRegistro = new Set((registrosEscolaIds ?? []).map((r: any) => r.escola_id))
+  const escolas = todasEscolas.filter(e => escolasComRegistro.has(e.id))
 
   let escola: any = null, contrato: any = null, ultimo_enc: string = ''
   let arquivosEscola: any[] = []
