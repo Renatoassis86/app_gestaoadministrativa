@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { moverAmostra, atualizarLogistica, registrarDevolutiva, excluirAmostra, type AmostraStage } from './amostras-actions'
-import { Package, Truck, MapPin, MessageSquare, ExternalLink, X, Trash2, Phone, Mail, AlertTriangle, Plus } from 'lucide-react'
+import { Package, Truck, MapPin, MessageSquare, ExternalLink, X, Trash2, Phone, Mail, AlertTriangle, Plus, CheckCircle2 } from 'lucide-react'
 
 const STAGES: { key: AmostraStage; label: string; color: string }[] = [
   { key: 'solicitada', label: 'Solicitação Recebida', color: '#6366f1' },
@@ -315,14 +315,17 @@ function AmostraDetailModal({
   const [devDate, setDevDate] = useState(amostra.devolutiva_data ?? new Date().toISOString().slice(0, 10))
   const [saving, setSaving]   = useState<string | null>(null)
   const [err, setErr]         = useState<string | null>(null)
+  const [sucesso, setSucesso] = useState<string | null>(null)
 
   async function salvarLogistica() {
-    setSaving('logistica'); setErr(null)
+    setSaving('logistica'); setErr(null); setSucesso(null)
     const r = await atualizarLogistica(amostra.id, {
       transportadora: transp || null, codigo_rastreio: codigo || null, link_rastreio: link || null,
     })
     setSaving(null)
     if (!r.success) { setErr(r.error ?? 'Erro'); return }
+    setSucesso('Mensagem salva com sucesso')
+    setTimeout(() => setSucesso(null), 3500)
     onChange()
   }
 
@@ -385,6 +388,11 @@ function AmostraDetailModal({
           {err && (
             <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', color: '#991b1b', padding: '.6rem 1rem', borderRadius: 8, marginBottom: '1rem', fontSize: '.78rem' }}>
               ⚠ {err}
+            </div>
+          )}
+          {sucesso && (
+            <div style={{ background: '#dcfce7', border: '1px solid #86efac', color: '#15803d', padding: '.6rem 1rem', borderRadius: 8, marginBottom: '1rem', fontSize: '.82rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '.5rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+              <CheckCircle2 size={16} /> {sucesso}
             </div>
           )}
 
