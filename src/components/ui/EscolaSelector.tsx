@@ -60,6 +60,11 @@ export function EscolaSelector({ escolas, escolaId, basePath, placeholder, extra
     return () => document.removeEventListener('mousedown', handleClickFora)
   }, [])
 
+  const totalDisponiveis = escolasCRM.length + escolasLead.length
+  const dynamicPlaceholder = totalDisponiveis > 0
+    ? `Clique aqui para escolher entre ${totalDisponiveis} escolas...`
+    : (placeholder ?? 'Digite para buscar escola, cidade ou estado...')
+
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', flexWrap: 'wrap' }}>
       <label style={{ fontSize: '.82rem', fontWeight: 700, color: 'var(--text-m)', whiteSpace: 'nowrap', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
@@ -70,12 +75,13 @@ export function EscolaSelector({ escolas, escolaId, basePath, placeholder, extra
         {/* Input de busca com autocompletar */}
         <input
           type="text"
-          placeholder={placeholder ?? 'Digite para buscar escola, cidade ou estado...'}
+          placeholder={dynamicPlaceholder}
           value={dropdownAberto ? busca : (escolaSelecionada?.nome ?? '')}
           onChange={e => {
             setBusca(e.target.value)
             setDropdownAberto(true)
           }}
+          onClick={() => setDropdownAberto(true)}
           onFocus={() => setDropdownAberto(true)}
           onKeyDown={(e) => {
             if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -90,7 +96,8 @@ export function EscolaSelector({ escolas, escolaId, basePath, placeholder, extra
             fontSize: '.85rem',
             fontFamily: 'var(--font-inter, sans-serif)',
             transition: 'border-color .15s',
-            borderColor: busca.trim() && dropdownAberto ? '#0ea5e9' : '#e2e8f0',
+            borderColor: busca.trim() && dropdownAberto ? '#0ea5e9' : '#94a3b8',
+            cursor: 'pointer',
           }}
           autoComplete="off"
         />
