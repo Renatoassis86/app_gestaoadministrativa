@@ -16,6 +16,13 @@ function n(v: FormDataEntryValue | null): number {
   return Number.isFinite(x) && x >= 0 ? x : 0
 }
 
+function money(v: FormDataEntryValue | null): number | null {
+  const t = String(v ?? '').trim()
+  if (t === '') return null
+  const x = parseFloat(t)
+  return Number.isFinite(x) && x >= 0 ? x : null
+}
+
 export async function editarProposta(id: string, formData: FormData): Promise<Result> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -45,6 +52,8 @@ export async function editarProposta(id: string, formData: FormData): Promise<Re
     data_fim_letivo:    s(formData.get('data_fim_letivo')),
     formato_ano_letivo: s(formData.get('formato_ano_letivo')),
     observacoes:        s(formData.get('observacoes')),
+    ticket_medio_mensalidade:   money(formData.get('ticket_medio_mensalidade')),
+    investimento_sistema_atual: money(formData.get('investimento_sistema_atual')),
     legal_nome:         s(formData.get('legal_nome')),
     legal_cpf:          s(formData.get('legal_cpf')),
     legal_rg:           s(formData.get('legal_rg')),

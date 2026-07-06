@@ -733,6 +733,12 @@ export async function enviarFormularioPublico(formData: FormData) {
   const supabase = await createClient()
 
   const toNum = (k: string) => parseInt(formData.get(k) as string) || 0
+  const toMoney = (k: string) => {
+    const raw = (formData.get(k) as string || '').replace(',', '.').trim()
+    if (!raw) return null
+    const v = parseFloat(raw)
+    return Number.isFinite(v) ? v : null
+  }
 
   const payload = {
     email_responsavel:  formData.get('email_responsavel') as string,
@@ -758,6 +764,8 @@ export async function enviarFormularioPublico(formData: FormData) {
     data_fim_letivo:    formData.get('data_fim_letivo') as string || null,
     formato_ano_letivo: formData.get('formato_ano_letivo') as string || null,
     observacoes:        formData.get('observacoes') as string || null,
+    ticket_medio_mensalidade:   toMoney('ticket_medio_mensalidade'),
+    investimento_sistema_atual: toMoney('investimento_sistema_atual'),
     legal_nome:         formData.get('legal_nome') as string || null,
     legal_cpf:          formData.get('legal_cpf') as string || null,
     legal_rg:           formData.get('legal_rg') as string || null,

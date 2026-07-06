@@ -31,6 +31,8 @@ export interface FormularioProposta {
   data_fim_letivo: string | null
   formato_ano_letivo: string | null
   observacoes: string | null
+  ticket_medio_mensalidade: number | null
+  investimento_sistema_atual: number | null
   legal_nome: string | null
   legal_cpf: string | null
   legal_rg: string | null
@@ -70,6 +72,11 @@ function fmtData(d: string) {
 function fmtDateOnly(d: string | null) {
   if (!d) return '—'
   return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+function fmtMoeda(v: number | null | undefined) {
+  if (v == null) return '—'
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 export function PropostasList({ formularios }: { formularios: FormularioProposta[] }) {
@@ -415,6 +422,14 @@ function DetalhesModal({ formulario: f, onClose, onEditar }: {
             )}
           </Section>
 
+          {/* Informações financeiras */}
+          <Section label="💰 Informações Financeiras">
+            <Grid items={[
+              ['Ticket médio da mensalidade', fmtMoeda(f.ticket_medio_mensalidade)],
+              ['Investimento no sistema de ensino atual', fmtMoeda(f.investimento_sistema_atual)],
+            ]} />
+          </Section>
+
           {/* Representante Legal */}
           <Representante label="🪪 Representante Legal" tipo="legal" formulario={f} />
           <Representante label="💰 Representante Financeiro" tipo="fin" formulario={f} />
@@ -623,6 +638,15 @@ function EditarPropostaModal({ formulario: f, onClose, onSaved }: {
             <FormTextarea name="observacoes" label="Observações" defaultValue={f.observacoes ?? ''} />
           </FormSection>
 
+          <FormSection label="💰 Informações Financeiras">
+            <FormGrid cols={2}>
+              <FormInput name="ticket_medio_mensalidade" label="Ticket médio da mensalidade (R$)" type="number" min="0" step="0.01"
+                defaultValue={f.ticket_medio_mensalidade != null ? String(f.ticket_medio_mensalidade) : ''} />
+              <FormInput name="investimento_sistema_atual" label="Investimento no sistema de ensino atual (R$)" type="number" min="0" step="0.01"
+                defaultValue={f.investimento_sistema_atual != null ? String(f.investimento_sistema_atual) : ''} />
+            </FormGrid>
+          </FormSection>
+
           <FormSection label="🪪 Representante Legal">
             <FormGrid cols={2}>
               <FormInput name="legal_nome" label="Nome" defaultValue={f.legal_nome ?? ''} />
@@ -723,15 +747,15 @@ function FormGrid({ cols, children }: { cols: number; children: React.ReactNode 
   )
 }
 
-function FormInput({ name, label, type = 'text', defaultValue, required, min }: {
-  name: string; label: string; type?: string; defaultValue?: string; required?: boolean; min?: string
+function FormInput({ name, label, type = 'text', defaultValue, required, min, step }: {
+  name: string; label: string; type?: string; defaultValue?: string; required?: boolean; min?: string; step?: string
 }) {
   return (
     <div>
       <label style={{ display: 'block', fontSize: '.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: '#64748b', marginBottom: '.3rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
         {label}{required && <span style={{ color: '#dc2626', marginLeft: 4 }}>*</span>}
       </label>
-      <input name={name} type={type} defaultValue={defaultValue} required={required} min={min}
+      <input name={name} type={type} defaultValue={defaultValue} required={required} min={min} step={step}
         style={{ width: '100%', padding: '.5rem .8rem', fontSize: '.85rem', border: '1.5px solid #94a3b8', borderRadius: 8, outline: 'none', fontFamily: 'var(--font-inter,sans-serif)' }}
       />
     </div>

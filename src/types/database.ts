@@ -249,6 +249,8 @@ export interface Formulario {
   data_fim_letivo: string | null
   formato_ano_letivo: string | null
   observacoes: string | null
+  ticket_medio_mensalidade: number | null
+  investimento_sistema_atual: number | null
   legal_nome: string | null
   legal_cpf: string | null
   legal_rg: string | null

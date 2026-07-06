@@ -20,8 +20,8 @@ function Row({ children }: { children: React.ReactNode }) {
   return <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>{children}</div>
 }
 
-function Field({ label, name, type = 'text', required, options }: {
-  label: string; name: string; type?: string; required?: boolean; options?: string[]
+function Field({ label, name, type = 'text', required, options, step, min }: {
+  label: string; name: string; type?: string; required?: boolean; options?: string[]; step?: string; min?: string
 }) {
   return (
     <div>
@@ -36,7 +36,7 @@ function Field({ label, name, type = 'text', required, options }: {
       ) : type === 'textarea' ? (
         <textarea name={name} rows={3} style={{ width: '100%', padding: '.55rem .85rem', fontSize: '.875rem', border: '1px solid #CBD5E1', borderRadius: 8, resize: 'vertical', outline: 'none' }} />
       ) : (
-        <input name={name} type={type} required={required}
+        <input name={name} type={type} required={required} step={step} min={min}
           style={{ width: '100%', padding: '.55rem .85rem', fontSize: '.875rem', border: '1px solid #CBD5E1', borderRadius: 8, outline: 'none' }} />
       )}
     </div>
@@ -137,6 +137,13 @@ export default function FormularioPublico() {
                 <Field label="Formato do ano letivo" name="formato_ano_letivo" options={['Bimestre','Trimestre']} />
               </Row>
               <Field label="Observações adicionais" name="observacoes" type="textarea" />
+            </Section>
+
+            <Section title="Informações Financeiras">
+              <Row>
+                <Field label="Ticket médio da mensalidade paga pelos alunos (R$)" name="ticket_medio_mensalidade" type="number" step="0.01" min="0" />
+                <Field label="Valor médio investido atualmente no sistema de ensino utilizado (R$)" name="investimento_sistema_atual" type="number" step="0.01" min="0" />
+              </Row>
             </Section>
 
             <Section title="Representante Legal">
