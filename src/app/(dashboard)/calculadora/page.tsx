@@ -9,7 +9,11 @@ import PageHeader from '@/components/layout/PageHeader'
 const TAXA_PLATAFORMA   = 0.015
 const TAXA_FIXA_PARCELA = 0.30
 const VALOR_MIN_PARCELA = 30.00
-const MANUTENCAO_MENSAL = 70
+const CUSTO_LOJA_BASE   = 73.02   // valor unitário mensal da loja, sem ISS (fatura Eskolare: "Lojas Ativas")
+const ISS_LOJA          = 0.02
+// ISS calculado "por dentro" sobre o SUBTOTAL DO PERÍODO — mesmo cálculo da fatura real da Eskolare:
+// Subtotal = meses consumidos × valor unitário; Total = Subtotal ÷ (1 − ISS).
+// Ex. real: 8 meses × R$73,02 = R$584,16 subtotal → ÷0,98 = R$596,08 (ISS R$11,92)
 const MESES_LOJA_PADRAO = 9   // média observada: loja fica aberta entre 8 e 10 meses
 
 const SEGMENTOS = [
@@ -143,8 +147,11 @@ export default function CalculadoraPage() {
   const [calculados, setCalculados] = useState<Record<string, Resultado>>({})
   const [calculou,   setCalculou]   = useState(false)
   const [mesesLoja,  setMesesLoja]  = useState(MESES_LOJA_PADRAO)
+  const [memoriaSeg, setMemoriaSeg] = useState<string | null>(null)
 
-  const manutencaoTotal = MANUTENCAO_MENSAL * mesesLoja
+  const manutencaoSubtotal = CUSTO_LOJA_BASE * mesesLoja           // ex: 8 × R$73,02 = R$584,16
+  const manutencaoTotal    = manutencaoSubtotal / (1 - ISS_LOJA)   // ex: ÷0,98 = R$596,08
+  const manutencaoIss      = manutencaoTotal - manutencaoSubtotal  // ex: R$11,92
 
   const primeiroAtivo = segmentos.find(s => s.ativo)
 
@@ -177,6 +184,12 @@ export default function CalculadoraPage() {
 
   const ativos = segmentos.filter(s => s.ativo)
 
+  // Segmento exibido na memória de cálculo: o selecionado (se ainda válido) ou o primeiro ativo
+  const segMemoriaId = (memoriaSeg && calculados[memoriaSeg]) ? memoriaSeg : ativos[0]?.id
+  const segMemoria    = ativos.find(s => s.id === segMemoriaId)
+  const resMemoria    = segMemoriaId ? calculados[segMemoriaId] : undefined
+  const refMemoria    = segMemoria && segMemoria.igualPrimeiro && primeiroAtivo ? primeiroAtivo : segMemoria
+
   return (
     <div>
       <PageHeader title="Calculadora Eskolare" subtitle="Precificação por segmento e turma" />
@@ -192,7 +205,7 @@ export default function CalculadoraPage() {
               Preço final = custo + comissão + taxas Eskolare + manutenção rateada
             </div>
             <div style={{ fontSize: '.78rem', color: 'rgba(255,255,255,.55)', lineHeight: 1.65, fontFamily: 'var(--font-inter,sans-serif)' }}>
-              A manutenção da loja online (<strong style={{ color: '#d97706' }}>R$ {MANUTENCAO_MENSAL}/mês</strong> × meses em que a loja fica aberta) é dividida proporcionalmente
+              A manutenção da loja online (<strong style={{ color: '#d97706' }}>{fmt(CUSTO_LOJA_BASE)}/mês</strong> + 2% ISS por dentro sobre o subtotal do período, igual à fatura real da Eskolare) é dividida proporcionalmente
               pela quantidade total de alunos de todos os segmentos ativos. Cada aluno absorve sua fração.
               Quanto mais alunos, menor o custo individual de manutenção.
             </div>
@@ -211,7 +224,7 @@ export default function CalculadoraPage() {
               <div style={{ fontSize: '.6rem', color: 'rgba(255,255,255,.35)', marginTop: '.2rem' }}>Média observada: 8 a 10 meses</div>
             </div>
             {[
-              [`R$ ${MANUTENCAO_MENSAL}/mês`, `${mesesLoja} meses`],
+              [`${fmt(CUSTO_LOJA_BASE)}/mês`, `${mesesLoja} meses`],
               ['Total do período', fmt(manutencaoTotal)],
               ['Dividido por', `${totalAlunos > 0 ? totalAlunos : '?'} alunos`],
               ['Por aluno', totalAlunos > 0 ? fmt(manutencaoTotal / totalAlunos) : '—'],
@@ -519,13 +532,108 @@ export default function CalculadoraPage() {
                         Manutenção total: {fmt(manutencaoTotal)} / {totalAlunos} alunos = {fmt(manutencaoTotal / totalAlunos)}/aluno
                       </td>
                       <td colSpan={4} style={{ padding: '.75rem 1rem', fontSize: '.72rem', color: 'rgba(255,255,255,.4)', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                        Loja ativa: {mesesLoja} meses × R$ {MANUTENCAO_MENSAL}/mês = {fmt(manutencaoTotal)}
+                        Loja ativa: {mesesLoja} meses × {fmt(CUSTO_LOJA_BASE)}/mês = {fmt(manutencaoSubtotal)} + ISS {fmt(manutencaoIss)} = {fmt(manutencaoTotal)}
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
             </div>
+
+            {/* Memória de cálculo — uso comercial */}
+            {segMemoria && resMemoria && refMemoria && (
+              <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 8px rgba(15,23,42,.05)', marginBottom: '1.5rem' }}>
+                <div style={{ background: '#0f172a', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '.75rem' }}>
+                  <div>
+                    <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#d97706' }}>
+                      📋 Memória de cálculo — para uso comercial
+                    </div>
+                    <div style={{ fontSize: '.72rem', color: 'rgba(255,255,255,.45)', marginTop: '.15rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                      Explicação passo a passo de como o preço final é formado, para apresentar à escola
+                    </div>
+                  </div>
+                  {ativos.length > 1 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.35rem' }}>
+                      {ativos.map(s => (
+                        <button key={s.id} onClick={() => setMemoriaSeg(s.id)}
+                          style={{
+                            padding: '4px 12px', borderRadius: 9999, cursor: 'pointer',
+                            fontSize: '.68rem', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)',
+                            background: s.id === segMemoriaId ? '#d97706' : 'rgba(255,255,255,.08)',
+                            color: s.id === segMemoriaId ? '#fff' : 'rgba(255,255,255,.6)',
+                            border: `1px solid ${s.id === segMemoriaId ? '#d97706' : 'rgba(255,255,255,.15)'}`,
+                          }}>
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <ol style={{ padding: '1.25rem 1.75rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '.7rem' }}>
+                  {[
+                    {
+                      texto: <>Custo de aquisição do livro <span style={{ color: '#94a3b8' }}>(valor pago pela escola ao fornecedor)</span></>,
+                      valor: fmt(resMemoria.custo),
+                    },
+                    {
+                      texto: <>Comissão do consultor comercial <span style={{ color: '#94a3b8' }}>({refMemoria.comissaoTipo === 'pct' ? `${refMemoria.comissaoPct}% sobre o custo` : 'valor fixo por livro'})</span></>,
+                      valor: `+ ${fmt(resMemoria.comissao_valor)}`,
+                    },
+                    {
+                      texto: <strong>Líquido desejado (custo + comissão)</strong>,
+                      valor: fmt(resMemoria.liquido_desejado), destaque: true,
+                    },
+                    {
+                      texto: <>Taxa fixa Eskolare por parcela <span style={{ color: '#94a3b8' }}>(R$ 0,30 × {refMemoria.parcelas} parcela{refMemoria.parcelas > 1 ? 's' : ''})</span></>,
+                      valor: `+ ${fmt(resMemoria.taxa_fixa_eskolare)}`,
+                    },
+                    {
+                      texto: <>Manutenção da loja rateada por aluno <span style={{ color: '#94a3b8' }}>({fmt(CUSTO_LOJA_BASE)}/mês × {mesesLoja} meses = {fmt(manutencaoSubtotal)}, + ISS 2% por dentro = {fmt(manutencaoTotal)}, ÷ {totalAlunos} alunos ativos)</span></>,
+                      valor: `+ ${fmt(resMemoria.manutencao_por_aluno)}`,
+                    },
+                    {
+                      texto: <strong>Soma dos custos e taxas fixas</strong>,
+                      valor: fmt(resMemoria.liquido_desejado + resMemoria.taxa_fixa_eskolare + resMemoria.manutencao_por_aluno), destaque: true,
+                    },
+                    {
+                      texto: <>Taxas percentuais Eskolare descontadas no repasse <span style={{ color: '#94a3b8' }}>(plataforma 1,5% + cartão {resMemoria.taxa_cartao_pct.toFixed(2)}% em {refMemoria.parcelas === 1 ? 'à vista' : `${refMemoria.parcelas}x`})</span></>,
+                      valor: `${(1.5 + resMemoria.taxa_cartao_pct).toFixed(2)}%`,
+                    },
+                    {
+                      texto: <strong>Preço final ao pai = soma dos custos fixos ÷ (1 − taxas percentuais)</strong>,
+                      valor: fmt(resMemoria.preco_final), destaque: true, cor: '#d97706',
+                    },
+                    {
+                      texto: <>Forma de pagamento</>,
+                      valor: refMemoria.parcelas === 1 ? 'À vista' : `${refMemoria.parcelas}x de ${fmt(resMemoria.valor_parcela)}`,
+                    },
+                    {
+                      texto: <>Conferência — líquido real recebido pela Cidade Viva <span style={{ color: '#94a3b8' }}>(deve bater com o líquido desejado no passo 3)</span></>,
+                      valor: fmt(resMemoria.liquido_real), cor: '#16a34a',
+                    },
+                  ].map((item, i) => (
+                    <li key={i} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '1rem',
+                      padding: (item as any).destaque ? '.6rem .9rem' : '0', borderRadius: 8,
+                      background: (item as any).destaque ? '#fffbeb' : 'transparent',
+                    }}>
+                      <span style={{ fontSize: '.82rem', color: '#334155', fontFamily: 'var(--font-inter,sans-serif)', lineHeight: 1.5 }}>
+                        <strong style={{ color: '#94a3b8', marginRight: '.5rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>{i + 1}.</strong>
+                        {item.texto}
+                      </span>
+                      <span style={{
+                        fontFamily: 'var(--font-cormorant,serif)', fontSize: (item as any).destaque ? '1.15rem' : '1rem', fontWeight: 800,
+                        color: (item as any).cor ?? ((item as any).destaque ? '#d97706' : '#0f172a'),
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {item.valor}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
 
             {/* Tabela de taxas */}
             <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: '1.1rem 1.5rem', boxShadow: '0 1px 4px rgba(15,23,42,.05)' }}>
@@ -540,9 +648,11 @@ export default function CalculadoraPage() {
                   ['Taxa cartão 7x–12x', '3,69%'],
                   ['Taxa fixa por parcela', 'R$ 0,30'],
                   ['Mínimo por parcela', 'R$ 30,00'],
-                  [`Manutenção/mês`, `R$ ${MANUTENCAO_MENSAL},00`],
-                  [`Meses de loja ativa`, `${mesesLoja} meses`],
-                  [`Total manutenção (período)`, fmt(manutencaoTotal)],
+                  ['Loja — Valor Unitário/mês', fmt(CUSTO_LOJA_BASE)],
+                  ['Loja — Consumido (meses)', `${mesesLoja} meses`],
+                  ['Loja — Subtotal', fmt(manutencaoSubtotal)],
+                  ['Loja — ISS (2%, por dentro)', fmt(manutencaoIss)],
+                  ['Loja — Total (Subtotal + ISS)', fmt(manutencaoTotal)],
                 ].map(([l, v]) => (
                   <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '.35rem 0', borderBottom: '1px solid #f8fafc', fontSize: '.78rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
                     <span style={{ color: '#64748b' }}>{l}</span>
