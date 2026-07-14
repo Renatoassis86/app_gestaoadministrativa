@@ -91,7 +91,7 @@ function calcular(
   const taxa_fixa_eskolare = TAXA_FIXA_PARCELA * parcelas
   const denominador        = 1 - TAXA_PLATAFORMA - taxa_cartao
 
-  // Preço final por livro = (líquido + taxa fixa + manutenção por aluno) / denominador
+  // Preço final por kit = (líquido + taxa fixa + manutenção por aluno) / denominador
   const preco_final = Math.ceil(
     ((liquido_desejado + taxa_fixa_eskolare + manutencao_por_aluno) / denominador) * 100
   ) / 100
@@ -140,7 +140,7 @@ export default function CalculadoraPage() {
       comissaoTipo: 'pct' as const,
       comissaoPct: 20,
       comissaoAbs: 0,
-      qtdAlunos: 30,
+      qtdAlunos: 0,
       parcelas: 12,
     }))
   )
@@ -296,7 +296,7 @@ export default function CalculadoraPage() {
                   <div style={{ padding: '1.1rem 1.25rem', display: 'grid', gridTemplateColumns: '1fr 1.4fr 1fr 1fr', gap: '1rem', alignItems: 'end' }}>
                     {/* Custo — sempre editável, mesmo que igual a outra turma */}
                     <div>
-                      <label style={lblStyle}>Custo do Livro (R$)</label>
+                      <label style={lblStyle}>Custo do Kit (R$)</label>
                       <input type="number" min="0" step="0.01" value={s.custo}
                         onChange={e => update(s.id, 'custo', parseFloat(e.target.value) || 0)}
                         style={inpStyle} placeholder="Ex: 600,00" />
@@ -348,15 +348,15 @@ export default function CalculadoraPage() {
                         </div>
                       )}
                       <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                        {herdando ? `Igual à ${primeiroAtivo?.label}` : (s.comissaoTipo === 'pct' ? 'Margem sobre o custo' : 'Valor fixo por livro')}
+                        {herdando ? `Igual à ${primeiroAtivo?.label}` : (s.comissaoTipo === 'pct' ? 'Margem sobre o custo' : 'Valor fixo por kit')}
                       </div>
                     </div>
 
                     {/* Qtd alunos — sempre editável e própria da turma, influencia o rateio da manutenção */}
                     <div>
                       <label style={lblStyle}>Qtd. Alunos</label>
-                      <input type="number" min="1" value={s.qtdAlunos}
-                        onChange={e => update(s.id, 'qtdAlunos', parseInt(e.target.value) || 1)}
+                      <input type="number" min="0" value={s.qtdAlunos}
+                        onChange={e => update(s.id, 'qtdAlunos', parseInt(e.target.value) || 0)}
                         style={{ ...inpStyle, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1rem', fontWeight: 700 }} />
                       <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
                         Manutenção: {totalAlunos > 0 ? fmt(manutencaoTotal / totalAlunos) : '—'}/aluno
@@ -467,7 +467,7 @@ export default function CalculadoraPage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#f8fafc' }}>
-                      {['Segmento','Alunos','Custo Livro','Comissão','Taxas Eskolare','Manut./Aluno','Preço Final','Parcela','Líquido Real','Status'].map(col => (
+                      {['Segmento','Alunos','Custo Kit','Comissão','Taxas Eskolare','Manut./Aluno','Preço Final','Parcela','Líquido Real','Status'].map(col => (
                         <th key={col} style={{ padding: '.65rem 1rem', textAlign: 'left', fontSize: '.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#64748b', borderBottom: '1px solid #e2e8f0', fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap' }}>{col}</th>
                       ))}
                     </tr>
@@ -556,11 +556,11 @@ export default function CalculadoraPage() {
                 <ol style={{ padding: '1.25rem 1.75rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '.7rem' }}>
                   {[
                     {
-                      texto: <>Custo de aquisição do livro <span style={{ color: '#94a3b8' }}>(valor pago pela escola ao fornecedor)</span></>,
+                      texto: <>Custo de aquisição do kit <span style={{ color: '#94a3b8' }}>(valor pago pela escola ao fornecedor)</span></>,
                       valor: fmt(resMemoria.custo),
                     },
                     {
-                      texto: <>Comissão do consultor comercial <span style={{ color: '#94a3b8' }}>({refMemoria.comissaoTipo === 'pct' ? `${refMemoria.comissaoPct}% sobre o custo` : 'valor fixo por livro'})</span></>,
+                      texto: <>Comissão do consultor comercial <span style={{ color: '#94a3b8' }}>({refMemoria.comissaoTipo === 'pct' ? `${refMemoria.comissaoPct}% sobre o custo` : 'valor fixo por kit'})</span></>,
                       valor: `+ ${fmt(resMemoria.comissao_valor)}`,
                     },
                     {
