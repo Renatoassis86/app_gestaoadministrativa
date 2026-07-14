@@ -221,7 +221,7 @@ export default function CalculadoraPage() {
             </div>
             <div style={{ fontSize: '.78rem', color: 'rgba(255,255,255,.55)', lineHeight: 1.65, fontFamily: 'var(--font-inter,sans-serif)' }}>
               A manutenção da plataforma (<strong style={{ color: '#d97706' }}>{fmt(CUSTO_MANUTENCAO_PLATAFORMA)}</strong>, R$73,02 + 2% ISS por dentro) e a nota fiscal
-              (<strong style={{ color: '#d97706' }}>{fmt(CUSTO_NOTA_FISCAL)}</strong>) entram integralmente em <strong>cada kit vendido</strong> — não são mais rateadas entre os alunos.
+              (<strong style={{ color: '#d97706' }}>{fmt(CUSTO_NOTA_FISCAL)}</strong>) entram integralmente em <strong>cada kit vendido</strong>.
               A taxa de cartão e a taxa fixa por parcela são sempre calculadas com base em 12x (<strong style={{ color: '#d97706' }}>{(TAXA_CARTAO_PARCELADO * 100).toFixed(2)}%</strong>),
               independente da forma de pagamento que a família escolher — o preço final não muda conforme o parcelamento selecionado.
             </div>
@@ -234,7 +234,6 @@ export default function CalculadoraPage() {
               ['Valor base (sem ISS)', fmt(CUSTO_LOJA_BASE)],
               ['ISS (2%, por dentro)', fmt(CUSTO_MANUTENCAO_PLATAFORMA - CUSTO_LOJA_BASE)],
               ['Por kit vendido', fmt(CUSTO_MANUTENCAO_PLATAFORMA)],
-              ['Cobrança', 'Integral, sem rateio'],
             ].map(([l, v]) => (
               <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '.25rem 0', borderBottom: '1px solid rgba(255,255,255,.06)', fontSize: '.75rem' }}>
                 <span style={{ color: 'rgba(255,255,255,.5)', fontFamily: 'var(--font-inter,sans-serif)' }}>{l}</span>
@@ -318,6 +317,7 @@ export default function CalculadoraPage() {
                       <label style={lblStyle}>Custo do Kit (R$)</label>
                       <input type="number" min="0" step="0.01" value={s.custo}
                         onChange={e => update(s.id, 'custo', parseFloat(e.target.value) || 0)}
+                        onWheel={e => (e.target as HTMLInputElement).blur()}
                         style={inpStyle} placeholder="Ex: 600,00" />
                       <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>Valor pago pela escola</div>
                     </div>
@@ -355,6 +355,7 @@ export default function CalculadoraPage() {
                         <div style={{ position: 'relative' }}>
                           <input type="number" min="0" max="100" step="0.1" value={s.comissaoPct}
                             onChange={e => update(s.id, 'comissaoPct', parseFloat(e.target.value) || 0)}
+                            onWheel={e => (e.target as HTMLInputElement).blur()}
                             style={{ ...inpStyle, paddingRight: '2.5rem' }} />
                           <span style={{ position: 'absolute', right: '.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '.85rem', color: '#94a3b8', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)', pointerEvents: 'none' }}>%</span>
                         </div>
@@ -363,6 +364,7 @@ export default function CalculadoraPage() {
                           <span style={{ position: 'absolute', left: '.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '.78rem', color: '#94a3b8', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)', pointerEvents: 'none' }}>R$</span>
                           <input type="number" min="0" step="0.01" value={s.comissaoAbs}
                             onChange={e => update(s.id, 'comissaoAbs', parseFloat(e.target.value) || 0)}
+                            onWheel={e => (e.target as HTMLInputElement).blur()}
                             style={{ ...inpStyle, paddingLeft: '2.25rem' }} />
                         </div>
                       )}
@@ -371,11 +373,12 @@ export default function CalculadoraPage() {
                       </div>
                     </div>
 
-                    {/* Qtd alunos — sempre editável e própria da turma, influencia o rateio da manutenção */}
+                    {/* Qtd alunos — sempre editável e própria da turma */}
                     <div>
                       <label style={lblStyle}>Qtd. Alunos</label>
                       <input type="number" min="0" value={s.qtdAlunos}
                         onChange={e => update(s.id, 'qtdAlunos', parseInt(e.target.value) || 0)}
+                        onWheel={e => (e.target as HTMLInputElement).blur()}
                         style={{ ...inpStyle, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1rem', fontWeight: 700 }} />
                       <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
                         Manutenção: {fmt(CUSTO_MANUTENCAO_PLATAFORMA)}/kit
@@ -502,7 +505,6 @@ export default function CalculadoraPage() {
                         <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#fff' : '#fafafa' }}>
                           <td style={{ padding: '.75rem 1rem', fontWeight: 700, fontSize: '.82rem', color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap' }}>
                             {s.label}
-                            {s.igualPrimeiro && s.id !== primeiroAtivo?.id && <span style={{ marginLeft: '.4rem', fontSize: '.58rem', background: '#dbeafe', color: '#1d4ed8', padding: '.08rem .35rem', borderRadius: 99, fontWeight: 700 }}>com.=1º</span>}
                           </td>
                           <td style={{ padding: '.75rem 1rem', textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '.95rem', fontWeight: 700, color: '#0f172a' }}>{r.qtd_alunos}</td>
                           <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)' }}>{fmt(r.custo)}</td>
@@ -513,12 +515,7 @@ export default function CalculadoraPage() {
                             </span>
                           </td>
                           <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#a855f7', fontFamily: 'var(--font-inter,sans-serif)' }}>{fmt(r.custo_nota_fiscal)}</td>
-                          <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#dc2626', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                            {fmt(r.total_taxas_parcelamento)}
-                            <span style={{ display: 'block', fontSize: '.62rem', color: '#94a3b8', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 600 }}>
-                              plat. {fmt(r.taxa_plataforma_valor)} + cartão {fmt(r.taxa_cartao_valor)} + fixa {fmt(r.taxa_fixa_eskolare)}
-                            </span>
-                          </td>
+                          <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#dc2626', fontFamily: 'var(--font-inter,sans-serif)' }}>{fmt(r.total_taxas_parcelamento)}</td>
                           <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#0ea5e9', fontFamily: 'var(--font-inter,sans-serif)' }}>{fmt(r.custo_manutencao)}</td>
                           <td style={{ padding: '.75rem 1rem', fontWeight: 800, color: '#d97706', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1rem' }}>{fmt(r.preco_final)}</td>
                           <td style={{ padding: '.75rem 1rem', fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-cormorant,serif)', fontSize: '.95rem', whiteSpace: 'nowrap' }}>
@@ -539,7 +536,7 @@ export default function CalculadoraPage() {
                       <td style={{ padding: '.75rem 1rem', fontWeight: 700, fontSize: '.78rem', color: '#d97706', fontFamily: 'var(--font-montserrat,sans-serif)' }}>TOTAL</td>
                       <td style={{ padding: '.75rem 1rem', textAlign: 'center', fontWeight: 800, color: '#fff', fontFamily: 'var(--font-cormorant,serif)', fontSize: '.95rem' }}>{totalAlunos}</td>
                       <td colSpan={5} style={{ padding: '.75rem 1rem', fontSize: '.72rem', color: 'rgba(255,255,255,.4)', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                        Manutenção da plataforma: {fmt(CUSTO_MANUTENCAO_PLATAFORMA)}/kit (integral, sem rateio) × {totalAlunos} kits = {fmt(CUSTO_MANUTENCAO_PLATAFORMA * totalAlunos)}
+                        Manutenção da plataforma: {fmt(CUSTO_MANUTENCAO_PLATAFORMA)}/kit × {totalAlunos} kits = {fmt(CUSTO_MANUTENCAO_PLATAFORMA * totalAlunos)}
                       </td>
                       <td colSpan={4} style={{ padding: '.75rem 1rem', fontSize: '.72rem', color: 'rgba(255,255,255,.4)', fontFamily: 'var(--font-inter,sans-serif)' }}>
                         Nota fiscal: {fmt(CUSTO_NOTA_FISCAL)}/kit × {totalAlunos} kits = {fmt(CUSTO_NOTA_FISCAL * totalAlunos)}
@@ -632,7 +629,7 @@ export default function CalculadoraPage() {
                       valor: `+ ${fmt(resMemoria.taxa_fixa_eskolare)}`,
                     },
                     {
-                      texto: <>Manutenção da plataforma <span style={{ color: '#94a3b8' }}>(R$73,02 + 2% ISS por dentro = {fmt(CUSTO_MANUTENCAO_PLATAFORMA)}, integral neste kit — sem rateio entre alunos)</span></>,
+                      texto: <>Manutenção da plataforma <span style={{ color: '#94a3b8' }}>(R$73,02 + 2% ISS por dentro = {fmt(CUSTO_MANUTENCAO_PLATAFORMA)})</span></>,
                       valor: `+ ${fmt(resMemoria.custo_manutencao)}`,
                     },
                     {
