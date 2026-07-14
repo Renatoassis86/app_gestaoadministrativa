@@ -56,6 +56,9 @@ interface Resultado {
   custo_manutencao: number   // manutenção da plataforma — integral por kit, não rateada
   taxa_fixa_eskolare: number
   taxa_cartao_pct: number
+  taxa_plataforma_valor: number   // R$ — 1,5% do preço final
+  taxa_cartao_valor: number       // R$ — taxa de cartão (sempre 12x) do preço final
+  total_taxas_parcelamento: number // R$ — plataforma + cartão + taxa fixa
   custo_nota_fiscal: number
   preco_final: number
   valor_parcela: number
@@ -98,10 +101,16 @@ function calcular(
   const valor_parcela = Math.round((preco_final / parcelas) * 100) / 100
   const liquido_real  = preco_final * denominador - taxa_fixa_eskolare - CUSTO_MANUTENCAO_PLATAFORMA - CUSTO_NOTA_FISCAL
 
+  // Despesas do parcelamento em R$ (informativo — derivadas do preço final já calculado acima)
+  const taxa_plataforma_valor    = preco_final * TAXA_PLATAFORMA
+  const taxa_cartao_valor        = preco_final * taxa_cartao
+  const total_taxas_parcelamento = taxa_plataforma_valor + taxa_cartao_valor + taxa_fixa_eskolare
+
   return {
     custo, comissao_valor, liquido_desejado,
     custo_manutencao: CUSTO_MANUTENCAO_PLATAFORMA,
     taxa_fixa_eskolare, taxa_cartao_pct: taxa_cartao * 100,
+    taxa_plataforma_valor, taxa_cartao_valor, total_taxas_parcelamento,
     custo_nota_fiscal: CUSTO_NOTA_FISCAL,
     preco_final, valor_parcela, liquido_real,
     diferenca: liquido_real - liquido_desejado,
@@ -137,7 +146,7 @@ export default function CalculadoraPage() {
       ...s,
       ativo: i < 2,
       igualPrimeiro: i > 0,
-      custo: 600,
+      custo: s.id.startsWith('inf') ? 1150 : 1450,   // padrão: Infantil R$1.150 · Fundamental R$1.450
       comissaoTipo: 'pct' as const,
       comissaoPct: 20,
       comissaoAbs: 0,
@@ -175,6 +184,20 @@ export default function CalculadoraPage() {
   }
 
   const ativos = segmentos.filter(s => s.ativo)
+
+  // Resumo financeiro da proposta inteira — soma de todos os segmentos ativos já calculados
+  const faturamentoEducation = ativos.reduce((acc, s) => {
+    const r = calculados[s.id]
+    return r ? acc + r.custo * r.qtd_alunos : acc
+  }, 0)
+  const comissaoTotalProposta = ativos.reduce((acc, s) => {
+    const r = calculados[s.id]
+    return r ? acc + r.comissao_valor * r.qtd_alunos : acc
+  }, 0)
+  const faturamentoTotalVenda = ativos.reduce((acc, s) => {
+    const r = calculados[s.id]
+    return r ? acc + r.preco_final * r.qtd_alunos : acc
+  }, 0)
 
   // Segmento exibido na memória de cálculo: o selecionado (se ainda válido) ou o primeiro ativo
   const segMemoriaId = (memoriaSeg && calculados[memoriaSeg]) ? memoriaSeg : ativos[0]?.id
@@ -428,6 +451,7 @@ export default function CalculadoraPage() {
                         { label: 'Comissão', value: fmt(r.comissao_valor), sub: ref.comissaoTipo === 'pct' ? `${ref.comissaoPct}% sobre custo` : 'valor fixo', bg: '#f5f3ff' },
                         { label: 'Nota Fiscal', value: fmt(r.custo_nota_fiscal), sub: 'por venda', bg: '#fdf4ff' },
                         { label: 'Manutenção da Plataforma', value: fmt(r.custo_manutencao), sub: 'por kit, integral', bg: '#eff6ff' },
+                        { label: 'Despesas de Parcelamento', value: fmt(r.total_taxas_parcelamento), sub: `plataforma + cartão (${r.taxa_cartao_pct.toFixed(2)}%) + taxa fixa`, bg: '#fef2f2' },
                         { label: 'Valor Final ao Pai', value: fmt(r.preco_final), sub: ref.parcelas === 1 ? 'à vista' : `${ref.parcelas}x de ${fmt(r.valor_parcela)}`, bg: '#fffbeb', big: true, full: true },
                       ].map(m => (
                         <div key={m.label} style={{ gridColumn: (m as any).full ? '1 / -1' : undefined, background: m.bg, padding: '.85rem 1rem', borderRight: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9' }}>
@@ -489,7 +513,12 @@ export default function CalculadoraPage() {
                             </span>
                           </td>
                           <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#a855f7', fontFamily: 'var(--font-inter,sans-serif)' }}>{fmt(r.custo_nota_fiscal)}</td>
-                          <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#dc2626', fontFamily: 'var(--font-inter,sans-serif)' }}>{fmt(r.taxa_fixa_eskolare)}</td>
+                          <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#dc2626', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                            {fmt(r.total_taxas_parcelamento)}
+                            <span style={{ display: 'block', fontSize: '.62rem', color: '#94a3b8', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 600 }}>
+                              plat. {fmt(r.taxa_plataforma_valor)} + cartão {fmt(r.taxa_cartao_valor)} + fixa {fmt(r.taxa_fixa_eskolare)}
+                            </span>
+                          </td>
                           <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#0ea5e9', fontFamily: 'var(--font-inter,sans-serif)' }}>{fmt(r.custo_manutencao)}</td>
                           <td style={{ padding: '.75rem 1rem', fontWeight: 800, color: '#d97706', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1rem' }}>{fmt(r.preco_final)}</td>
                           <td style={{ padding: '.75rem 1rem', fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-cormorant,serif)', fontSize: '.95rem', whiteSpace: 'nowrap' }}>
@@ -518,6 +547,35 @@ export default function CalculadoraPage() {
                     </tr>
                   </tbody>
                 </table>
+              </div>
+            </div>
+
+            {/* Resumo financeiro da proposta — soma de todos os segmentos ativos */}
+            <div style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', borderRadius: 16, padding: '1.5rem 1.75rem', marginBottom: '1.5rem' }}>
+              <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.08em', color: '#d97706', marginBottom: '.25rem' }}>
+                💰 Resumo financeiro da proposta
+              </div>
+              <div style={{ fontSize: '.72rem', color: 'rgba(255,255,255,.45)', marginBottom: '1.1rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                Soma de todos os segmentos ativos ({totalAlunos} aluno{totalAlunos !== 1 ? 's' : ''})
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px,1fr))', gap: '1.25rem' }}>
+                {[
+                  { label: 'Faturamento Cidade Viva Education', sub: 'custo de aquisição × alunos', valor: faturamentoEducation, cor: '#38bdf8' },
+                  { label: 'Comissão Total', sub: 'comissão × alunos', valor: comissaoTotalProposta, cor: '#c084fc' },
+                  { label: 'Faturamento Total da Venda', sub: 'preço final × alunos', valor: faturamentoTotalVenda, cor: '#d97706' },
+                ].map(item => (
+                  <div key={item.label}>
+                    <div style={{ fontSize: '.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'rgba(255,255,255,.5)', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.3rem' }}>
+                      {item.label}
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.6rem', fontWeight: 800, color: item.cor, lineHeight: 1 }}>
+                      {fmt(item.valor)}
+                    </div>
+                    <div style={{ fontSize: '.68rem', color: 'rgba(255,255,255,.35)', marginTop: '.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                      {item.sub}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -588,6 +646,18 @@ export default function CalculadoraPage() {
                     {
                       texto: <strong>Preço final ao pai = soma dos custos fixos ÷ (1 − taxas percentuais)</strong>,
                       valor: fmt(resMemoria.preco_final), destaque: true, cor: '#d97706',
+                    },
+                    {
+                      texto: <>↳ Taxa da plataforma Eskolare <span style={{ color: '#94a3b8' }}>(1,5% do preço final acima)</span></>,
+                      valor: fmt(resMemoria.taxa_plataforma_valor),
+                    },
+                    {
+                      texto: <>↳ Taxa de cartão <span style={{ color: '#94a3b8' }}>({resMemoria.taxa_cartao_pct.toFixed(2)}% do preço final, sempre calculada em 12x)</span></>,
+                      valor: fmt(resMemoria.taxa_cartao_valor),
+                    },
+                    {
+                      texto: <strong>Total de despesas do parcelamento (plataforma + cartão + taxa fixa)</strong>,
+                      valor: fmt(resMemoria.total_taxas_parcelamento), destaque: true,
                     },
                     {
                       texto: <>Forma de pagamento <span style={{ color: '#94a3b8' }}>(escolhida pela família — não altera o preço final acima)</span></>,
