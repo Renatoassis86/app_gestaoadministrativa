@@ -10,8 +10,7 @@ const TAXA_PLATAFORMA   = 0.015
 const TAXA_FIXA_PARCELA = 0.30
 const VALOR_MIN_PARCELA = 30.00
 const MANUTENCAO_MENSAL = 70
-const MESES_LOJA        = 3
-const MANUTENCAO_TOTAL  = MANUTENCAO_MENSAL * MESES_LOJA  // R$ 210 fixo por loja
+const MESES_LOJA_PADRAO = 9   // média observada: loja fica aberta entre 8 e 10 meses
 
 const SEGMENTOS = [
   { id: 'inf2',  label: 'Infantil 2'    },
@@ -66,7 +65,8 @@ function calcular(
   comissaoAbs: number,
   parcelas: number,
   qtdAlunos: number,
-  totalAlunos: number,   // soma de todos os alunos ativos
+  totalAlunos: number,      // soma de todos os alunos ativos
+  manutencaoTotal: number,  // R$70 × meses reais de loja aberta (informado pelo usuário)
 ): Resultado {
   const taxa_cartao = parcelas === 1 ? 0.0289 : parcelas <= 6 ? 0.0299 : 0.0369
 
@@ -77,10 +77,10 @@ function calcular(
 
   const liquido_desejado = custo + comissao_valor
 
-  // Manutenção: R$210 fixos divididos proporcionalmente pelos alunos totais
-  // Cada segmento absorve (qtdAlunos / totalAlunos) × R$210
+  // Manutenção: total (R$70 × meses de loja aberta) dividido proporcionalmente pelos alunos totais
+  // Cada segmento absorve (qtdAlunos / totalAlunos) × manutencaoTotal
   const proporcao_alunos    = totalAlunos > 0 ? qtdAlunos / totalAlunos : 0
-  const manutencao_segmento = MANUTENCAO_TOTAL * proporcao_alunos
+  const manutencao_segmento = manutencaoTotal * proporcao_alunos
   // Por aluno deste segmento:
   const manutencao_por_aluno = qtdAlunos > 0 ? manutencao_segmento / qtdAlunos : 0
 
@@ -142,6 +142,9 @@ export default function CalculadoraPage() {
   )
   const [calculados, setCalculados] = useState<Record<string, Resultado>>({})
   const [calculou,   setCalculou]   = useState(false)
+  const [mesesLoja,  setMesesLoja]  = useState(MESES_LOJA_PADRAO)
+
+  const manutencaoTotal = MANUTENCAO_MENSAL * mesesLoja
 
   const primeiroAtivo = segmentos.find(s => s.ativo)
 
@@ -165,7 +168,7 @@ export default function CalculadoraPage() {
       res[s.id] = calcular(
         ref.custo, ref.comissaoTipo, ref.comissaoPct, ref.comissaoAbs,
         ref.parcelas, ref.qtdAlunos,
-        totalAlunos,
+        totalAlunos, manutencaoTotal,
       )
     })
     setCalculados(res)
@@ -189,7 +192,7 @@ export default function CalculadoraPage() {
               Preço final = custo + comissão + taxas Eskolare + manutenção rateada
             </div>
             <div style={{ fontSize: '.78rem', color: 'rgba(255,255,255,.55)', lineHeight: 1.65, fontFamily: 'var(--font-inter,sans-serif)' }}>
-              A manutenção da loja online (<strong style={{ color: '#d97706' }}>R$ {MANUTENCAO_TOTAL}</strong> fixo · {MESES_LOJA} meses) é dividida proporcionalmente
+              A manutenção da loja online (<strong style={{ color: '#d97706' }}>R$ {MANUTENCAO_MENSAL}/mês</strong> × meses em que a loja fica aberta) é dividida proporcionalmente
               pela quantidade total de alunos de todos os segmentos ativos. Cada aluno absorve sua fração.
               Quanto mais alunos, menor o custo individual de manutenção.
             </div>
@@ -198,11 +201,20 @@ export default function CalculadoraPage() {
             <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.62rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.07em', color: '#d97706', marginBottom: '.6rem' }}>
               Manutenção da loja
             </div>
+            <div style={{ marginBottom: '.6rem' }}>
+              <label style={{ display: 'block', fontSize: '.65rem', color: 'rgba(255,255,255,.5)', fontFamily: 'var(--font-inter,sans-serif)', marginBottom: '.25rem' }}>
+                Meses que a loja fica aberta
+              </label>
+              <input type="number" min="1" max="24" step="1" value={mesesLoja}
+                onChange={e => setMesesLoja(parseInt(e.target.value) || 1)}
+                style={{ width: '100%', padding: '.4rem .6rem', fontSize: '.85rem', fontWeight: 700, border: '1px solid rgba(217,119,6,.35)', borderRadius: 6, background: 'rgba(255,255,255,.06)', color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
+              <div style={{ fontSize: '.6rem', color: 'rgba(255,255,255,.35)', marginTop: '.2rem' }}>Média observada: 8 a 10 meses</div>
+            </div>
             {[
-              [`R$ ${MANUTENCAO_MENSAL}/mês`, `${MESES_LOJA} meses`],
-              ['Total fixo', fmt(MANUTENCAO_TOTAL)],
+              [`R$ ${MANUTENCAO_MENSAL}/mês`, `${mesesLoja} meses`],
+              ['Total do período', fmt(manutencaoTotal)],
               ['Dividido por', `${totalAlunos > 0 ? totalAlunos : '?'} alunos`],
-              ['Por aluno', totalAlunos > 0 ? fmt(MANUTENCAO_TOTAL / totalAlunos) : '—'],
+              ['Por aluno', totalAlunos > 0 ? fmt(manutencaoTotal / totalAlunos) : '—'],
             ].map(([l, v]) => (
               <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '.25rem 0', borderBottom: '1px solid rgba(255,255,255,.06)', fontSize: '.75rem' }}>
                 <span style={{ color: 'rgba(255,255,255,.5)', fontFamily: 'var(--font-inter,sans-serif)' }}>{l}</span>
@@ -235,7 +247,7 @@ export default function CalculadoraPage() {
           {totalAlunos > 0 && (
             <div style={{ marginTop: '.85rem', fontSize: '.75rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>
               Total de alunos nos segmentos ativos: <strong style={{ color: '#0f172a' }}>{totalAlunos}</strong>
-              {' · '}Manutenção por aluno: <strong style={{ color: '#d97706' }}>{fmt(MANUTENCAO_TOTAL / totalAlunos)}</strong>
+              {' · '}Manutenção por aluno: <strong style={{ color: '#d97706' }}>{fmt(manutencaoTotal / totalAlunos)}</strong>
             </div>
           )}
         </div>
@@ -344,7 +356,7 @@ export default function CalculadoraPage() {
                           onChange={e => update(s.id, 'qtdAlunos', parseInt(e.target.value) || 1)}
                           style={{ ...inpStyle, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1rem', fontWeight: 700 }} />
                         <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                          Manutenção: {totalAlunos > 0 ? fmt(MANUTENCAO_TOTAL / totalAlunos) : '—'}/aluno
+                          Manutenção: {totalAlunos > 0 ? fmt(manutencaoTotal / totalAlunos) : '—'}/aluno
                         </div>
                       </div>
 
@@ -504,10 +516,10 @@ export default function CalculadoraPage() {
                       <td style={{ padding: '.75rem 1rem', fontWeight: 700, fontSize: '.78rem', color: '#d97706', fontFamily: 'var(--font-montserrat,sans-serif)' }}>TOTAL</td>
                       <td style={{ padding: '.75rem 1rem', textAlign: 'center', fontWeight: 800, color: '#fff', fontFamily: 'var(--font-cormorant,serif)', fontSize: '.95rem' }}>{totalAlunos}</td>
                       <td colSpan={4} style={{ padding: '.75rem 1rem', fontSize: '.72rem', color: 'rgba(255,255,255,.4)', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                        Manutenção total: {fmt(MANUTENCAO_TOTAL)} / {totalAlunos} alunos = {fmt(MANUTENCAO_TOTAL / totalAlunos)}/aluno
+                        Manutenção total: {fmt(manutencaoTotal)} / {totalAlunos} alunos = {fmt(manutencaoTotal / totalAlunos)}/aluno
                       </td>
                       <td colSpan={4} style={{ padding: '.75rem 1rem', fontSize: '.72rem', color: 'rgba(255,255,255,.4)', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                        Loja ativa: {MESES_LOJA} meses × R$ {MANUTENCAO_MENSAL}/mês = R$ {MANUTENCAO_TOTAL} fixo
+                        Loja ativa: {mesesLoja} meses × R$ {MANUTENCAO_MENSAL}/mês = {fmt(manutencaoTotal)}
                       </td>
                     </tr>
                   </tbody>
@@ -529,8 +541,8 @@ export default function CalculadoraPage() {
                   ['Taxa fixa por parcela', 'R$ 0,30'],
                   ['Mínimo por parcela', 'R$ 30,00'],
                   [`Manutenção/mês`, `R$ ${MANUTENCAO_MENSAL},00`],
-                  [`Meses de loja ativa`, `${MESES_LOJA} meses`],
-                  [`Total manutenção (fixo)`, `R$ ${MANUTENCAO_TOTAL},00`],
+                  [`Meses de loja ativa`, `${mesesLoja} meses`],
+                  [`Total manutenção (período)`, fmt(manutencaoTotal)],
                 ].map(([l, v]) => (
                   <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '.35rem 0', borderBottom: '1px solid #f8fafc', fontSize: '.78rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
                     <span style={{ color: '#64748b' }}>{l}</span>
