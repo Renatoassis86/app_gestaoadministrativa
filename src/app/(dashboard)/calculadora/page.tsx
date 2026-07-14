@@ -15,13 +15,14 @@ const CUSTO_NOTA_FISCAL = 1.00    // R$1,00 por nota fiscal emitida — uma nota
 // o preço final não pode variar conforme a forma de pagamento selecionada pelo cliente.
 const PARCELAS_BASE_PRECO   = 12
 const TAXA_CARTAO_PARCELADO = 0.0369
-const CUSTO_LOJA_BASE   = 73.02   // valor unitário mensal da loja, sem ISS (fatura Eskolare: "Lojas Ativas")
-const ISS_LOJA          = 0.02
+const CUSTO_LOJA_BASE    = 73.02   // valor unitário mensal da loja, sem ISS (fatura Eskolare: "Lojas Ativas")
+const ISS_LOJA           = 0.02
+const CUSTO_SUPORTE_LOJA = 50.00   // suporte da loja — valor fixo, sem ISS
 // Custo de manutenção da plataforma: NÃO é mais rateado entre os alunos nem multiplicado pelos
 // meses de loja aberta — entra integralmente 1x em cada kit vendido, igual à nota fiscal.
-// Hoje é só o valor da loja Eskolare (com ISS "por dentro"), mas o bucket vai receber também
-// custos de mão de obra/operação no futuro.
-const CUSTO_MANUTENCAO_PLATAFORMA = CUSTO_LOJA_BASE / (1 - ISS_LOJA)   // ≈ R$74,51 por kit
+// Composto pelo valor da loja Eskolare (com ISS "por dentro") + suporte da loja, e pode receber
+// também custos de mão de obra/operação no futuro.
+const CUSTO_MANUTENCAO_PLATAFORMA = (CUSTO_LOJA_BASE / (1 - ISS_LOJA)) + CUSTO_SUPORTE_LOJA   // ≈ R$124,51 por kit
 
 const SEGMENTOS = [
   { id: 'inf2',  label: 'Infantil 2'    },
@@ -220,7 +221,7 @@ export default function CalculadoraPage() {
               Preço final = custo + comissão + nota fiscal + manutenção da plataforma + taxas Eskolare
             </div>
             <div style={{ fontSize: '.78rem', color: 'rgba(255,255,255,.55)', lineHeight: 1.65, fontFamily: 'var(--font-inter,sans-serif)' }}>
-              A manutenção da plataforma (<strong style={{ color: '#d97706' }}>{fmt(CUSTO_MANUTENCAO_PLATAFORMA)}</strong>, R$73,02 + 2% ISS por dentro) e a nota fiscal
+              A manutenção da plataforma (<strong style={{ color: '#d97706' }}>{fmt(CUSTO_MANUTENCAO_PLATAFORMA)}</strong>, R$73,02 + 2% ISS por dentro + {fmt(CUSTO_SUPORTE_LOJA)} de suporte da loja) e a nota fiscal
               (<strong style={{ color: '#d97706' }}>{fmt(CUSTO_NOTA_FISCAL)}</strong>) entram integralmente em <strong>cada kit vendido</strong>.
               A taxa de cartão e a taxa fixa por parcela são sempre calculadas com base em 12x (<strong style={{ color: '#d97706' }}>{(TAXA_CARTAO_PARCELADO * 100).toFixed(2)}%</strong>),
               independente da forma de pagamento que a família escolher — o preço final não muda conforme o parcelamento selecionado.
@@ -231,8 +232,9 @@ export default function CalculadoraPage() {
               Manutenção da plataforma
             </div>
             {[
-              ['Valor base (sem ISS)', fmt(CUSTO_LOJA_BASE)],
-              ['ISS (2%, por dentro)', fmt(CUSTO_MANUTENCAO_PLATAFORMA - CUSTO_LOJA_BASE)],
+              ['Valor base da loja (sem ISS)', fmt(CUSTO_LOJA_BASE)],
+              ['ISS (2%, por dentro)', fmt(CUSTO_LOJA_BASE / (1 - ISS_LOJA) - CUSTO_LOJA_BASE)],
+              ['Suporte da loja', fmt(CUSTO_SUPORTE_LOJA)],
               ['Por kit vendido', fmt(CUSTO_MANUTENCAO_PLATAFORMA)],
             ].map(([l, v]) => (
               <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '.25rem 0', borderBottom: '1px solid rgba(255,255,255,.06)', fontSize: '.75rem' }}>
@@ -629,7 +631,7 @@ export default function CalculadoraPage() {
                       valor: `+ ${fmt(resMemoria.taxa_fixa_eskolare)}`,
                     },
                     {
-                      texto: <>Manutenção da plataforma <span style={{ color: '#94a3b8' }}>(R$73,02 + 2% ISS por dentro = {fmt(CUSTO_MANUTENCAO_PLATAFORMA)})</span></>,
+                      texto: <>Manutenção da plataforma <span style={{ color: '#94a3b8' }}>(R$73,02 + 2% ISS por dentro + {fmt(CUSTO_SUPORTE_LOJA)} de suporte da loja = {fmt(CUSTO_MANUTENCAO_PLATAFORMA)})</span></>,
                       valor: `+ ${fmt(resMemoria.custo_manutencao)}`,
                     },
                     {
@@ -703,7 +705,8 @@ export default function CalculadoraPage() {
                   ['Mínimo por parcela', 'R$ 30,00'],
                   ['Nota fiscal (por kit)', fmt(CUSTO_NOTA_FISCAL)],
                   ['Manutenção — Valor base (sem ISS)', fmt(CUSTO_LOJA_BASE)],
-                  ['Manutenção — ISS (2%, por dentro)', fmt(CUSTO_MANUTENCAO_PLATAFORMA - CUSTO_LOJA_BASE)],
+                  ['Manutenção — ISS (2%, por dentro)', fmt(CUSTO_LOJA_BASE / (1 - ISS_LOJA) - CUSTO_LOJA_BASE)],
+                  ['Manutenção — Suporte da loja', fmt(CUSTO_SUPORTE_LOJA)],
                   ['Manutenção — Total (por kit, integral)', fmt(CUSTO_MANUTENCAO_PLATAFORMA)],
                 ].map(([l, v]) => (
                   <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '.35rem 0', borderBottom: '1px solid #f8fafc', fontSize: '.78rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
