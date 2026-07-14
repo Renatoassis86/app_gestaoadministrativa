@@ -161,20 +161,17 @@ export default function CalculadoraPage() {
   }
 
   // Total de alunos em todos os segmentos ATIVOS (para rateio da manutenção)
-  const totalAlunos = segmentos.filter(s => s.ativo).reduce((acc, s) => {
-    if (s.igualPrimeiro && primeiroAtivo && s.id !== primeiroAtivo.id) {
-      return acc + primeiroAtivo.qtdAlunos
-    }
-    return acc + s.qtdAlunos
-  }, 0)
+  // Custo e Qtd. Alunos são sempre próprios de cada turma — nunca herdados
+  const totalAlunos = segmentos.filter(s => s.ativo).reduce((acc, s) => acc + s.qtdAlunos, 0)
 
   const handleCalcular = () => {
     const res: Record<string, Resultado> = {}
     segmentos.filter(s => s.ativo).forEach(s => {
+      // "Mesmo valor" só se aplica a comissão e parcelas — custo e qtd. de alunos são sempre da própria turma
       const ref = (s.igualPrimeiro && primeiroAtivo && s.id !== primeiroAtivo.id) ? primeiroAtivo : s
       res[s.id] = calcular(
-        ref.custo, ref.comissaoTipo, ref.comissaoPct, ref.comissaoAbs,
-        ref.parcelas, ref.qtdAlunos,
+        s.custo, ref.comissaoTipo, ref.comissaoPct, ref.comissaoAbs,
+        ref.parcelas, s.qtdAlunos,
         totalAlunos, manutencaoTotal,
       )
     })
@@ -279,25 +276,24 @@ export default function CalculadoraPage() {
 
               return (
                 <div key={s.id} style={{
-                  background: '#fff', border: `1.5px solid ${herdando ? '#e2e8f0' : '#d97706'}`,
+                  background: '#fff', border: '1.5px solid #d97706',
                   borderRadius: 14, marginBottom: '1rem', overflow: 'hidden',
-                  boxShadow: herdando ? '0 1px 4px rgba(15,23,42,.04)' : '0 4px 16px rgba(217,119,6,.12)',
-                  opacity: herdando ? .75 : 1,
+                  boxShadow: '0 4px 16px rgba(217,119,6,.12)',
                 }}>
                   {/* Header */}
-                  <div style={{ background: herdando ? '#fafafa' : '#0f172a', padding: '.85rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ background: '#0f172a', padding: '.85rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '.65rem' }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 7, background: herdando ? '#e2e8f0' : '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.72rem', fontWeight: 800, color: '#fff', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 7, background: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.72rem', fontWeight: 800, color: '#fff', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
                         {idx + 1}
                       </div>
-                      <span style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.82rem', fontWeight: 800, color: herdando ? '#475569' : '#fff' }}>{s.label}</span>
+                      <span style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.82rem', fontWeight: 800, color: '#fff' }}>{s.label}</span>
                       {herdando && <span style={{ fontSize: '.65rem', background: '#dbeafe', color: '#1d4ed8', padding: '.15rem .5rem', borderRadius: 99, fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
-                        Mesmo valor do {primeiroAtivo?.label}
+                        Comissão/parcelas = {primeiroAtivo?.label}
                       </span>}
                     </div>
                     {!isPrimeiro && (
                       <label style={{ display: 'flex', alignItems: 'center', gap: '.5rem', cursor: 'pointer' }}>
-                        <span style={{ fontSize: '.72rem', color: herdando ? '#475569' : 'rgba(255,255,255,.6)', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Mesmo valor</span>
+                        <span style={{ fontSize: '.72rem', color: 'rgba(255,255,255,.6)', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Comissão/parcelas iguais</span>
                         <div onClick={() => update(s.id, 'igualPrimeiro', !s.igualPrimeiro)}
                           style={{ width: 36, height: 20, borderRadius: 10, cursor: 'pointer', background: s.igualPrimeiro ? '#d97706' : '#cbd5e1', position: 'relative', transition: 'background .2s' }}>
                           <div style={{ position: 'absolute', top: 2, left: s.igualPrimeiro ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'left .2s' }} />
@@ -306,23 +302,22 @@ export default function CalculadoraPage() {
                     )}
                   </div>
 
-                  {/* Campos */}
-                  {!herdando && (
-                    <div style={{ padding: '1.1rem 1.25rem', display: 'grid', gridTemplateColumns: '1fr 1.4fr 1fr 1fr', gap: '1rem', alignItems: 'end' }}>
-                      {/* Custo */}
-                      <div>
-                        <label style={lblStyle}>Custo do Livro (R$)</label>
-                        <input type="number" min="0" step="0.01" value={s.custo}
-                          onChange={e => update(s.id, 'custo', parseFloat(e.target.value) || 0)}
-                          style={inpStyle} placeholder="Ex: 600,00" />
-                        <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>Valor pago pela escola</div>
-                      </div>
+                  {/* Campos — Custo e Qtd. Alunos são sempre da própria turma; Comissão/Parcelas seguem o toggle acima */}
+                  <div style={{ padding: '1.1rem 1.25rem', display: 'grid', gridTemplateColumns: '1fr 1.4fr 1fr 1fr', gap: '1rem', alignItems: 'end' }}>
+                    {/* Custo — sempre editável, mesmo que igual a outra turma */}
+                    <div>
+                      <label style={lblStyle}>Custo do Livro (R$)</label>
+                      <input type="number" min="0" step="0.01" value={s.custo}
+                        onChange={e => update(s.id, 'custo', parseFloat(e.target.value) || 0)}
+                        style={inpStyle} placeholder="Ex: 600,00" />
+                      <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>Valor pago pela escola</div>
+                    </div>
 
-                      {/* Comissão com toggle % / R$ */}
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.35rem' }}>
-                          <label style={{ ...lblStyle, marginBottom: 0 }}>Comissão</label>
-                          {/* Toggle % / R$ */}
+                    {/* Comissão — editável, ou igual ao primeiro segmento quando o toggle está ligado */}
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.35rem' }}>
+                        <label style={{ ...lblStyle, marginBottom: 0 }}>Comissão</label>
+                        {!herdando && (
                           <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 7, padding: 2, gap: 1 }}>
                             {[
                               { v: 'pct', l: '%' },
@@ -341,61 +336,59 @@ export default function CalculadoraPage() {
                               </button>
                             ))}
                           </div>
-                        </div>
-                        {s.comissaoTipo === 'pct' ? (
-                          <div style={{ position: 'relative' }}>
-                            <input type="number" min="0" max="100" step="0.1" value={s.comissaoPct}
-                              onChange={e => update(s.id, 'comissaoPct', parseFloat(e.target.value) || 0)}
-                              style={{ ...inpStyle, paddingRight: '2.5rem' }} />
-                            <span style={{ position: 'absolute', right: '.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '.85rem', color: '#94a3b8', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)', pointerEvents: 'none' }}>%</span>
-                          </div>
-                        ) : (
-                          <div style={{ position: 'relative' }}>
-                            <span style={{ position: 'absolute', left: '.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '.78rem', color: '#94a3b8', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)', pointerEvents: 'none' }}>R$</span>
-                            <input type="number" min="0" step="0.01" value={s.comissaoAbs}
-                              onChange={e => update(s.id, 'comissaoAbs', parseFloat(e.target.value) || 0)}
-                              style={{ ...inpStyle, paddingLeft: '2.25rem' }} />
-                          </div>
                         )}
-                        <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                          {s.comissaoTipo === 'pct' ? 'Margem sobre o custo' : 'Valor fixo por livro'}
-                        </div>
                       </div>
-
-                      {/* Qtd alunos */}
-                      <div>
-                        <label style={lblStyle}>Qtd. Alunos</label>
-                        <input type="number" min="1" value={s.qtdAlunos}
-                          onChange={e => update(s.id, 'qtdAlunos', parseInt(e.target.value) || 1)}
-                          style={{ ...inpStyle, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1rem', fontWeight: 700 }} />
-                        <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                          Manutenção: {totalAlunos > 0 ? fmt(manutencaoTotal / totalAlunos) : '—'}/aluno
+                      {herdando ? (
+                        <div style={{ ...inpStyle, background: '#f8fafc', color: '#64748b', fontWeight: 700, display: 'flex', alignItems: 'center' }}>
+                          {ref.comissaoTipo === 'pct' ? `${ref.comissaoPct}%` : fmt(ref.comissaoAbs)}
                         </div>
+                      ) : s.comissaoTipo === 'pct' ? (
+                        <div style={{ position: 'relative' }}>
+                          <input type="number" min="0" max="100" step="0.1" value={s.comissaoPct}
+                            onChange={e => update(s.id, 'comissaoPct', parseFloat(e.target.value) || 0)}
+                            style={{ ...inpStyle, paddingRight: '2.5rem' }} />
+                          <span style={{ position: 'absolute', right: '.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '.85rem', color: '#94a3b8', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)', pointerEvents: 'none' }}>%</span>
+                        </div>
+                      ) : (
+                        <div style={{ position: 'relative' }}>
+                          <span style={{ position: 'absolute', left: '.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '.78rem', color: '#94a3b8', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)', pointerEvents: 'none' }}>R$</span>
+                          <input type="number" min="0" step="0.01" value={s.comissaoAbs}
+                            onChange={e => update(s.id, 'comissaoAbs', parseFloat(e.target.value) || 0)}
+                            style={{ ...inpStyle, paddingLeft: '2.25rem' }} />
+                        </div>
+                      )}
+                      <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                        {herdando ? `Igual à ${primeiroAtivo?.label}` : (s.comissaoTipo === 'pct' ? 'Margem sobre o custo' : 'Valor fixo por livro')}
                       </div>
+                    </div>
 
-                      {/* Parcelas */}
-                      <div>
-                        <label style={lblStyle}>Parcelas</label>
+                    {/* Qtd alunos — sempre editável e própria da turma, influencia o rateio da manutenção */}
+                    <div>
+                      <label style={lblStyle}>Qtd. Alunos</label>
+                      <input type="number" min="1" value={s.qtdAlunos}
+                        onChange={e => update(s.id, 'qtdAlunos', parseInt(e.target.value) || 1)}
+                        style={{ ...inpStyle, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1rem', fontWeight: 700 }} />
+                      <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                        Manutenção: {totalAlunos > 0 ? fmt(manutencaoTotal / totalAlunos) : '—'}/aluno
+                      </div>
+                    </div>
+
+                    {/* Parcelas — editável, ou igual ao primeiro segmento quando o toggle está ligado */}
+                    <div>
+                      <label style={lblStyle}>Parcelas</label>
+                      {herdando ? (
+                        <div style={{ ...inpStyle, background: '#f8fafc', color: '#64748b', fontWeight: 700, display: 'flex', alignItems: 'center' }}>
+                          {ref.parcelas === 1 ? 'À vista' : `${ref.parcelas}x`}
+                        </div>
+                      ) : (
                         <select value={s.parcelas} onChange={e => update(s.id, 'parcelas', parseInt(e.target.value))} style={inpStyle}>
                           {Array.from({ length: 12 }, (_, i) => i + 1).map(n => (
                             <option key={n} value={n}>{n === 1 ? 'À vista' : `${n}x`}</option>
                           ))}
                         </select>
-                      </div>
+                      )}
                     </div>
-                  )}
-
-                  {/* Preview da comissão quando herda */}
-                  {herdando && primeiroAtivo && (
-                    <div style={{ padding: '.6rem 1.25rem', display: 'flex', gap: '1.5rem', fontSize: '.72rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                      <span>Custo: <strong style={{ color: '#0f172a' }}>{fmt(primeiroAtivo.custo)}</strong></span>
-                      <span>Comissão: <strong style={{ color: '#0f172a' }}>
-                        {primeiroAtivo.comissaoTipo === 'pct' ? `${primeiroAtivo.comissaoPct}%` : fmt(primeiroAtivo.comissaoAbs)}
-                      </strong></span>
-                      <span>Alunos: <strong style={{ color: '#0f172a' }}>{primeiroAtivo.qtdAlunos}</strong></span>
-                      <span>Parcelas: <strong style={{ color: '#0f172a' }}>{primeiroAtivo.parcelas === 1 ? 'À vista' : `${primeiroAtivo.parcelas}x`}</strong></span>
-                    </div>
-                  )}
+                  </div>
                 </div>
               )
             })}
@@ -498,7 +491,7 @@ export default function CalculadoraPage() {
                         <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#fff' : '#fafafa' }}>
                           <td style={{ padding: '.75rem 1rem', fontWeight: 700, fontSize: '.82rem', color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap' }}>
                             {s.label}
-                            {s.igualPrimeiro && s.id !== primeiroAtivo?.id && <span style={{ marginLeft: '.4rem', fontSize: '.58rem', background: '#dbeafe', color: '#1d4ed8', padding: '.08rem .35rem', borderRadius: 99, fontWeight: 700 }}>=1º</span>}
+                            {s.igualPrimeiro && s.id !== primeiroAtivo?.id && <span style={{ marginLeft: '.4rem', fontSize: '.58rem', background: '#dbeafe', color: '#1d4ed8', padding: '.08rem .35rem', borderRadius: 99, fontWeight: 700 }}>com.=1º</span>}
                           </td>
                           <td style={{ padding: '.75rem 1rem', textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '.95rem', fontWeight: 700, color: '#0f172a' }}>{r.qtd_alunos}</td>
                           <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#475569', fontFamily: 'var(--font-inter,sans-serif)' }}>{fmt(r.custo)}</td>
