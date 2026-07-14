@@ -9,12 +9,19 @@ import PageHeader from '@/components/layout/PageHeader'
 const TAXA_PLATAFORMA   = 0.015
 const TAXA_FIXA_PARCELA = 0.30
 const VALOR_MIN_PARCELA = 30.00
+const CUSTO_NOTA_FISCAL = 1.00    // R$1,00 por nota fiscal emitida — uma nota por venda/kit
+// Despesas financeiras do parcelamento (taxa de cartão + taxa fixa por parcela) são sempre
+// calculadas com base em 12x, independente de quantas parcelas a família escolher no pagamento —
+// o preço final não pode variar conforme a forma de pagamento selecionada pelo cliente.
+const PARCELAS_BASE_PRECO   = 12
+const TAXA_CARTAO_PARCELADO = 0.0369
 const CUSTO_LOJA_BASE   = 73.02   // valor unitário mensal da loja, sem ISS (fatura Eskolare: "Lojas Ativas")
 const ISS_LOJA          = 0.02
-// ISS calculado "por dentro" sobre o SUBTOTAL DO PERÍODO — mesmo cálculo da fatura real da Eskolare:
-// Subtotal = meses consumidos × valor unitário; Total = Subtotal ÷ (1 − ISS).
-// Ex. real: 8 meses × R$73,02 = R$584,16 subtotal → ÷0,98 = R$596,08 (ISS R$11,92)
-const MESES_LOJA = 12   // fixo — loja sempre considerada aberta pelos 12 meses
+// Custo de manutenção da plataforma: NÃO é mais rateado entre os alunos nem multiplicado pelos
+// meses de loja aberta — entra integralmente 1x em cada kit vendido, igual à nota fiscal.
+// Hoje é só o valor da loja Eskolare (com ISS "por dentro"), mas o bucket vai receber também
+// custos de mão de obra/operação no futuro.
+const CUSTO_MANUTENCAO_PLATAFORMA = CUSTO_LOJA_BASE / (1 - ISS_LOJA)   // ≈ R$74,51 por kit
 
 const SEGMENTOS = [
   { id: 'inf2',  label: 'Infantil 2'    },
@@ -46,9 +53,10 @@ interface Resultado {
   custo: number
   comissao_valor: number
   liquido_desejado: number
-  manutencao_por_aluno: number   // manutenção dividida pelos alunos deste segmento
+  custo_manutencao: number   // manutenção da plataforma — integral por kit, não rateada
   taxa_fixa_eskolare: number
   taxa_cartao_pct: number
+  custo_nota_fiscal: number
   preco_final: number
   valor_parcela: number
   liquido_real: number
@@ -58,9 +66,8 @@ interface Resultado {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   CÁLCULO CORRIGIDO
-   - Manutenção: R$210 FIXO dividido pelo total de alunos de TODOS os segmentos
-   - Cada aluno "absorve" sua fração da manutenção da loja
+   CÁLCULO
+   - Manutenção da plataforma e nota fiscal entram integralmente em CADA kit
    ═══════════════════════════════════════════════════════════════════ */
 function calcular(
   custo: number,
@@ -69,10 +76,9 @@ function calcular(
   comissaoAbs: number,
   parcelas: number,
   qtdAlunos: number,
-  totalAlunos: number,      // soma de todos os alunos ativos
-  manutencaoTotal: number,  // R$70 × meses reais de loja aberta (informado pelo usuário)
 ): Resultado {
-  const taxa_cartao = parcelas === 1 ? 0.0289 : parcelas <= 6 ? 0.0299 : 0.0369
+  // Taxa de cartão e taxa fixa por parcela sempre calculadas com base em 12x — ver nota acima.
+  const taxa_cartao = TAXA_CARTAO_PARCELADO
 
   // Comissão: percentual OU valor absoluto
   const comissao_valor = comissaoTipo === 'pct'
@@ -81,27 +87,22 @@ function calcular(
 
   const liquido_desejado = custo + comissao_valor
 
-  // Manutenção: total (R$70 × meses de loja aberta) dividido proporcionalmente pelos alunos totais
-  // Cada segmento absorve (qtdAlunos / totalAlunos) × manutencaoTotal
-  const proporcao_alunos    = totalAlunos > 0 ? qtdAlunos / totalAlunos : 0
-  const manutencao_segmento = manutencaoTotal * proporcao_alunos
-  // Por aluno deste segmento:
-  const manutencao_por_aluno = qtdAlunos > 0 ? manutencao_segmento / qtdAlunos : 0
-
-  const taxa_fixa_eskolare = TAXA_FIXA_PARCELA * parcelas
+  const taxa_fixa_eskolare = TAXA_FIXA_PARCELA * PARCELAS_BASE_PRECO
   const denominador        = 1 - TAXA_PLATAFORMA - taxa_cartao
 
-  // Preço final por kit = (líquido + taxa fixa + manutenção por aluno) / denominador
+  // Preço final por kit = (líquido + taxa fixa + manutenção da plataforma + nota fiscal) / denominador
   const preco_final = Math.ceil(
-    ((liquido_desejado + taxa_fixa_eskolare + manutencao_por_aluno) / denominador) * 100
+    ((liquido_desejado + taxa_fixa_eskolare + CUSTO_MANUTENCAO_PLATAFORMA + CUSTO_NOTA_FISCAL) / denominador) * 100
   ) / 100
+  // Valor da parcela usa a forma de pagamento REAL escolhida pela família — o preço já está fixado acima
   const valor_parcela = Math.round((preco_final / parcelas) * 100) / 100
-  const liquido_real  = preco_final * denominador - taxa_fixa_eskolare - manutencao_por_aluno
+  const liquido_real  = preco_final * denominador - taxa_fixa_eskolare - CUSTO_MANUTENCAO_PLATAFORMA - CUSTO_NOTA_FISCAL
 
   return {
     custo, comissao_valor, liquido_desejado,
-    manutencao_por_aluno,
+    custo_manutencao: CUSTO_MANUTENCAO_PLATAFORMA,
     taxa_fixa_eskolare, taxa_cartao_pct: taxa_cartao * 100,
+    custo_nota_fiscal: CUSTO_NOTA_FISCAL,
     preco_final, valor_parcela, liquido_real,
     diferenca: liquido_real - liquido_desejado,
     parcela_valida: valor_parcela >= VALOR_MIN_PARCELA,
@@ -148,10 +149,6 @@ export default function CalculadoraPage() {
   const [calculou,   setCalculou]   = useState(false)
   const [memoriaSeg, setMemoriaSeg] = useState<string | null>(null)
 
-  const manutencaoSubtotal = CUSTO_LOJA_BASE * MESES_LOJA          // 12 × R$73,02 = R$876,24
-  const manutencaoTotal    = manutencaoSubtotal / (1 - ISS_LOJA)   // ÷0,98 = R$894,12
-  const manutencaoIss      = manutencaoTotal - manutencaoSubtotal  // R$17,88
-
   const primeiroAtivo = segmentos.find(s => s.ativo)
 
   const update = (id: string, field: keyof SegmentoCalc, value: any) => {
@@ -159,7 +156,7 @@ export default function CalculadoraPage() {
     setCalculou(false)
   }
 
-  // Total de alunos em todos os segmentos ATIVOS (para rateio da manutenção)
+  // Total de alunos em todos os segmentos ATIVOS — apenas informativo, não influencia mais o preço
   // Custo e Qtd. Alunos são sempre próprios de cada turma — nunca herdados
   const totalAlunos = segmentos.filter(s => s.ativo).reduce((acc, s) => acc + s.qtdAlunos, 0)
 
@@ -171,7 +168,6 @@ export default function CalculadoraPage() {
       res[s.id] = calcular(
         s.custo, ref.comissaoTipo, ref.comissaoPct, ref.comissaoAbs,
         ref.parcelas, s.qtdAlunos,
-        totalAlunos, manutencaoTotal,
       )
     })
     setCalculados(res)
@@ -198,23 +194,24 @@ export default function CalculadoraPage() {
               ✦ Lógica de cálculo
             </div>
             <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '.5rem' }}>
-              Preço final = custo + comissão + taxas Eskolare + manutenção rateada
+              Preço final = custo + comissão + nota fiscal + manutenção da plataforma + taxas Eskolare
             </div>
             <div style={{ fontSize: '.78rem', color: 'rgba(255,255,255,.55)', lineHeight: 1.65, fontFamily: 'var(--font-inter,sans-serif)' }}>
-              A manutenção da loja online (<strong style={{ color: '#d97706' }}>{fmt(CUSTO_LOJA_BASE)}/mês</strong> + 2% ISS por dentro sobre o subtotal do período, igual à fatura real da Eskolare) é dividida proporcionalmente
-              pela quantidade total de alunos de todos os segmentos ativos. Cada aluno absorve sua fração.
-              Quanto mais alunos, menor o custo individual de manutenção.
+              A manutenção da plataforma (<strong style={{ color: '#d97706' }}>{fmt(CUSTO_MANUTENCAO_PLATAFORMA)}</strong>, R$73,02 + 2% ISS por dentro) e a nota fiscal
+              (<strong style={{ color: '#d97706' }}>{fmt(CUSTO_NOTA_FISCAL)}</strong>) entram integralmente em <strong>cada kit vendido</strong> — não são mais rateadas entre os alunos.
+              A taxa de cartão e a taxa fixa por parcela são sempre calculadas com base em 12x (<strong style={{ color: '#d97706' }}>{(TAXA_CARTAO_PARCELADO * 100).toFixed(2)}%</strong>),
+              independente da forma de pagamento que a família escolher — o preço final não muda conforme o parcelamento selecionado.
             </div>
           </div>
           <div style={{ background: 'rgba(217,119,6,.12)', border: '1px solid rgba(217,119,6,.25)', borderRadius: 10, padding: '1rem 1.25rem', minWidth: 220, flexShrink: 0 }}>
             <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.62rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.07em', color: '#d97706', marginBottom: '.6rem' }}>
-              Manutenção da loja
+              Manutenção da plataforma
             </div>
             {[
-              [`${fmt(CUSTO_LOJA_BASE)}/mês`, `${MESES_LOJA} meses (fixo)`],
-              ['Total do período', fmt(manutencaoTotal)],
-              ['Dividido por', `${totalAlunos > 0 ? totalAlunos : '?'} alunos`],
-              ['Por aluno', totalAlunos > 0 ? fmt(manutencaoTotal / totalAlunos) : '—'],
+              ['Valor base (sem ISS)', fmt(CUSTO_LOJA_BASE)],
+              ['ISS (2%, por dentro)', fmt(CUSTO_MANUTENCAO_PLATAFORMA - CUSTO_LOJA_BASE)],
+              ['Por kit vendido', fmt(CUSTO_MANUTENCAO_PLATAFORMA)],
+              ['Cobrança', 'Integral, sem rateio'],
             ].map(([l, v]) => (
               <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '.25rem 0', borderBottom: '1px solid rgba(255,255,255,.06)', fontSize: '.75rem' }}>
                 <span style={{ color: 'rgba(255,255,255,.5)', fontFamily: 'var(--font-inter,sans-serif)' }}>{l}</span>
@@ -247,7 +244,6 @@ export default function CalculadoraPage() {
           {totalAlunos > 0 && (
             <div style={{ marginTop: '.85rem', fontSize: '.75rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>
               Total de alunos nos segmentos ativos: <strong style={{ color: '#0f172a' }}>{totalAlunos}</strong>
-              {' · '}Manutenção por aluno: <strong style={{ color: '#d97706' }}>{fmt(manutencaoTotal / totalAlunos)}</strong>
             </div>
           )}
         </div>
@@ -359,7 +355,7 @@ export default function CalculadoraPage() {
                         onChange={e => update(s.id, 'qtdAlunos', parseInt(e.target.value) || 0)}
                         style={{ ...inpStyle, textAlign: 'center', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1rem', fontWeight: 700 }} />
                       <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                        Manutenção: {totalAlunos > 0 ? fmt(manutencaoTotal / totalAlunos) : '—'}/aluno
+                        Manutenção: {fmt(CUSTO_MANUTENCAO_PLATAFORMA)}/kit
                       </div>
                     </div>
 
@@ -422,7 +418,7 @@ export default function CalculadoraPage() {
                       <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#d97706', marginBottom: '.2rem' }}>Segmento</div>
                       <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.2rem', fontWeight: 700, color: '#fff' }}>{s.label}</div>
                       <div style={{ fontSize: '.68rem', color: 'rgba(255,255,255,.4)', marginTop: '.15rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                        {r.qtd_alunos} aluno{r.qtd_alunos !== 1 ? 's' : ''} · manutenção: {fmt(r.manutencao_por_aluno)}/aluno
+                        {r.qtd_alunos} aluno{r.qtd_alunos !== 1 ? 's' : ''} · manutenção: {fmt(r.custo_manutencao)}/kit
                       </div>
                     </div>
 
@@ -430,10 +426,11 @@ export default function CalculadoraPage() {
                       {[
                         { label: 'Custo de Aquisição', value: fmt(r.custo), sub: 'escola paga', bg: '#f8fafc' },
                         { label: 'Comissão', value: fmt(r.comissao_valor), sub: ref.comissaoTipo === 'pct' ? `${ref.comissaoPct}% sobre custo` : 'valor fixo', bg: '#f5f3ff' },
-                        { label: 'Manutenção Rateada', value: fmt(r.manutencao_por_aluno), sub: 'por aluno neste segmento', bg: '#eff6ff' },
-                        { label: 'Valor Final ao Pai', value: fmt(r.preco_final), sub: ref.parcelas === 1 ? 'à vista' : `${ref.parcelas}x de ${fmt(r.valor_parcela)}`, bg: '#fffbeb', big: true },
+                        { label: 'Nota Fiscal', value: fmt(r.custo_nota_fiscal), sub: 'por venda', bg: '#fdf4ff' },
+                        { label: 'Manutenção da Plataforma', value: fmt(r.custo_manutencao), sub: 'por kit, integral', bg: '#eff6ff' },
+                        { label: 'Valor Final ao Pai', value: fmt(r.preco_final), sub: ref.parcelas === 1 ? 'à vista' : `${ref.parcelas}x de ${fmt(r.valor_parcela)}`, bg: '#fffbeb', big: true, full: true },
                       ].map(m => (
-                        <div key={m.label} style={{ background: m.bg, padding: '.85rem 1rem', borderRight: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9' }}>
+                        <div key={m.label} style={{ gridColumn: (m as any).full ? '1 / -1' : undefined, background: m.bg, padding: '.85rem 1rem', borderRight: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9' }}>
                           <div style={{ fontSize: '.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#94a3b8', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.2rem' }}>{m.label}</div>
                           <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: (m as any).big ? '1.3rem' : '1.1rem', fontWeight: 800, color: (m as any).big ? '#d97706' : '#0f172a', lineHeight: 1 }}>{m.value}</div>
                           <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.2rem', fontFamily: 'var(--font-inter,sans-serif)' }}>{m.sub}</div>
@@ -467,7 +464,7 @@ export default function CalculadoraPage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#f8fafc' }}>
-                      {['Segmento','Alunos','Custo Kit','Comissão','Taxas Eskolare','Manut./Aluno','Preço Final','Parcela','Líquido Real','Status'].map(col => (
+                      {['Segmento','Alunos','Custo Kit','Comissão','Nota Fiscal','Taxas Eskolare','Manutenção','Preço Final','Parcela','Líquido Real','Status'].map(col => (
                         <th key={col} style={{ padding: '.65rem 1rem', textAlign: 'left', fontSize: '.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#64748b', borderBottom: '1px solid #e2e8f0', fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap' }}>{col}</th>
                       ))}
                     </tr>
@@ -491,8 +488,9 @@ export default function CalculadoraPage() {
                               {ref.comissaoTipo === 'pct' ? `${ref.comissaoPct}%` : 'valor fixo'}
                             </span>
                           </td>
+                          <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#a855f7', fontFamily: 'var(--font-inter,sans-serif)' }}>{fmt(r.custo_nota_fiscal)}</td>
                           <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#dc2626', fontFamily: 'var(--font-inter,sans-serif)' }}>{fmt(r.taxa_fixa_eskolare)}</td>
-                          <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#0ea5e9', fontFamily: 'var(--font-inter,sans-serif)' }}>{fmt(r.manutencao_por_aluno)}</td>
+                          <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#0ea5e9', fontFamily: 'var(--font-inter,sans-serif)' }}>{fmt(r.custo_manutencao)}</td>
                           <td style={{ padding: '.75rem 1rem', fontWeight: 800, color: '#d97706', fontFamily: 'var(--font-cormorant,serif)', fontSize: '1rem' }}>{fmt(r.preco_final)}</td>
                           <td style={{ padding: '.75rem 1rem', fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-cormorant,serif)', fontSize: '.95rem', whiteSpace: 'nowrap' }}>
                             {ref.parcelas === 1 ? 'À vista' : `${ref.parcelas}x ${fmt(r.valor_parcela)}`}
@@ -511,11 +509,11 @@ export default function CalculadoraPage() {
                     <tr style={{ background: '#0f172a' }}>
                       <td style={{ padding: '.75rem 1rem', fontWeight: 700, fontSize: '.78rem', color: '#d97706', fontFamily: 'var(--font-montserrat,sans-serif)' }}>TOTAL</td>
                       <td style={{ padding: '.75rem 1rem', textAlign: 'center', fontWeight: 800, color: '#fff', fontFamily: 'var(--font-cormorant,serif)', fontSize: '.95rem' }}>{totalAlunos}</td>
-                      <td colSpan={4} style={{ padding: '.75rem 1rem', fontSize: '.72rem', color: 'rgba(255,255,255,.4)', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                        Manutenção total: {fmt(manutencaoTotal)} / {totalAlunos} alunos = {fmt(manutencaoTotal / totalAlunos)}/aluno
+                      <td colSpan={5} style={{ padding: '.75rem 1rem', fontSize: '.72rem', color: 'rgba(255,255,255,.4)', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                        Manutenção da plataforma: {fmt(CUSTO_MANUTENCAO_PLATAFORMA)}/kit (integral, sem rateio) × {totalAlunos} kits = {fmt(CUSTO_MANUTENCAO_PLATAFORMA * totalAlunos)}
                       </td>
                       <td colSpan={4} style={{ padding: '.75rem 1rem', fontSize: '.72rem', color: 'rgba(255,255,255,.4)', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                        Loja ativa: {MESES_LOJA} meses × {fmt(CUSTO_LOJA_BASE)}/mês = {fmt(manutencaoSubtotal)} + ISS {fmt(manutencaoIss)} = {fmt(manutencaoTotal)}
+                        Nota fiscal: {fmt(CUSTO_NOTA_FISCAL)}/kit × {totalAlunos} kits = {fmt(CUSTO_NOTA_FISCAL * totalAlunos)}
                       </td>
                     </tr>
                   </tbody>
@@ -568,19 +566,23 @@ export default function CalculadoraPage() {
                       valor: fmt(resMemoria.liquido_desejado), destaque: true,
                     },
                     {
-                      texto: <>Taxa fixa Eskolare por parcela <span style={{ color: '#94a3b8' }}>(R$ 0,30 × {refMemoria.parcelas} parcela{refMemoria.parcelas > 1 ? 's' : ''})</span></>,
+                      texto: <>Nota fiscal <span style={{ color: '#94a3b8' }}>(uma nota por venda/kit)</span></>,
+                      valor: `+ ${fmt(resMemoria.custo_nota_fiscal)}`,
+                    },
+                    {
+                      texto: <>Taxa fixa Eskolare por parcela <span style={{ color: '#94a3b8' }}>(R$ 0,30 × {PARCELAS_BASE_PRECO} parcelas — sempre calculada em 12x, independente da forma de pagamento escolhida)</span></>,
                       valor: `+ ${fmt(resMemoria.taxa_fixa_eskolare)}`,
                     },
                     {
-                      texto: <>Manutenção da loja rateada por aluno <span style={{ color: '#94a3b8' }}>({fmt(CUSTO_LOJA_BASE)}/mês × {MESES_LOJA} meses = {fmt(manutencaoSubtotal)}, + ISS 2% por dentro = {fmt(manutencaoTotal)}, ÷ {totalAlunos} alunos ativos)</span></>,
-                      valor: `+ ${fmt(resMemoria.manutencao_por_aluno)}`,
+                      texto: <>Manutenção da plataforma <span style={{ color: '#94a3b8' }}>(R$73,02 + 2% ISS por dentro = {fmt(CUSTO_MANUTENCAO_PLATAFORMA)}, integral neste kit — sem rateio entre alunos)</span></>,
+                      valor: `+ ${fmt(resMemoria.custo_manutencao)}`,
                     },
                     {
                       texto: <strong>Soma dos custos e taxas fixas</strong>,
-                      valor: fmt(resMemoria.liquido_desejado + resMemoria.taxa_fixa_eskolare + resMemoria.manutencao_por_aluno), destaque: true,
+                      valor: fmt(resMemoria.liquido_desejado + resMemoria.custo_nota_fiscal + resMemoria.taxa_fixa_eskolare + resMemoria.custo_manutencao), destaque: true,
                     },
                     {
-                      texto: <>Taxas percentuais Eskolare descontadas no repasse <span style={{ color: '#94a3b8' }}>(plataforma 1,5% + cartão {resMemoria.taxa_cartao_pct.toFixed(2)}% em {refMemoria.parcelas === 1 ? 'à vista' : `${refMemoria.parcelas}x`})</span></>,
+                      texto: <>Taxas percentuais Eskolare descontadas no repasse <span style={{ color: '#94a3b8' }}>(plataforma 1,5% + cartão {resMemoria.taxa_cartao_pct.toFixed(2)}% — sempre calculada em 12x, independente da forma de pagamento escolhida)</span></>,
                       valor: `${(1.5 + resMemoria.taxa_cartao_pct).toFixed(2)}%`,
                     },
                     {
@@ -588,7 +590,7 @@ export default function CalculadoraPage() {
                       valor: fmt(resMemoria.preco_final), destaque: true, cor: '#d97706',
                     },
                     {
-                      texto: <>Forma de pagamento</>,
+                      texto: <>Forma de pagamento <span style={{ color: '#94a3b8' }}>(escolhida pela família — não altera o preço final acima)</span></>,
                       valor: refMemoria.parcelas === 1 ? 'À vista' : `${refMemoria.parcelas}x de ${fmt(resMemoria.valor_parcela)}`,
                     },
                     {
@@ -626,16 +628,16 @@ export default function CalculadoraPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem' }}>
                 {[
                   ['Taxa da plataforma', '1,5%'],
-                  ['Taxa cartão 1x', '2,89%'],
-                  ['Taxa cartão 2x–6x', '2,99%'],
-                  ['Taxa cartão 7x–12x', '3,69%'],
-                  ['Taxa fixa por parcela', 'R$ 0,30'],
+                  ['Taxa cartão aplicada (sempre 12x)', `${(TAXA_CARTAO_PARCELADO * 100).toFixed(2)}%`],
+                  ['Taxa cartão 1x (referência)', '2,89%'],
+                  ['Taxa cartão 2x–6x (referência)', '2,99%'],
+                  ['Taxa cartão 7x–12x (referência)', '3,69%'],
+                  ['Taxa fixa por parcela (sempre 12x)', `R$ 0,30 × 12 = ${fmt(TAXA_FIXA_PARCELA * PARCELAS_BASE_PRECO)}`],
                   ['Mínimo por parcela', 'R$ 30,00'],
-                  ['Loja — Valor Unitário/mês', fmt(CUSTO_LOJA_BASE)],
-                  ['Loja — Consumido (meses)', `${MESES_LOJA} meses`],
-                  ['Loja — Subtotal', fmt(manutencaoSubtotal)],
-                  ['Loja — ISS (2%, por dentro)', fmt(manutencaoIss)],
-                  ['Loja — Total (Subtotal + ISS)', fmt(manutencaoTotal)],
+                  ['Nota fiscal (por kit)', fmt(CUSTO_NOTA_FISCAL)],
+                  ['Manutenção — Valor base (sem ISS)', fmt(CUSTO_LOJA_BASE)],
+                  ['Manutenção — ISS (2%, por dentro)', fmt(CUSTO_MANUTENCAO_PLATAFORMA - CUSTO_LOJA_BASE)],
+                  ['Manutenção — Total (por kit, integral)', fmt(CUSTO_MANUTENCAO_PLATAFORMA)],
                 ].map(([l, v]) => (
                   <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '.35rem 0', borderBottom: '1px solid #f8fafc', fontSize: '.78rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
                     <span style={{ color: '#64748b' }}>{l}</span>
