@@ -14,7 +14,7 @@ const ISS_LOJA          = 0.02
 // ISS calculado "por dentro" sobre o SUBTOTAL DO PERÍODO — mesmo cálculo da fatura real da Eskolare:
 // Subtotal = meses consumidos × valor unitário; Total = Subtotal ÷ (1 − ISS).
 // Ex. real: 8 meses × R$73,02 = R$584,16 subtotal → ÷0,98 = R$596,08 (ISS R$11,92)
-const MESES_LOJA_PADRAO = 9   // média observada: loja fica aberta entre 8 e 10 meses
+const MESES_LOJA = 12   // fixo — loja sempre considerada aberta pelos 12 meses
 
 const SEGMENTOS = [
   { id: 'inf2',  label: 'Infantil 2'    },
@@ -146,12 +146,11 @@ export default function CalculadoraPage() {
   )
   const [calculados, setCalculados] = useState<Record<string, Resultado>>({})
   const [calculou,   setCalculou]   = useState(false)
-  const [mesesLoja,  setMesesLoja]  = useState(MESES_LOJA_PADRAO)
   const [memoriaSeg, setMemoriaSeg] = useState<string | null>(null)
 
-  const manutencaoSubtotal = CUSTO_LOJA_BASE * mesesLoja           // ex: 8 × R$73,02 = R$584,16
-  const manutencaoTotal    = manutencaoSubtotal / (1 - ISS_LOJA)   // ex: ÷0,98 = R$596,08
-  const manutencaoIss      = manutencaoTotal - manutencaoSubtotal  // ex: R$11,92
+  const manutencaoSubtotal = CUSTO_LOJA_BASE * MESES_LOJA          // 12 × R$73,02 = R$876,24
+  const manutencaoTotal    = manutencaoSubtotal / (1 - ISS_LOJA)   // ÷0,98 = R$894,12
+  const manutencaoIss      = manutencaoTotal - manutencaoSubtotal  // R$17,88
 
   const primeiroAtivo = segmentos.find(s => s.ativo)
 
@@ -211,17 +210,8 @@ export default function CalculadoraPage() {
             <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.62rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.07em', color: '#d97706', marginBottom: '.6rem' }}>
               Manutenção da loja
             </div>
-            <div style={{ marginBottom: '.6rem' }}>
-              <label style={{ display: 'block', fontSize: '.65rem', color: 'rgba(255,255,255,.5)', fontFamily: 'var(--font-inter,sans-serif)', marginBottom: '.25rem' }}>
-                Meses que a loja fica aberta
-              </label>
-              <input type="number" min="1" max="24" step="1" value={mesesLoja}
-                onChange={e => setMesesLoja(parseInt(e.target.value) || 1)}
-                style={{ width: '100%', padding: '.4rem .6rem', fontSize: '.85rem', fontWeight: 700, border: '1px solid rgba(217,119,6,.35)', borderRadius: 6, background: 'rgba(255,255,255,.06)', color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
-              <div style={{ fontSize: '.6rem', color: 'rgba(255,255,255,.35)', marginTop: '.2rem' }}>Média observada: 8 a 10 meses</div>
-            </div>
             {[
-              [`${fmt(CUSTO_LOJA_BASE)}/mês`, `${mesesLoja} meses`],
+              [`${fmt(CUSTO_LOJA_BASE)}/mês`, `${MESES_LOJA} meses (fixo)`],
               ['Total do período', fmt(manutencaoTotal)],
               ['Dividido por', `${totalAlunos > 0 ? totalAlunos : '?'} alunos`],
               ['Por aluno', totalAlunos > 0 ? fmt(manutencaoTotal / totalAlunos) : '—'],
@@ -525,7 +515,7 @@ export default function CalculadoraPage() {
                         Manutenção total: {fmt(manutencaoTotal)} / {totalAlunos} alunos = {fmt(manutencaoTotal / totalAlunos)}/aluno
                       </td>
                       <td colSpan={4} style={{ padding: '.75rem 1rem', fontSize: '.72rem', color: 'rgba(255,255,255,.4)', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                        Loja ativa: {mesesLoja} meses × {fmt(CUSTO_LOJA_BASE)}/mês = {fmt(manutencaoSubtotal)} + ISS {fmt(manutencaoIss)} = {fmt(manutencaoTotal)}
+                        Loja ativa: {MESES_LOJA} meses × {fmt(CUSTO_LOJA_BASE)}/mês = {fmt(manutencaoSubtotal)} + ISS {fmt(manutencaoIss)} = {fmt(manutencaoTotal)}
                       </td>
                     </tr>
                   </tbody>
@@ -582,7 +572,7 @@ export default function CalculadoraPage() {
                       valor: `+ ${fmt(resMemoria.taxa_fixa_eskolare)}`,
                     },
                     {
-                      texto: <>Manutenção da loja rateada por aluno <span style={{ color: '#94a3b8' }}>({fmt(CUSTO_LOJA_BASE)}/mês × {mesesLoja} meses = {fmt(manutencaoSubtotal)}, + ISS 2% por dentro = {fmt(manutencaoTotal)}, ÷ {totalAlunos} alunos ativos)</span></>,
+                      texto: <>Manutenção da loja rateada por aluno <span style={{ color: '#94a3b8' }}>({fmt(CUSTO_LOJA_BASE)}/mês × {MESES_LOJA} meses = {fmt(manutencaoSubtotal)}, + ISS 2% por dentro = {fmt(manutencaoTotal)}, ÷ {totalAlunos} alunos ativos)</span></>,
                       valor: `+ ${fmt(resMemoria.manutencao_por_aluno)}`,
                     },
                     {
@@ -642,7 +632,7 @@ export default function CalculadoraPage() {
                   ['Taxa fixa por parcela', 'R$ 0,30'],
                   ['Mínimo por parcela', 'R$ 30,00'],
                   ['Loja — Valor Unitário/mês', fmt(CUSTO_LOJA_BASE)],
-                  ['Loja — Consumido (meses)', `${mesesLoja} meses`],
+                  ['Loja — Consumido (meses)', `${MESES_LOJA} meses`],
                   ['Loja — Subtotal', fmt(manutencaoSubtotal)],
                   ['Loja — ISS (2%, por dentro)', fmt(manutencaoIss)],
                   ['Loja — Total (Subtotal + ISS)', fmt(manutencaoTotal)],
