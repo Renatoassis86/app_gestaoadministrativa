@@ -40,6 +40,8 @@ const PLATAFORMAS = [
   { value: 'outro',       label: 'Outro',           cor: '#64748b' },
 ]
 
+const TAMANHO_MAX_ARQUIVO = 50 * 1024 * 1024   // 50 MB — limite do bucket documentos-oficiais
+
 function fmtSize(bytes: number | null) {
   if (!bytes) return ''
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
@@ -94,6 +96,17 @@ export function TranscricaoForm({ escolas, transcricoes: inicial, userId }: Prop
     if (refMidia.current) refMidia.current.value = ''
   }
 
+  function selecionarArquivo(file: File | null, setArquivo: (f: File | null) => void, inputRef: { current: HTMLInputElement | null }) {
+    if (file && file.size > TAMANHO_MAX_ARQUIVO) {
+      setErro(`Arquivo muito grande (${fmtSize(file.size)}). Máximo: ${fmtSize(TAMANHO_MAX_ARQUIVO)}.`)
+      if (inputRef.current) inputRef.current.value = ''
+      setArquivo(null)
+      return
+    }
+    setErro('')
+    setArquivo(file)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!escolaId || !dataReuniao) { setErro('Escola e data são obrigatórios'); return }
@@ -115,28 +128,43 @@ export function TranscricaoForm({ escolas, transcricoes: inicial, userId }: Prop
       setUploadando(true)
       const supabase = createClient()
       const updates: Record<string, string | number> = {}
+      const falhas: string[] = []
 
       if (arqTranscricao) {
         const path = `transcricoes/${result.id}/transcricao_${Date.now()}.${arqTranscricao.name.split('.').pop()}`
-        await supabase.storage.from('documentos-oficiais').upload(path, arqTranscricao)
-        updates.arquivo_transcricao_path = path
-        updates.arquivo_transcricao_nome = arqTranscricao.name
-        updates.arquivo_transcricao_size = arqTranscricao.size
+        const { error: upErr } = await supabase.storage.from('documentos-oficiais').upload(path, arqTranscricao)
+        if (upErr) {
+          falhas.push(`Transcrição: ${upErr.message}`)
+        } else {
+          updates.arquivo_transcricao_path = path
+          updates.arquivo_transcricao_nome = arqTranscricao.name
+          updates.arquivo_transcricao_size = arqTranscricao.size
+        }
       }
 
       if (arqMidia) {
         const path = `transcricoes/${result.id}/midia_${Date.now()}.${arqMidia.name.split('.').pop()}`
-        await supabase.storage.from('documentos-oficiais').upload(path, arqMidia)
-        updates.arquivo_midia_path = path
-        updates.arquivo_midia_nome = arqMidia.name
-        updates.arquivo_midia_size = arqMidia.size
-        updates.arquivo_midia_tipo = arqMidia.type.startsWith('audio') ? 'audio' : 'video'
+        const { error: upErr } = await supabase.storage.from('documentos-oficiais').upload(path, arqMidia)
+        if (upErr) {
+          falhas.push(`Mídia: ${upErr.message}`)
+        } else {
+          updates.arquivo_midia_path = path
+          updates.arquivo_midia_nome = arqMidia.name
+          updates.arquivo_midia_size = arqMidia.size
+          updates.arquivo_midia_tipo = arqMidia.type.startsWith('audio') ? 'audio' : 'video'
+        }
       }
 
       if (Object.keys(updates).length > 0) {
         await supabase.from('transcricoes_reunioes').update(updates).eq('id', result.id)
       }
       setUploadando(false)
+
+      if (falhas.length > 0) {
+        setErro(`Transcrição salva, mas o upload falhou — ${falhas.join(' · ')}`)
+        setSaving(false)
+        return
+      }
     }
 
     setOk('Transcrição salva com sucesso!')
@@ -303,7 +331,7 @@ export function TranscricaoForm({ escolas, transcricoes: inicial, userId }: Prop
                       }}
                     >
                       <input ref={refTranscricao} type="file" accept=".pdf,.doc,.docx,.txt" style={{ display: 'none' }}
-                        onChange={e => setArqTranscricao(e.target.files?.[0] ?? null)} />
+                        onChange={e => selecionarArquivo(e.target.files?.[0] ?? null, setArqTranscricao, refTranscricao)} />
                       {arqTranscricao ? (
                         <div>
                           <div style={{ fontSize: '.75rem', fontWeight: 600, color: '#0d9488', fontFamily: 'var(--font-montserrat,sans-serif)' }}>{arqTranscricao.name.slice(0, 28)}</div>
@@ -335,7 +363,7 @@ export function TranscricaoForm({ escolas, transcricoes: inicial, userId }: Prop
                       }}
                     >
                       <input ref={refMidia} type="file" accept="audio/*,video/*,.mp3,.mp4,.wav,.m4a,.webm" style={{ display: 'none' }}
-                        onChange={e => setArqMidia(e.target.files?.[0] ?? null)} />
+                        onChange={e => selecionarArquivo(e.target.files?.[0] ?? null, setArqMidia, refMidia)} />
                       {arqMidia ? (
                         <div>
                           <div style={{ fontSize: '.75rem', fontWeight: 600, color: '#7c3aed', fontFamily: 'var(--font-montserrat,sans-serif)' }}>{arqMidia.name.slice(0, 28)}</div>
