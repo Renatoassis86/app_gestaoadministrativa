@@ -17,6 +17,8 @@ interface Transcricao {
   arquivo_transcricao_nome: string | null
   arquivo_transcricao_path: string | null
   arquivo_transcricao_size: number | null
+  arquivo_transcricao_drive_id: string | null
+  arquivo_transcricao_drive_url: string | null
   arquivo_midia_nome: string | null
   arquivo_midia_path: string | null
   arquivo_midia_size: number | null
@@ -131,12 +133,17 @@ export function TranscricaoForm({ escolas, transcricoes: inicial, userId }: Prop
       const falhas: string[] = []
 
       if (arqTranscricao) {
-        const path = `transcricoes/${result.id}/transcricao_${Date.now()}.${arqTranscricao.name.split('.').pop()}`
-        const { error: upErr } = await supabase.storage.from('documentos-oficiais').upload(path, arqTranscricao)
-        if (upErr) {
-          falhas.push(`Transcrição: ${upErr.message}`)
+        // Arquivo de transcrição vai para o Google Drive (não mais Supabase Storage)
+        const driveFd = new FormData()
+        driveFd.set('file', arqTranscricao)
+        driveFd.set('tipo', 'transcricao')
+        const res = await fetch('/api/upload-drive', { method: 'POST', body: driveFd })
+        const driveResult = await res.json()
+        if (!res.ok) {
+          falhas.push(`Transcrição: ${driveResult.error ?? 'falha no upload ao Google Drive'}`)
         } else {
-          updates.arquivo_transcricao_path = path
+          updates.arquivo_transcricao_drive_id = driveResult.driveId
+          updates.arquivo_transcricao_drive_url = driveResult.driveUrl
           updates.arquivo_transcricao_nome = arqTranscricao.name
           updates.arquivo_transcricao_size = arqTranscricao.size
         }
@@ -516,9 +523,16 @@ export function TranscricaoForm({ escolas, transcricoes: inicial, userId }: Prop
                     )}
 
                     {/* Downloads */}
-                    {(t.arquivo_transcricao_path || t.arquivo_midia_path) && (
+                    {(t.arquivo_transcricao_drive_url || t.arquivo_transcricao_path || t.arquivo_midia_path) && (
                       <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-                        {t.arquivo_transcricao_path && (
+                        {t.arquivo_transcricao_drive_url ? (
+                          <a href={t.arquivo_transcricao_drive_url}
+                            target="_blank" rel="noopener noreferrer"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '.4rem', padding: '.45rem .9rem', borderRadius: 8, background: '#f0fdfa', border: '1px solid #99f6e4', color: '#0d9488', textDecoration: 'none', fontSize: '.75rem', fontWeight: 600, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            {t.arquivo_transcricao_nome ?? 'Transcrição'} {t.arquivo_transcricao_size ? `(${fmtSize(t.arquivo_transcricao_size)})` : ''} · Drive
+                          </a>
+                        ) : t.arquivo_transcricao_path && (
                           <a href={`${supabaseUrl}/storage/v1/object/public/documentos-oficiais/${t.arquivo_transcricao_path}`}
                             target="_blank" rel="noopener noreferrer"
                             style={{ display: 'inline-flex', alignItems: 'center', gap: '.4rem', padding: '.45rem .9rem', borderRadius: 8, background: '#f0fdfa', border: '1px solid #99f6e4', color: '#0d9488', textDecoration: 'none', fontSize: '.75rem', fontWeight: 600, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
