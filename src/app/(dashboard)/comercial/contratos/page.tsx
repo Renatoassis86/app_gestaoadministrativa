@@ -82,7 +82,7 @@ export default async function ContratosPage({ searchParams }: Props) {
     supabase.from('contratos').select('*, escola:escolas(nome, estado, cidade)')
       .order('updated_at', { ascending: false }),
     // Só queremos escolas que já têm pelo menos um registro de negociação
-    supabase.from('registros').select('escola_id'),
+    supabase.from('registros').select('escola_id').eq('ativa', true),
   ])
 
   // Filtra escolas mostradas no seletor: somente as que tem registros
@@ -97,7 +97,7 @@ export default async function ContratosPage({ searchParams }: Props) {
       supabase.from('escolas').select('*').eq('id', escolaId).single(),
       supabase.from('contratos').select('*').eq('escola_id', escolaId).single(),
       supabase.from('registros').select('encaminhamentos, prontidao')
-        .eq('escola_id', escolaId).order('data_contato', { ascending: false }).limit(1).single(),
+        .eq('escola_id', escolaId).eq('ativa', true).order('data_contato', { ascending: false }).limit(1).single(),
       supabase.from('contratos_arquivos').select('id, nome, path, created_at, tamanho')
         .eq('escola_id', escolaId).order('created_at', { ascending: false }),
     ])

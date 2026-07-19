@@ -187,13 +187,17 @@ export default async function EscolaDetalhe({ params }: Props) {
     { data: tarefas },
     { data: notas },
     { data: contrato },
+    { data: propostaBilinguismo },
+    { data: contratoBilinguismo },
   ] = await Promise.all([
     supabase.from('escolas_resumo').select('*').eq('id', id).single(),
-    supabase.from('registros').select('*, responsavel:profiles!responsavel_id(full_name)').eq('escola_id', id).order('data_contato', { ascending: false }),
+    supabase.from('registros').select('*, responsavel:profiles!responsavel_id(full_name)').eq('escola_id', id).eq('ativa', true).order('data_contato', { ascending: false }),
     supabase.from('negociacoes').select('*, responsavel:profiles!negociacoes_responsavel_id_fkey(full_name)').eq('escola_id', id).order('updated_at', { ascending: false }),
     supabase.from('tarefas').select('*').eq('escola_id', id).eq('status', 'pendente').order('vencimento'),
-    supabase.from('notas_escola').select('*').eq('escola_id', id).order('fixada', { ascending: false }).order('created_at', { ascending: false }),
-    supabase.from('contratos').select('*').eq('escola_id', id).single(),
+    supabase.from('notas_escola').select('*').eq('escola_id', id).eq('ativa', true).order('fixada', { ascending: false }).order('created_at', { ascending: false }),
+    supabase.from('contratos').select('*').eq('escola_id', id).maybeSingle(),
+    supabase.from('formularios_bilinguismo').select('*').eq('escola_id', id).order('data_envio', { ascending: false }).limit(1).maybeSingle(),
+    supabase.from('contratos_bilinguismo').select('*').eq('escola_id', id).maybeSingle(),
   ])
 
   if (!escola) notFound()
@@ -693,6 +697,8 @@ export default async function EscolaDetalhe({ params }: Props) {
               tarefas={tarefas ?? []}
               notas={notas ?? []}
               contrato={contrato}
+              propostaBilinguismo={propostaBilinguismo}
+              contratoBilinguismo={contratoBilinguismo}
             />
           </div>
 

@@ -38,11 +38,12 @@ export default async function ComercialDashboard() {
     { data: escolasComRegistro },
   ] = await Promise.all([
     supabase.from('escolas').select('*', { count: 'exact', head: true }).eq('ativa', true),
-    supabase.from('registros').select('escola_id', { count: 'exact', head: true }).eq('classificacao', 'quente'),
-    supabase.from('registros').select('escola_id', { count: 'exact', head: true }).eq('classificacao', 'morno'),
-    supabase.from('registros').select('*', { count: 'exact', head: true }),
+    supabase.from('registros').select('escola_id', { count: 'exact', head: true }).eq('classificacao', 'quente').eq('ativa', true),
+    supabase.from('registros').select('escola_id', { count: 'exact', head: true }).eq('classificacao', 'morno').eq('ativa', true),
+    supabase.from('registros').select('*', { count: 'exact', head: true }).eq('ativa', true),
     supabase.from('registros')
       .select('*, escola:escolas(nome,id,cidade,estado)')
+      .eq('ativa', true)
       .order('data_contato', { ascending: false })
       .limit(8),
     supabase.from('escolas')
@@ -50,7 +51,8 @@ export default async function ComercialDashboard() {
       .eq('ativa', true)
       .order('created_at', { ascending: false }),
     supabase.from('registros')
-      .select('escola_id'),
+      .select('escola_id')
+      .eq('ativa', true),
   ])
 
   // Escolas sem nenhum registro de interação (negociação não iniciada)

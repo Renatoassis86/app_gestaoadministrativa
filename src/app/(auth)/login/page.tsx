@@ -65,21 +65,38 @@ export default function LoginPage() {
           style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)', opacity: .92 }}
           priority
         />
-        <a href="/formulario" style={{
-          display: 'inline-flex', alignItems: 'center', gap: '.4rem',
-          background: '#d97706', color: '#fff',
-          padding: '.45rem 1.1rem', borderRadius: 9999,
-          fontSize: '.78rem', fontWeight: 700, textDecoration: 'none',
-          letterSpacing: '.03em', boxShadow: '0 4px 14px rgba(217,119,6,.4)',
-          transition: 'all .2s',
-          fontFamily: 'var(--font-montserrat, sans-serif)',
-        }}
-          onMouseEnter={e => { e.currentTarget.style.background = '#b45309'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = '#d97706'; e.currentTarget.style.transform = 'translateY(0)' }}
-        >
-          <ClipboardList size={14} />
-          Formulário da Escola
-        </a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', flexWrap: 'wrap' }}>
+          <a href="/formulario" style={{
+            display: 'inline-flex', alignItems: 'center', gap: '.4rem',
+            background: '#d97706', color: '#fff',
+            padding: '.45rem 1.1rem', borderRadius: 9999,
+            fontSize: '.78rem', fontWeight: 700, textDecoration: 'none',
+            letterSpacing: '.03em', boxShadow: '0 4px 14px rgba(217,119,6,.4)',
+            transition: 'all .2s',
+            fontFamily: 'var(--font-montserrat, sans-serif)',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#b45309'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#d97706'; e.currentTarget.style.transform = 'translateY(0)' }}
+          >
+            <ClipboardList size={14} />
+            Formulário Paideia
+          </a>
+          <a href="/formulario-ingles" style={{
+            display: 'inline-flex', alignItems: 'center', gap: '.4rem',
+            background: 'linear-gradient(135deg, #0284c7, #0f766e)', color: '#fff',
+            padding: '.45rem 1.1rem', borderRadius: 9999,
+            fontSize: '.78rem', fontWeight: 700, textDecoration: 'none',
+            letterSpacing: '.03em', boxShadow: '0 4px 14px rgba(2,132,199,.4)',
+            transition: 'all .2s',
+            fontFamily: 'var(--font-montserrat, sans-serif)',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)' }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)' }}
+          >
+            <ClipboardList size={14} />
+            Formulário Bilinguismo
+          </a>
+        </div>
       </header>
 
       {/* ══════════════════════════════════════════════════════════

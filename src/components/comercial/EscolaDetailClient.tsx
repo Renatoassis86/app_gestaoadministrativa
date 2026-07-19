@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { criarTarefaEscola, criarNotaEscola, concluirTarefaEscola } from './escola-actions'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import { LABEL } from '@/types/database'
+import { PACOTE_NOMES, PACOTE_PRECOS } from '@/lib/bilinguismo-constants'
+import { Globe, FileSignature } from 'lucide-react'
 
 interface Props {
   escolaId: string
@@ -13,6 +15,8 @@ interface Props {
   tarefas: any[]
   notas: any[]
   contrato: any
+  propostaBilinguismo?: any
+  contratoBilinguismo?: any
 }
 
 const TABS = [
@@ -20,6 +24,7 @@ const TABS = [
   { id: 'negociacoes', label: 'Negociacoes' },
   { id: 'tarefas',     label: 'Tarefas' },
   { id: 'notas',       label: 'Notas' },
+  { id: 'bilinguismo', label: 'Bilinguismo' },
 ]
 
 const MEIO_SVG: Record<string, React.ReactNode> = {
@@ -31,37 +36,44 @@ const MEIO_SVG: Record<string, React.ReactNode> = {
   outro:      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
 }
 
-export function EscolaDetailClient({ escolaId, registros, negociacoes, tarefas, notas, contrato }: Props) {
+export function EscolaDetailClient({
+  escolaId, registros, negociacoes, tarefas, notas, contrato, propostaBilinguismo, contratoBilinguismo
+}: Props) {
   const [active, setActive] = useState('registros')
 
   return (
     <div>
-      <div style={{ display: 'flex', borderBottom: '2px solid var(--border)', marginBottom: '1.5rem' }}>
-        {TABS.map(tab => (
-          <button key={tab.id} onClick={() => setActive(tab.id)}
-            style={{
-              padding: '.65rem 1.1rem', fontSize: '.82rem',
-              fontWeight: active === tab.id ? 700 : 500,
-              color: active === tab.id ? '#d97706' : 'var(--text-s)',
-              background: 'none', border: 'none', cursor: 'pointer',
-              borderBottom: `2px solid ${active === tab.id ? '#d97706' : 'transparent'}`,
-              marginBottom: -2, transition: 'all .15s',
-              fontFamily: 'var(--font-montserrat,sans-serif)',
-              display: 'flex', alignItems: 'center', gap: '.35rem',
-            }}>
-            {tab.label}
-            <span style={{
-              fontSize: '.62rem', fontWeight: 700, padding: '.1rem .35rem', borderRadius: 99,
-              background: active === tab.id ? '#fef3c7' : 'var(--surface-2)',
-              color: active === tab.id ? '#92400e' : 'var(--text-s)',
-            }}>
-              {tab.id === 'registros' ? registros.length
-                : tab.id === 'negociacoes' ? negociacoes.length
-                : tab.id === 'tarefas' ? tarefas.length
-                : notas.length}
-            </span>
-          </button>
-        ))}
+      <div style={{ display: 'flex', borderBottom: '2px solid var(--border)', marginBottom: '1.5rem', overflowX: 'auto' }}>
+        {TABS.map(tab => {
+          const count = tab.id === 'registros' ? registros.length
+            : tab.id === 'negociacoes' ? negociacoes.length
+            : tab.id === 'tarefas' ? tarefas.length
+            : tab.id === 'notas' ? notas.length
+            : (propostaBilinguismo || contratoBilinguismo ? 1 : 0)
+
+          return (
+            <button key={tab.id} onClick={() => setActive(tab.id)}
+              style={{
+                padding: '.65rem 1.1rem', fontSize: '.82rem',
+                fontWeight: active === tab.id ? 700 : 500,
+                color: active === tab.id ? (tab.id === 'bilinguismo' ? '#0284c7' : '#d97706') : 'var(--text-s)',
+                background: 'none', border: 'none', cursor: 'pointer',
+                borderBottom: `2px solid ${active === tab.id ? (tab.id === 'bilinguismo' ? '#0284c7' : '#d97706') : 'transparent'}`,
+                marginBottom: -2, transition: 'all .15s',
+                fontFamily: 'var(--font-montserrat,sans-serif)',
+                display: 'flex', alignItems: 'center', gap: '.35rem', whiteSpace: 'nowrap',
+              }}>
+              {tab.label}
+              <span style={{
+                fontSize: '.62rem', fontWeight: 700, padding: '.1rem .35rem', borderRadius: 99,
+                background: active === tab.id ? (tab.id === 'bilinguismo' ? '#e0f2fe' : '#fef3c7') : 'var(--surface-2)',
+                color: active === tab.id ? (tab.id === 'bilinguismo' ? '#0369a1' : '#92400e') : 'var(--text-s)',
+              }}>
+                {count}
+              </span>
+            </button>
+          )
+        })}
       </div>
 
       {active === 'registros' && (
@@ -193,6 +205,93 @@ export function EscolaDetailClient({ escolaId, registros, negociacoes, tarefas, 
               <div style={{ fontSize: '.68rem', color: 'var(--text-s)', marginTop: '.4rem' }}>{formatDate(n.created_at)}</div>
             </div>
           )) : <div className="empty-state"><h3>Nenhuma nota</h3></div>}
+        </div>
+      )}
+
+      {/* ABA BILINGUISMO */}
+      {active === 'bilinguismo' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+              Parceria de Bilinguismo
+            </h3>
+            <Link
+              href={`/comercial/contratos-ingles?escola=${escolaId}`}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '.4rem', padding: '.45rem .95rem',
+                borderRadius: 8, background: '#0284c7', color: '#fff', textDecoration: 'none',
+                fontSize: '.78rem', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)',
+              }}
+            >
+              <FileSignature size={14} /> Gerenciar Contrato de Bilinguismo
+            </Link>
+          </div>
+
+          {/* Card Proposta */}
+          <div style={{ background: '#fff', border: '1.5px solid #bae6fd', borderLeft: '4px solid #0284c7', borderRadius: 12, padding: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem', fontSize: '.7rem', fontWeight: 700, textTransform: 'uppercase', color: '#0369a1', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.5rem' }}>
+              <Globe size={14} /> Proposta Comercial de Bilinguismo
+            </div>
+            {propostaBilinguismo ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                <div>
+                  <div style={{ fontSize: '.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Pacote de Interesse</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0284c7', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                    {PACOTE_NOMES[propostaBilinguismo.pacote_interesse] ?? propostaBilinguismo.pacote_interesse}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Representante Legal</div>
+                  <div style={{ fontSize: '.88rem', fontWeight: 700, color: '#0f172a' }}>{propostaBilinguismo.nome_representante_legal}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>E-mail Responsável</div>
+                  <div style={{ fontSize: '.85rem', color: '#334155' }}>{propostaBilinguismo.email_responsavel}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Data de Envio</div>
+                  <div style={{ fontSize: '.85rem', color: '#334155' }}>{formatDate(propostaBilinguismo.data_envio)}</div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ fontSize: '.85rem', color: '#64748b', fontStyle: 'italic' }}>
+                Nenhum formulário de bilinguismo preenchido por esta escola ainda.
+              </div>
+            )}
+          </div>
+
+          {/* Card Contrato */}
+          <div style={{ background: '#fff', border: '1.5px solid #cbd5e1', borderLeft: '4px solid #0d9488', borderRadius: 12, padding: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem', fontSize: '.7rem', fontWeight: 700, textTransform: 'uppercase', color: '#0d9488', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.5rem' }}>
+              <FileSignature size={14} /> Status Contratual do Bilinguismo
+            </div>
+            {contratoBilinguismo ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                <div>
+                  <div style={{ fontSize: '.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Pacote Contratado</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0d9488', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                    {PACOTE_NOMES[contratoBilinguismo.pacote_contratado] ?? contratoBilinguismo.pacote_contratado}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Valor Anual Acordado</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', fontFamily: 'var(--font-cormorant,serif)' }}>
+                    {contratoBilinguismo.valor_anual ? formatCurrency(contratoBilinguismo.valor_anual) : '—'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Contrato Assinado</div>
+                  <div style={{ fontSize: '.88rem', fontWeight: 700, color: contratoBilinguismo.contrato_assinado ? '#0d9488' : '#eab308' }}>
+                    {contratoBilinguismo.contrato_assinado ? 'Sim ✓' : 'Aguardando Assinatura'}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ fontSize: '.85rem', color: '#64748b', fontStyle: 'italic' }}>
+                Nenhum contrato de bilinguismo configurado ainda. <Link href={`/comercial/contratos-ingles?escola=${escolaId}`} style={{ color: '#0284c7', textDecoration: 'underline' }}>Clique aqui para iniciar</Link>.
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

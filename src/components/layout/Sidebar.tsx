@@ -31,6 +31,7 @@ const NAV_PROCESS = [
   { href: '/comercial/jornada-visual', label: 'Jornada Visual',    icon: GitBranch   },
   { href: '/comercial/jornada',        label: 'Jornada Relac.',    icon: Activity    },
   { href: '/comercial/contratos',      label: 'Jornada Contrat.',  icon: FileSignature },
+  { href: '/comercial/contratos-ingles', label: 'Contratos Inglês', icon: FileSignature },
   { href: '/comercial/pipeline',       label: 'Pipeline',          icon: Kanban      },
   { href: '/comercial/amostras',       label: 'Envio Amostras',    icon: Package     },
   { href: '/comercial/tabela',         label: 'Tabela Geral',      icon: Table2      },

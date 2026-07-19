@@ -241,6 +241,7 @@ export async function getRegistros(
       '*, escola:escolas(id, nome), responsavel:profiles!responsavel_id(id, full_name)',
       { count: 'exact' }
     )
+    .eq('ativa', true)
     .order('data_contato', { ascending: false })
     .order('created_at',   { ascending: false })
     .range(from, to)
@@ -292,6 +293,7 @@ export async function getRegistrosByEscola(
     .from('registros')
     .select('*, escola:escolas(id, nome), responsavel:profiles!responsavel_id(id, full_name)')
     .eq('escola_id', escola_id)
+    .eq('ativa', true)
     .order('data_contato', { ascending: false })
     .order('created_at',   { ascending: false })
     .limit(limit)
@@ -447,6 +449,7 @@ export async function getNotasByEscola(escola_id: string): Promise<NotaEscola[]>
     .from('notas_escola')
     .select('*')
     .eq('escola_id', escola_id)
+    .eq('ativa', true)
     .order('fixada',    { ascending: false })
     .order('created_at', { ascending: false })
 
@@ -578,25 +581,29 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     supabase
       .from('registros')
       .select('escola_id', { count: 'exact', head: true })
-      .eq('classificacao', 'quente'),
+      .eq('classificacao', 'quente')
+      .eq('ativa', true),
 
     // 3. Leads mornos
     supabase
       .from('registros')
       .select('escola_id', { count: 'exact', head: true })
-      .eq('classificacao', 'morno'),
+      .eq('classificacao', 'morno')
+      .eq('ativa', true),
 
     // 4. Leads frios
     supabase
       .from('registros')
       .select('escola_id', { count: 'exact', head: true })
-      .eq('classificacao', 'frio'),
+      .eq('classificacao', 'frio')
+      .eq('ativa', true),
 
     // 5. Registros nos últimos 30 dias
     supabase
       .from('registros')
       .select('*', { count: 'exact', head: true })
-      .gte('data_contato', trintaDias),
+      .gte('data_contato', trintaDias)
+      .eq('ativa', true),
 
     // 6. Potencial total de todas escolas ativas (soma)
     supabase
@@ -628,13 +635,15 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     // 10. Distribuição por classificação (registros mais recentes por escola)
     supabase
       .from('registros')
-      .select('classificacao'),
+      .select('classificacao')
+      .eq('ativa', true),
 
     // 11. Registros por mês (últimos 6 meses) — data_contato >= 6 meses atrás
     supabase
       .from('registros')
       .select('data_contato, potencial_financeiro')
       .gte('data_contato', sesMesesAtras)
+      .eq('ativa', true)
       .order('data_contato', { ascending: true }),
 
     // 12. Pipeline por stage — negociações ativas
@@ -647,6 +656,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     supabase
       .from('registros')
       .select('*, escola:escolas(id, nome), responsavel:profiles!responsavel_id(id, full_name)')
+      .eq('ativa', true)
       .order('data_contato', { ascending: false })
       .order('created_at',   { ascending: false })
       .limit(8),

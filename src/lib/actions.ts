@@ -370,8 +370,8 @@ export async function deleteRegistro(id: string): Promise<ActionResult> {
     return { success: false, error: 'Registro não encontrado' }
   }
 
-  // RLS Policy no banco valida a permissão
-  const { error: deleteError } = await supabase.from('registros').delete().eq('id', id)
+  // RLS Policy no banco valida a permissão. Soft-delete: mantém o histórico.
+  const { error: deleteError } = await supabase.from('registros').update({ ativa: false }).eq('id', id)
   if (deleteError) return { success: false, error: deleteError.message }
 
   await createAuditLog('DELETE', 'registros', id, null, registro)
@@ -658,7 +658,7 @@ export async function deletarNota(id: string): Promise<ActionResult> {
     }
   }
 
-  const { error } = await supabase.from('notas_escola').delete().eq('id', id)
+  const { error } = await supabase.from('notas_escola').update({ ativa: false }).eq('id', id)
   if (error) return { success: false, error: error.message }
 
   revalidatePath(`/comercial/escolas/${nota.escola_id}`)

@@ -25,6 +25,7 @@ export default async function RegistrosPage({ searchParams }: Props) {
   let query = supabase
     .from('registros')
     .select('*, escola:escolas(id,nome,cidade,estado)', { count: 'exact' })
+    .eq('ativa', true)
     .order('data_contato', { ascending: false })
     .order('created_at', { ascending: false })
     .range(from, to)

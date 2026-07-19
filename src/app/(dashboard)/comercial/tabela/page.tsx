@@ -20,6 +20,7 @@ export default async function TabelaPage() {
     supabase.from('escolas_resumo').select('*').eq('ativa', true),
     supabase.from('registros')
       .select('escola_id, data_contato, meio_contato, prontidao, classificacao, probabilidade, resumo')
+      .eq('ativa', true)
       .order('data_contato', { ascending: false }),
   ])
 

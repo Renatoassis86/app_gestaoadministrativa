@@ -183,6 +183,7 @@ export default async function MetasPage() {
 
     supabase.from('registros')
       .select('escola_id, data_contato, classificacao, responsavel:profiles!responsavel_id(full_name), escola:escolas(nome)')
+      .eq('ativa', true)
       .order('data_contato', { ascending: false }),
 
     // ✅ NOVAS ESCOLAS PARCEIRAS = contrato assinado por ambas as partes
