@@ -116,6 +116,16 @@ export function PropostasList({
 }) {
   const router = useRouter()
   const [tipoForm, setTipoForm] = useState<'paideia' | 'bilinguismo'>(abaInicial)
+
+  // Sincroniza a aba ativa quando a prop abaInicial mudar (ex: navegando pelo menu lateral)
+  useEffect(() => {
+    setTipoForm(abaInicial)
+  }, [abaInicial])
+
+  const mudarAba = (novaAba: 'paideia' | 'bilinguismo') => {
+    setTipoForm(novaAba)
+    router.push(`/comercial/proposta?tipo=${novaAba}`)
+  }
   const [busca, setBusca] = useState('')
   const [selecionado, setSelecionado] = useState<FormularioProposta | null>(null)
   const [selecionadoBilinguismo, setSelecionadoBilinguismo] = useState<FormularioBilinguismo | null>(null)
@@ -170,7 +180,7 @@ export function PropostasList({
       {/* Selector de Abas: Paideia vs Bilinguismo */}
       <div style={{ display: 'flex', gap: '.5rem', borderBottom: '2px solid #e2e8f0', paddingBottom: '.1rem' }}>
         <button
-          onClick={() => setTipoForm('paideia')}
+          onClick={() => mudarAba('paideia')}
           style={{
             padding: '.65rem 1.25rem',
             borderRadius: '10px 10px 0 0',
@@ -200,7 +210,7 @@ export function PropostasList({
         </button>
 
         <button
-          onClick={() => setTipoForm('bilinguismo')}
+          onClick={() => mudarAba('bilinguismo')}
           style={{
             padding: '.65rem 1.25rem',
             borderRadius: '10px 10px 0 0',
