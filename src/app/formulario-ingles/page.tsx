@@ -235,12 +235,7 @@ export default function FormularioBilinguismoPublico() {
                       </span>
                     </div>
 
-                    <div style={{ marginBottom: '1rem' }}>
-                      <span style={{ fontFamily: 'var(--font-cormorant, serif)', fontSize: '1.85rem', fontWeight: 800, color: isSelected ? p.cor : '#0f172a' }}>
-                        {p.preco}
-                      </span>
-                      <span style={{ fontSize: '.78rem', color: '#64748b', marginLeft: '.25rem' }}>{p.periodo}</span>
-                    </div>
+                    <div style={{ marginBottom: '.85rem' }} />
 
                     <ul style={{ paddingLeft: '1.1rem', margin: 0, fontSize: '.8rem', color: '#334155', lineHeight: 1.5, fontFamily: 'var(--font-inter, sans-serif)' }}>
                       {p.recursos.map((r, i) => (
