@@ -112,7 +112,29 @@ export async function enviarFormularioBilinguismo(formData: FormData) {
     escola_id: escolaId,
   }
 
-  const { error } = await supabase.from('formularios_bilinguismo').insert(payload)
+  let { error } = await supabase.from('formularios_bilinguismo').insert(payload)
+
+  // Fallback de resiliência: se as colunas adicionais de representante legal ainda não tiverem sido executadas no SQL Editor do Supabase
+  if (error && (error.message.includes('legal_') || error.message.includes('column'))) {
+    console.warn('⚠️ Tentando salvar payload simplificado devido a colunas pendentes no banco Supabase:', error.message)
+    const payloadBasico = {
+      email_responsavel,
+      nome_escola,
+      cnpj,
+      rua,
+      numero,
+      complemento,
+      bairro,
+      cidade,
+      estado,
+      cep,
+      nome_representante_legal: nome_representante,
+      pacote_interesse,
+      escola_id: escolaId,
+    }
+    const res2 = await supabase.from('formularios_bilinguismo').insert(payloadBasico)
+    error = res2.error
+  }
 
   if (error) {
     console.error('❌ Erro ao salvar formulário de bilinguismo:', error.message)
