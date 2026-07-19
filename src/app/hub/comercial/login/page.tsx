@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Eye, EyeOff, ArrowRight, BarChart3, ClipboardList, Phone, Mail, MessageCircle } from 'lucide-react'
+import { Eye, EyeOff, ArrowRight, BarChart3, ClipboardList, Phone, Mail, MessageCircle, Globe } from 'lucide-react'
 import Image from 'next/image'
 
 export default function ComercialLoginPage() {
