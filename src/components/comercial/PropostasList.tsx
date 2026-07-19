@@ -108,12 +108,14 @@ function fmtMoeda(v: number | null | undefined) {
 export function PropostasList({
   formularios = [],
   formulariosBilinguismo = [],
+  abaInicial = 'paideia',
 }: {
   formularios: FormularioProposta[]
   formulariosBilinguismo?: FormularioBilinguismo[]
+  abaInicial?: 'paideia' | 'bilinguismo'
 }) {
   const router = useRouter()
-  const [tipoForm, setTipoForm] = useState<'paideia' | 'bilinguismo'>('paideia')
+  const [tipoForm, setTipoForm] = useState<'paideia' | 'bilinguismo'>(abaInicial)
   const [busca, setBusca] = useState('')
   const [selecionado, setSelecionado] = useState<FormularioProposta | null>(null)
   const [selecionadoBilinguismo, setSelecionadoBilinguismo] = useState<FormularioBilinguismo | null>(null)

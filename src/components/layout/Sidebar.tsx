@@ -21,10 +21,11 @@ interface SidebarProps { profile: Profile | null }
 // ── Nav groups ───────────────────────────────────────────────────────────────
 
 const NAV_CRM = [
-  { href: '/comercial',           label: 'Dashboard',        icon: LayoutDashboard },
-  { href: '/comercial/escolas',   label: 'Escolas',          icon: School          },
-  { href: '/comercial/registros', label: 'Registros',        icon: FileText        },
-  { href: '/comercial/proposta',  label: 'Dados Proposta',   icon: ClipboardList   },
+  { href: '/comercial',                           label: 'Dashboard',             icon: LayoutDashboard },
+  { href: '/comercial/escolas',                   label: 'Escolas',               icon: School          },
+  { href: '/comercial/registros',                 label: 'Registros',             icon: FileText        },
+  { href: '/comercial/proposta?tipo=paideia',     label: 'Proposta Paideia',      icon: ClipboardList   },
+  { href: '/comercial/proposta?tipo=bilinguismo', label: 'Proposta Bilinguismo', icon: Globe           },
 ]
 
 const NAV_PROCESS = [
@@ -319,11 +320,18 @@ export default function Sidebar({ profile }: SidebarProps) {
           />
         ))}
 
-        {/* Formulário público */}
+        {/* Formulários públicos */}
         <NavItem
           href="/formulario"
-          label="Formulário Escola"
+          label="Formulário Paideia"
           icon={ClipboardList}
+          active={false}
+          external
+        />
+        <NavItem
+          href="/formulario-ingles"
+          label="Formulário Bilinguismo"
+          icon={Globe}
           active={false}
           external
         />

@@ -7,7 +7,14 @@ import { PropostasList, type FormularioProposta, type FormularioBilinguismo } fr
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-export default async function PropostaComercialPage() {
+export default async function PropostaComercialPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tipo?: string }>
+}) {
+  const params = await searchParams
+  const abaInicial = params.tipo === 'bilinguismo' ? 'bilinguismo' : 'paideia'
+
   const supabase = await createClient()
 
   const [resPaideia, resBilinguismo] = await Promise.all([
@@ -43,8 +50,8 @@ export default async function PropostaComercialPage() {
   return (
     <div>
       <PageHeader
-        title="Dados das Propostas Comerciais"
-        subtitle="Formulários preenchidos pelas escolas para iniciar a parceria com o Paideia ou Bilinguismo"
+        title={abaInicial === 'bilinguismo' ? 'Propostas da Parceria de Bilinguismo' : 'Propostas do Currículo Paideia'}
+        subtitle="Formulários preenchidos pelas escolas para iniciar a parceria comercial"
         actions={
           <div style={{ display: 'flex', gap: '.65rem', alignItems: 'center' }}>
             <Link
@@ -107,6 +114,7 @@ export default async function PropostaComercialPage() {
         <PropostasList
           formularios={listPaideia}
           formulariosBilinguismo={listBilinguismo}
+          abaInicial={abaInicial}
         />
       </div>
     </div>
