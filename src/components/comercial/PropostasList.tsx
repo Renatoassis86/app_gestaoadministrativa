@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Mail, Building2, MapPin, X, Calendar, Users, FileText, Pencil, Trash2, Globe, CheckCircle2 } from 'lucide-react'
 import { editarProposta, excluirProposta } from './propostas-actions'
