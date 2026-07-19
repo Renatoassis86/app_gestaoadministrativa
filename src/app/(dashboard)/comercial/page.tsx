@@ -2,8 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
 import { formatDate, formatCurrency } from '@/lib/utils'
-import { Plus } from 'lucide-react'
+import { Plus, Globe, FileText, ClipboardList } from 'lucide-react'
 import { LABEL } from '@/types/database'
+import { PACOTE_NOMES } from '@/lib/bilinguismo-constants'
 
 // ── Estilos reutilizáveis ─────────────────────────────────────────────────────
 const card: React.CSSProperties = {
@@ -36,6 +37,8 @@ export default async function ComercialDashboard() {
     { data: registrosRecentes },
     { data: todasEscolas },
     { data: escolasComRegistro },
+    { data: propostasPaideia },
+    { data: propostasBilinguismo },
   ] = await Promise.all([
     supabase.from('escolas').select('*', { count: 'exact', head: true }).eq('ativa', true),
     supabase.from('registros').select('escola_id', { count: 'exact', head: true }).eq('classificacao', 'quente').eq('ativa', true),
@@ -53,6 +56,14 @@ export default async function ComercialDashboard() {
     supabase.from('registros')
       .select('escola_id')
       .eq('ativa', true),
+    supabase.from('formularios')
+      .select('id, nome_escola, email_responsavel, cnpj, data_envio, cidade, estado')
+      .order('data_envio', { ascending: false })
+      .limit(5),
+    supabase.from('formularios_bilinguismo')
+      .select('id, nome_escola, email_responsavel, cnpj, data_envio, pacote_interesse, nome_representante_legal, cidade, estado')
+      .order('data_envio', { ascending: false })
+      .limit(5),
   ])
 
   // Escolas sem nenhum registro de interação (negociação não iniciada)
@@ -97,8 +108,121 @@ export default async function ComercialDashboard() {
           ))}
         </div>
 
+        {/* ── SEÇÃO PROPOSTAS COMERCIAIS (PAIDEIA & BILINGUISMO) ────── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+          
+          {/* Card Propostas Paideia */}
+          <div style={card}>
+            <div style={{ background: '#0f172a', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.15rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '.4rem' }}>
+                  <FileText size={16} color="#d97706" /> Propostas Paideia Recebidas
+                </div>
+                <div style={{ fontSize: '.68rem', color: '#d97706', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 600, marginTop: '.1rem' }}>
+                  Formulário Currículo Paideia
+                </div>
+              </div>
+              <Link href="/comercial/proposta?tipo=paideia" style={{ fontSize: '.72rem', color: '#fbbf24', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                Ver todas →
+              </Link>
+            </div>
 
-        {/* ── Conteúdo principal: 2 colunas ─────────────────────── */}
+            {propostasPaideia && propostasPaideia.length > 0 ? (
+              <div style={{ padding: '.75rem' }}>
+                {propostasPaideia.map((p: any, idx: number) => (
+                  <div key={p.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.85rem',
+                    padding: '.65rem .85rem', borderRadius: 10,
+                    marginBottom: idx < propostasPaideia.length - 1 ? '.3rem' : 0,
+                    background: idx % 2 === 0 ? '#fafafa' : '#fff', border: '1px solid #f1f5f9',
+                  }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: '.82rem', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                        {p.nome_escola}
+                      </div>
+                      <div style={{ fontSize: '.68rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                        {p.email_responsavel} · {p.cidade ? `${p.cidade}/${p.estado || ''}` : p.cnpj || '—'}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontSize: '.68rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                        {formatDate(p.data_envio)}
+                      </div>
+                      <span style={{ fontSize: '.6rem', fontWeight: 800, background: '#fffbeb', color: '#d97706', border: '1px solid #fcd34d', padding: '.05rem .45rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)', marginTop: '.15rem', display: 'inline-block' }}>
+                        Paideia
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: '#94a3b8', fontSize: '.82rem' }}>
+                Nenhuma proposta do Currículo Paideia recebida ainda.
+              </div>
+            )}
+          </div>
+
+          {/* Card Propostas Bilinguismo */}
+          <div style={card}>
+            <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #0369a1 100%)', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.15rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '.4rem' }}>
+                  <Globe size={16} color="#38bdf8" /> Propostas Bilinguismo Recebidas
+                </div>
+                <div style={{ fontSize: '.68rem', color: '#38bdf8', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 600, marginTop: '.1rem' }}>
+                  Formulário Parceria de Inglês
+                </div>
+              </div>
+              <Link href="/comercial/proposta?tipo=bilinguismo" style={{ fontSize: '.72rem', color: '#7dd3fc', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                Ver todas →
+              </Link>
+            </div>
+
+            {propostasBilinguismo && propostasBilinguismo.length > 0 ? (
+              <div style={{ padding: '.75rem' }}>
+                {propostasBilinguismo.map((p: any, idx: number) => {
+                  const badgeColor = p.pacote_interesse === 'gold' ? { bg: '#f5f3ff', text: '#4f46e5', border: '#c4b5fd' }
+                    : p.pacote_interesse === 'silver' ? { bg: '#f0fdfa', text: '#0f766e', border: '#99f6e4' }
+                    : { bg: '#f0f9ff', text: '#0284c7', border: '#bae6fd' }
+                  const pacoteNome = PACOTE_NOMES[p.pacote_interesse] || p.pacote_interesse
+
+                  return (
+                    <div key={p.id} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.85rem',
+                      padding: '.65rem .85rem', borderRadius: 10,
+                      marginBottom: idx < propostasBilinguismo.length - 1 ? '.3rem' : 0,
+                      background: idx % 2 === 0 ? '#f8fafc' : '#fff', border: '1px solid #f1f5f9',
+                    }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontWeight: 700, fontSize: '.82rem', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                          {p.nome_escola}
+                        </div>
+                        <div style={{ fontSize: '.68rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                          Rep: {p.nome_representante_legal || '—'} · {p.email_responsavel}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ fontSize: '.68rem', color: '#94a3b8', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                          {formatDate(p.data_envio)}
+                        </div>
+                        <span style={{ fontSize: '.6rem', fontWeight: 800, background: badgeColor.bg, color: badgeColor.text, border: `1px solid ${badgeColor.border}`, padding: '.05rem .45rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)', marginTop: '.15rem', display: 'inline-block' }}>
+                          {pacoteNome}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: '#94a3b8', fontSize: '.82rem' }}>
+                Nenhuma proposta de Bilinguismo recebida ainda.
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* ── Conteúdo secundário: 2 colunas ─────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
 
           {/* Últimas Interações */}
@@ -151,7 +275,6 @@ export default async function ComercialDashboard() {
               </div>
             )}
           </div>
-
 
         </div>
 
