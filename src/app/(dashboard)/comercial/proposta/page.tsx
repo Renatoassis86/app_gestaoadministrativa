@@ -25,23 +25,20 @@ export default async function PropostaComercialPage({
   const listPaideia = (resPaideia.data ?? []) as FormularioProposta[]
   const listBilinguismo = (resBilinguismo.data ?? []) as FormularioBilinguismo[]
 
-  // KPIs combinados
   const hoje = new Date()
   const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString()
   const inicioAno = new Date(hoje.getFullYear(), 0, 1).toISOString()
 
-  const totalGeral = listPaideia.length + listBilinguismo.length
-  const noMes = listPaideia.filter(f => f.data_envio >= inicioMes).length + listBilinguismo.filter(f => f.data_envio >= inicioMes).length
-  const noAno = listPaideia.filter(f => f.data_envio >= inicioAno).length + listBilinguismo.filter(f => f.data_envio >= inicioAno).length
-
-  const nomesEscolas = [
-    ...listPaideia.map(f => f.nome_escola?.trim().toLowerCase()),
-    ...listBilinguismo.map(f => f.nome_escola?.trim().toLowerCase())
-  ].filter(Boolean)
+  // KPIs específicos do tipo selecionado
+  const listaAtiva = abaInicial === 'bilinguismo' ? listBilinguismo : listPaideia
+  const totalGeral = listaAtiva.length
+  const noMes = listaAtiva.filter(f => f.data_envio >= inicioMes).length
+  const noAno = listaAtiva.filter(f => f.data_envio >= inicioAno).length
+  const nomesEscolas = listaAtiva.map(f => f.nome_escola?.trim().toLowerCase()).filter(Boolean)
   const escolasUnicas = new Set(nomesEscolas).size
 
   const kpis = [
-    { label: 'Total recebidas', value: totalGeral,     icon: FileText,    cor: '#d97706', bg: '#fffbeb', border: '#fcd34d' },
+    { label: `Total ${abaInicial === 'bilinguismo' ? 'Bilinguismo' : 'Paideia'}`, value: totalGeral, icon: FileText, cor: abaInicial === 'bilinguismo' ? '#0284c7' : '#d97706', bg: abaInicial === 'bilinguismo' ? '#f0f9ff' : '#fffbeb', border: abaInicial === 'bilinguismo' ? '#bae6fd' : '#fcd34d' },
     { label: 'Este mês',        value: noMes,           icon: Calendar,    cor: '#0d9488', bg: '#f0fdfa', border: '#99f6e4' },
     { label: 'Este ano',        value: noAno,           icon: Calendar,    cor: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
     { label: 'Escolas únicas',  value: escolasUnicas,   icon: Building2,   cor: '#7c3aed', bg: '#faf5ff', border: '#d8b4fe' },
@@ -50,8 +47,8 @@ export default async function PropostaComercialPage({
   return (
     <div>
       <PageHeader
-        title={abaInicial === 'bilinguismo' ? 'Propostas da Parceria de Bilinguismo' : 'Propostas do Currículo Paideia'}
-        subtitle="Formulários preenchidos pelas escolas para iniciar a parceria comercial"
+        title={abaInicial === 'bilinguismo' ? 'Dados das Propostas — Parceria de Bilinguismo' : 'Dados das Propostas — Currículo Paideia'}
+        subtitle={abaInicial === 'bilinguismo' ? 'Formulários de implantação do departamento de inglês preenchidos pelas escolas' : 'Formulários do Currículo Paideia preenchidos pelas escolas'}
         actions={
           <div style={{ display: 'flex', gap: '.65rem', alignItems: 'center' }}>
             <Link

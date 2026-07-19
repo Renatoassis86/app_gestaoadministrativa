@@ -382,7 +382,24 @@ export default function ComercialLoginPage() {
               onMouseLeave={e => { e.currentTarget.style.background = 'rgba(217,119,6,.08)'; e.currentTarget.style.borderColor = 'rgba(217,119,6,.25)' }}
             >
               <ClipboardList size={15} style={{ flexShrink: 0 }} />
-              <span>Quero ser escola parceira — Pré-Cadastro →</span>
+              <span>Formulário Paideia — Pré-Cadastro →</span>
+            </a>
+            <a href="/formulario-ingles" style={{
+              display: 'flex', alignItems: 'center', gap: '.5rem',
+              marginTop: '.5rem',
+              padding: '.7rem 1rem', borderRadius: 10,
+              border: '1px solid rgba(2,132,199,.3)',
+              background: 'rgba(2,132,199,.1)',
+              color: '#38bdf8', textDecoration: 'none',
+              fontSize: '.78rem', fontWeight: 600,
+              transition: 'all .2s',
+              fontFamily: 'var(--font-montserrat, sans-serif)',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(2,132,199,.2)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(2,132,199,.1)' }}
+            >
+              <Globe size={15} style={{ flexShrink: 0 }} />
+              <span>Formulário Bilinguismo — Parceria de Inglês →</span>
             </a>
             <a href="/" style={{
               display: 'flex', alignItems: 'center', gap: '.5rem',

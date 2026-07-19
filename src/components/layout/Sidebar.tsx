@@ -13,7 +13,7 @@ import {
   Package, FlaskConical, BarChart2, Download,
   Bot, DollarSign, Table2, Info, FileSignature, ClipboardList,
   ExternalLink, GitBranch, Target, CalendarDays, FileAudio,
-  Upload, TrendingUp, Database, BookOpen
+  Upload, TrendingUp, Database, BookOpen, Globe
 } from 'lucide-react'
 
 interface SidebarProps { profile: Profile | null }
