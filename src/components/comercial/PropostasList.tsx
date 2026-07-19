@@ -76,6 +76,12 @@ export interface FormularioBilinguismo {
   estado: string | null
   cep: string | null
   nome_representante_legal: string
+  legal_cpf?: string | null
+  legal_rg?: string | null
+  legal_orgao?: string | null
+  legal_email?: string | null
+  legal_celular?: string | null
+  legal_cargo?: string | null
   pacote_interesse: string
   escola_id: string | null
 }
@@ -722,11 +728,22 @@ function DetalhesBilinguismoModal({ formulario: f, onClose }: {
             <Grid items={[
               ['CNPJ', f.cnpj],
               ['E-mail do responsável', f.email_responsavel],
-              ['Representante Legal', f.nome_representante_legal],
               ['Logradouro', [f.rua, f.numero, f.complemento].filter(Boolean).join(', ')],
               ['Bairro', f.bairro],
               ['Cidade/UF', [f.cidade, f.estado].filter(Boolean).join(' / ')],
               ['CEP', f.cep],
+            ]} />
+          </Section>
+
+          {/* Dados Representante Legal */}
+          <Section label="👤 Representante Legal para Contrato">
+            <Grid items={[
+              ['Nome Completo', f.nome_representante_legal],
+              ['Cargo / Função', f.legal_cargo],
+              ['CPF', f.legal_cpf],
+              ['RG', f.legal_rg ? [f.legal_rg, f.legal_orgao].filter(Boolean).join(' ') : null],
+              ['E-mail do Representante', f.legal_email],
+              ['Celular / WhatsApp', f.legal_celular],
             ]} />
           </Section>
         </div>

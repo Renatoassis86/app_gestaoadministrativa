@@ -28,6 +28,12 @@ export async function enviarFormularioBilinguismo(formData: FormData) {
   const estado                = (formData.get('estado') as string || '').trim().toUpperCase() || null
   const cep                   = (formData.get('cep') as string || '').trim() || null
   const nome_representante    = (formData.get('nome_representante_legal') as string || '').trim() || null
+  const legal_cpf             = (formData.get('legal_cpf') as string || '').trim() || null
+  const legal_rg              = (formData.get('legal_rg') as string || '').trim() || null
+  const legal_orgao           = (formData.get('legal_orgao') as string || '').trim() || null
+  const legal_email           = (formData.get('legal_email') as string || '').trim() || null
+  const legal_celular         = (formData.get('legal_celular') as string || '').trim() || null
+  const legal_cargo           = (formData.get('legal_cargo') as string || '').trim() || null
   const pacote_interesse      = (formData.get('pacote_interesse') as string || '').trim().toLowerCase()
 
   if (!email_responsavel || !nome_escola || !cnpj || !nome_representante || !pacote_interesse) {
@@ -96,6 +102,12 @@ export async function enviarFormularioBilinguismo(formData: FormData) {
     estado,
     cep,
     nome_representante_legal: nome_representante,
+    legal_cpf,
+    legal_rg,
+    legal_orgao,
+    legal_email,
+    legal_celular,
+    legal_cargo,
     pacote_interesse,
     escola_id: escolaId,
   }

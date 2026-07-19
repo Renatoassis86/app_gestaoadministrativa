@@ -118,6 +118,8 @@ function Field({ label, name, type = 'text', required, options, placeholder, val
 export default function FormularioBilinguismoPublico() {
   const [pacoteSelecionado, setPacoteSelecionado] = useState<string>('silver')
   const [cnpj, setCnpj] = useState<string>('')
+  const [legalCpf, setLegalCpf] = useState<string>('')
+  const [legalCelular, setLegalCelular] = useState<string>('')
 
   // Máscara de CNPJ (00.000.000/0000-00)
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,6 +135,24 @@ export default function FormularioBilinguismoPublico() {
       v = v.replace(/^(\d{2})(\d{1,3})$/, '$1.$2')
     }
     setCnpj(v)
+  }
+
+  const handleCpfChange = (e: React.ChangeEvent<any>) => {
+    let v = e.target.value.replace(/\D/g, '')
+    if (v.length > 11) v = v.substring(0, 11)
+    if (v.length > 9) v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,2})$/, '$1.$2.$3-$4')
+    else if (v.length > 6) v = v.replace(/^(\d{3})(\d{3})(\d{1,3})$/, '$1.$2.$3')
+    else if (v.length > 3) v = v.replace(/^(\d{3})(\d{1,3})$/, '$1.$2')
+    setLegalCpf(v)
+  }
+
+  const handleCelularChange = (e: React.ChangeEvent<any>) => {
+    let v = e.target.value.replace(/\D/g, '')
+    if (v.length > 11) v = v.substring(0, 11)
+    if (v.length > 10) v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3')
+    else if (v.length > 6) v = v.replace(/^(\d{2})(\d{4,5})$/, '($1) $2')
+    else if (v.length > 2) v = v.replace(/^(\d{2})$/, '($1)')
+    setLegalCelular(v)
   }
 
   return (
@@ -286,12 +306,28 @@ export default function FormularioBilinguismoPublico() {
             </Section>
 
             <Section title="Representante Legal para Assinatura do Contrato">
-              <Field
-                label="Nome Completo do Representante Legal"
-                name="nome_representante_legal"
-                required
-                placeholder="Nome da pessoa responsável por assinar o contrato"
-              />
+              <Row>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <Field
+                    label="Nome Completo do Representante Legal"
+                    name="nome_representante_legal"
+                    required
+                    placeholder="Nome da pessoa responsável por assinar o contrato"
+                  />
+                </div>
+                <Field label="Cargo / Função" name="legal_cargo" placeholder="Ex: Diretor General / Mantenedor" />
+              </Row>
+              <Row>
+                <Field label="CPF do Representante" name="legal_cpf" placeholder="000.000.000-00" value={legalCpf} onChange={handleCpfChange} />
+                <Field label="RG" name="legal_rg" placeholder="0.000.000" />
+                <Field label="Órgão Emissor / UF" name="legal_orgao" placeholder="Ex: SSP/PB" />
+              </Row>
+              <Row>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <Field label="E-mail do Representante" name="legal_email" type="email" placeholder="representante@escola.com.br" />
+                </div>
+                <Field label="Celular / WhatsApp" name="legal_celular" placeholder="(00) 00000-0000" value={legalCelular} onChange={handleCelularChange} />
+              </Row>
             </Section>
 
             <button
