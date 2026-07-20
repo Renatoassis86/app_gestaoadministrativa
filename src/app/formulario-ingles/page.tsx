@@ -8,60 +8,6 @@ const ESTADOS_BR = [
   'PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
 ]
 
-const PACOTES = [
-  {
-    id: 'bronze',
-    nome: 'Bronze',
-    badge: 'Essencial',
-    preco: 'R$ 29.900',
-    periodo: '/ano',
-    cor: '#0284c7',
-    corBg: '#f0f9ff',
-    corBorder: '#bae6fd',
-    destaque: false,
-    recursos: [
-      'Consultoria básica de implantação do departamento de inglês',
-      'Treinamento e capacitação inicial da equipe docente',
-      'Acompanhamento pedagógico bimestral de evolução',
-      'Suporte comercial e suporte via e-mail',
-    ],
-  },
-  {
-    id: 'silver',
-    nome: 'Silver',
-    badge: 'Mais Popular',
-    preco: 'R$ 57.900',
-    periodo: '/ano',
-    cor: '#0d9488',
-    corBg: '#f0fdfa',
-    corBorder: '#99f6e4',
-    destaque: true,
-    recursos: [
-      'Consultoria intermediária e estrutura pedagógica completa',
-      'Treinamentos contínuos e materiais de apoio exclusivos',
-      'Acompanhamento pedagógico mensal dedicado',
-      'Avaliações de desempenho e diretrizes curriculares',
-    ],
-  },
-  {
-    id: 'gold',
-    nome: 'Gold',
-    badge: 'Full Bilinguismo',
-    preco: 'R$ 84.900',
-    periodo: '/ano',
-    cor: '#4f46e5',
-    corBg: '#f5f3ff',
-    corBorder: '#c4b5fd',
-    destaque: false,
-    recursos: [
-      'Implantação VIP / Full Bilinguismo na instituição',
-      'Assessoria pedagógica dedicada com gestão de qualidade',
-      'Encontros quinzenais, workshops e treinamentos avançados',
-      'Certificação e acompanhamento estratégico contínuo',
-    ],
-  },
-]
-
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: '2rem' }}>
@@ -116,7 +62,6 @@ function Field({ label, name, type = 'text', required, options, placeholder, val
 }
 
 export default function FormularioBilinguismoPublico() {
-  const [pacoteSelecionado, setPacoteSelecionado] = useState<string>('silver')
   const [cnpj, setCnpj] = useState<string>('')
   const [legalCpf, setLegalCpf] = useState<string>('')
   const [legalCelular, setLegalCelular] = useState<string>('')
@@ -191,84 +136,14 @@ export default function FormularioBilinguismoPublico() {
             maxWidth: 580, margin: '0 auto',
             fontFamily: 'var(--font-inter, sans-serif)',
           }}>
-            Preencha os dados da sua instituição abaixo para gerar a proposta comercial e dar o primeiro passo na implantação do programa de bilinguismo.
+            Preencha os dados da sua instituição abaixo para dar o primeiro passo na implantação do programa de bilinguismo.
           </p>
         </div>
 
         <form action={enviarFormularioBilinguismo}>
-          {/* Campo oculto para o pacote selecionado */}
-          <input type="hidden" name="pacote_interesse" value={pacoteSelecionado} />
+          <input type="hidden" name="pacote_interesse" value="silver" />
 
-          {/* 1. SELEÇÃO DE PACOTES DE INTERESSE */}
-          <div style={{ marginBottom: '2rem' }}>
-            <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
-              <h2 style={{ fontFamily: 'var(--font-cormorant, serif)', fontSize: '1.6rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                Escolha o Pacote de Interesse
-              </h2>
-              <p style={{ fontSize: '.83rem', color: '#64748b', fontFamily: 'var(--font-inter, sans-serif)', marginTop: '.2rem' }}>
-                Clique no pacote que melhor atende à realidade e planejamento da sua escola
-              </p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
-              {PACOTES.map((p) => {
-                const isSelected = pacoteSelecionado === p.id
-                return (
-                  <div
-                    key={p.id}
-                    onClick={() => setPacoteSelecionado(p.id)}
-                    style={{
-                      background: isSelected ? p.corBg : '#fff',
-                      border: `2px solid ${isSelected ? p.cor : '#e2e8f0'}`,
-                      borderRadius: 16,
-                      padding: '1.35rem 1.1rem',
-                      cursor: 'pointer',
-                      position: 'relative',
-                      transition: 'all .2s ease',
-                      boxShadow: isSelected ? `0 6px 20px ${p.cor}25` : '0 2px 8px rgba(0,0,0,.04)',
-                    }}
-                  >
-                    {p.badge && (
-                      <div style={{
-                        position: 'absolute', top: -12, right: 16,
-                        background: isSelected ? p.cor : '#64748b', color: '#fff',
-                        fontSize: '.62rem', fontWeight: 800, textTransform: 'uppercase',
-                        letterSpacing: '.08em', padding: '.2rem .65rem', borderRadius: 9999,
-                        fontFamily: 'var(--font-montserrat, sans-serif)',
-                      }}>
-                        {p.badge}
-                      </div>
-                    )}
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '.5rem' }}>
-                      <div style={{
-                        width: 18, height: 18, borderRadius: '50%',
-                        border: `2px solid ${isSelected ? p.cor : '#cbd5e1'}`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        {isSelected && (
-                          <div style={{ width: 10, height: 10, borderRadius: '50%', background: p.cor }} />
-                        )}
-                      </div>
-                      <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', fontFamily: 'var(--font-montserrat, sans-serif)' }}>
-                        {p.nome}
-                      </span>
-                    </div>
-
-                    <div style={{ marginBottom: '.85rem' }} />
-
-                    <ul style={{ paddingLeft: '1.1rem', margin: 0, fontSize: '.8rem', color: '#334155', lineHeight: 1.5, fontFamily: 'var(--font-inter, sans-serif)' }}>
-                      {p.recursos.map((r, i) => (
-                        <li key={i} style={{ marginBottom: '.4rem' }}>{r}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* 2. DADOS DO FORMULÁRIO */}
+          {/* DADOS DO FORMULÁRIO */}
           <div style={{ background: '#fff', borderRadius: 18, padding: '2rem', boxShadow: '0 4px 16px rgba(15,23,42,.06)', marginBottom: '1.5rem', border: '1px solid #e2e8f0' }}>
 
             <Section title="Responsável pelo Preenchimento">
@@ -315,7 +190,7 @@ export default function FormularioBilinguismoPublico() {
                     placeholder="Nome da pessoa responsável por assinar o contrato"
                   />
                 </div>
-                <Field label="Cargo / Função" name="legal_cargo" placeholder="Ex: Diretor General / Mantenedor" />
+                <Field label="Cargo / Função" name="legal_cargo" placeholder="Ex: Diretor Geral / Mantenedor" />
               </Row>
               <Row>
                 <Field label="CPF do Representante" name="legal_cpf" placeholder="000.000.000-00" value={legalCpf} onChange={handleCpfChange} />
@@ -343,7 +218,7 @@ export default function FormularioBilinguismoPublico() {
                 transition: 'transform .15s, opacity .15s',
               }}
             >
-              Enviar Formulário e Gerar Proposta →
+              Enviar Formulário →
             </button>
           </div>
         </form>

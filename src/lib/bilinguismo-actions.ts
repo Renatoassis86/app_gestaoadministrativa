@@ -34,9 +34,9 @@ export async function enviarFormularioBilinguismo(formData: FormData) {
   const legal_email           = (formData.get('legal_email') as string || '').trim() || null
   const legal_celular         = (formData.get('legal_celular') as string || '').trim() || null
   const legal_cargo           = (formData.get('legal_cargo') as string || '').trim() || null
-  const pacote_interesse      = (formData.get('pacote_interesse') as string || '').trim().toLowerCase()
+  const pacote_interesse      = (formData.get('pacote_interesse') as string || 'silver').trim().toLowerCase()
 
-  if (!email_responsavel || !nome_escola || !cnpj || !nome_representante || !pacote_interesse) {
+  if (!email_responsavel || !nome_escola || !cnpj || !nome_representante) {
     throw new Error('Por favor, preencha todos os campos obrigatórios (*).')
   }
 
