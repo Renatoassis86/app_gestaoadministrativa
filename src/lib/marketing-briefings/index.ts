@@ -1,6 +1,7 @@
 import type { FormularioBriefingConfig } from './types'
 import { diretorPedagogico } from './diretor-pedagogico'
 import { diretorAdministrativo } from './diretor-administrativo'
+import { consultoraPedagogica } from './consultora-pedagogica'
 import { consultorOrganizacional } from './consultor-organizacional'
 import { coordenacaoEducacaoInfantil } from './coordenacao-educacao-infantil'
 import { coordenacaoFundamental1 } from './coordenacao-fundamental-1'
@@ -15,6 +16,7 @@ export * from './types'
 export const FORMULARIOS_BRIEFING: FormularioBriefingConfig[] = [
   diretorPedagogico,
   diretorAdministrativo,
+  consultoraPedagogica,
   consultorOrganizacional,
   consultorInglesCambridge,
   coordenacaoEducacaoInfantil,

@@ -3,11 +3,11 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Eye, EyeOff, ArrowRight, Truck, Phone, Mail, MessageCircle } from 'lucide-react'
+import { Eye, EyeOff, ArrowRight, Megaphone, Phone, Mail, MessageCircle } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 
-export default function PedidosLoginPage() {
+export default function MarketingLoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -38,7 +38,7 @@ export default function PedidosLoginPage() {
       setLoading(false)
       return
     }
-    window.location.href = '/hub/pedidos'
+    window.location.href = '/marketing'
   }
 
   return (
@@ -65,15 +65,15 @@ export default function PedidosLoginPage() {
         </Link>
         <a href="/" style={{
           display: 'inline-flex', alignItems: 'center', gap: '.4rem',
-          background: '#0ea5e9', color: '#fff',
+          background: '#a855f7', color: '#fff',
           padding: '.45rem 1.1rem', borderRadius: 9999,
           fontSize: '.78rem', fontWeight: 700, textDecoration: 'none',
-          letterSpacing: '.03em', boxShadow: '0 4px 14px rgba(14,165,233,.4)',
+          letterSpacing: '.03em', boxShadow: '0 4px 14px rgba(168,85,247,.4)',
           transition: 'all .2s',
           fontFamily: 'var(--font-montserrat, sans-serif)',
         }}
-          onMouseEnter={e => { e.currentTarget.style.background = '#0284c7'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = '#0ea5e9'; e.currentTarget.style.transform = 'translateY(0)' }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#9333ea'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = '#a855f7'; e.currentTarget.style.transform = 'translateY(0)' }}
         >
           <ArrowRight size={14} style={{ transform: 'rotate(180deg)' }} />
           Voltar ao Hub
@@ -119,16 +119,16 @@ export default function PedidosLoginPage() {
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: '.4rem',
               background: 'rgba(15,23,42,.7)',
-              border: '1px solid rgba(14,165,233,.4)',
+              border: '1px solid rgba(168,85,247,.4)',
               backdropFilter: 'blur(8px)',
               borderRadius: 9999, padding: '.3rem .9rem',
               marginBottom: '1.5rem',
               fontSize: '.68rem', fontWeight: 700, letterSpacing: '.1em',
-              textTransform: 'uppercase', color: '#38bdf8',
+              textTransform: 'uppercase', color: '#c084fc',
               fontFamily: 'var(--font-montserrat, sans-serif)',
               boxShadow: '0 4px 16px rgba(0,0,0,.3)',
             }}>
-              ✦ Módulo de Gestão de Pedidos
+              ✦ Briefing Estratégico de Marketing
             </div>
 
             <h1 style={{
@@ -139,8 +139,8 @@ export default function PedidosLoginPage() {
               textShadow: '0 2px 20px rgba(0,0,0,.5)',
               textWrap: 'balance' as any,
             }}>
-              Controle de Pedidos<br />
-              <span style={{ color: '#38bdf8' }}>e Logística Integrada</span>
+              Gestão de<br />
+              <span style={{ color: '#c084fc' }}>Marketing</span>
             </h1>
 
             <p style={{
@@ -148,36 +148,36 @@ export default function PedidosLoginPage() {
               lineHeight: 1.7, marginBottom: '1.5rem', maxWidth: 480,
               fontFamily: 'var(--font-inter, sans-serif)',
             }}>
-              Gerenciamento completo de pedidos das escolas parceiras, tracking logístico, separação de materiais e integração com a equipe comercial em tempo real.
+              Responda o briefing do seu cargo para alimentar o diagnóstico, o posicionamento, o plano de campanhas e o calendário de conteúdo do marketing da Cidade Viva Education.
             </p>
 
             <div style={{
-              background: 'linear-gradient(135deg, rgba(14,165,233,.18) 0%, rgba(14,165,233,.08) 100%)',
-              border: '1px solid rgba(14,165,233,.35)',
-              borderLeft: '4px solid #0ea5e9',
+              background: 'linear-gradient(135deg, rgba(168,85,247,.18) 0%, rgba(168,85,247,.08) 100%)',
+              border: '1px solid rgba(168,85,247,.35)',
+              borderLeft: '4px solid #a855f7',
               borderRadius: 14, padding: '1.35rem 1.5rem',
               backdropFilter: 'blur(8px)',
               maxWidth: 500,
-              boxShadow: '0 8px 32px rgba(14,165,233,.12)',
+              boxShadow: '0 8px 32px rgba(168,85,247,.12)',
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
                 <div style={{
                   width: 46, height: 46, borderRadius: 12, flexShrink: 0,
-                  background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                  background: 'linear-gradient(135deg, #a855f7, #7e22ce)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 4px 12px rgba(14,165,233,.4)',
+                  boxShadow: '0 4px 12px rgba(168,85,247,.4)',
                 }}>
-                  <Truck size={21} color="#fff" />
+                  <Megaphone size={21} color="#fff" />
                 </div>
 
                 <div style={{ flex: 1 }}>
                   <div style={{
                     fontSize: '.6rem', fontWeight: 800, letterSpacing: '.1em',
-                    textTransform: 'uppercase', color: '#7dd3fc',
+                    textTransform: 'uppercase', color: '#e9d5ff',
                     marginBottom: '.3rem',
                     fontFamily: 'var(--font-montserrat, sans-serif)',
                   }}>
-                    ✦ Sistema de Logística Inteligente
+                    ✦ Sua resposta vira material de planejamento
                   </div>
 
                   <div style={{
@@ -185,7 +185,7 @@ export default function PedidosLoginPage() {
                     fontSize: '1.1rem', fontWeight: 700, color: '#fff',
                     lineHeight: 1.2, marginBottom: '.5rem',
                   }}>
-                    Rastreamento e Gestão Completa
+                    Cada cargo responde o que só ele sabe
                   </div>
 
                   <p style={{
@@ -193,20 +193,8 @@ export default function PedidosLoginPage() {
                     lineHeight: 1.6, marginBottom: '.9rem',
                     fontFamily: 'var(--font-inter, sans-serif)',
                   }}>
-                    Acompanhe todos os pedidos em tempo real, desde a separação até a entrega nas escolas parceiras.
+                    Onde não houver uma decisão fechada, escreva "ainda não decidido" ou "precisa ser validado" — isso também é informação útil para o time de marketing.
                   </p>
-
-                  <a href="/" style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '.45rem',
-                    background: '#0ea5e9', color: '#fff',
-                    padding: '.55rem 1.25rem', borderRadius: 9999,
-                    fontSize: '.8rem', fontWeight: 700, textDecoration: 'none',
-                    boxShadow: '0 4px 16px rgba(14,165,233,.45)',
-                    fontFamily: 'var(--font-montserrat, sans-serif)',
-                    letterSpacing: '.01em',
-                  }}>
-                    Voltar ao Hub <ArrowRight size={13} style={{ transform: 'rotate(180deg)' }} />
-                  </a>
                 </div>
               </div>
             </div>
@@ -224,7 +212,7 @@ export default function PedidosLoginPage() {
             <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
               <div style={{
                 fontSize: '.65rem', fontWeight: 700, letterSpacing: '.12em',
-                textTransform: 'uppercase', color: '#0ea5e9', marginBottom: '.65rem',
+                textTransform: 'uppercase', color: '#a855f7', marginBottom: '.65rem',
                 fontFamily: 'var(--font-montserrat, sans-serif)',
               }}>
                 ✦ Acesso Restrito Equipe Interna
@@ -271,7 +259,7 @@ export default function PedidosLoginPage() {
                     transition: 'border-color .15s, box-shadow .15s',
                     fontFamily: 'var(--font-inter, sans-serif)',
                   }}
-                  onFocus={e => { e.target.style.borderColor = '#0ea5e9'; e.target.style.boxShadow = '0 0 0 3px rgba(14,165,233,.15)' }}
+                  onFocus={e => { e.target.style.borderColor = '#a855f7'; e.target.style.boxShadow = '0 0 0 3px rgba(168,85,247,.15)' }}
                   onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,.1)'; e.target.style.boxShadow = 'none' }}
                 />
               </div>
@@ -297,7 +285,7 @@ export default function PedidosLoginPage() {
                       transition: 'border-color .15s, box-shadow .15s',
                       fontFamily: 'var(--font-inter, sans-serif)',
                     }}
-                    onFocus={e => { e.target.style.borderColor = '#0ea5e9'; e.target.style.boxShadow = '0 0 0 3px rgba(14,165,233,.15)' }}
+                    onFocus={e => { e.target.style.borderColor = '#a855f7'; e.target.style.boxShadow = '0 0 0 3px rgba(168,85,247,.15)' }}
                     onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,.1)'; e.target.style.boxShadow = 'none' }}
                   />
                   <button type="button" onClick={() => setShowPass(!showPass)} style={{
@@ -313,17 +301,17 @@ export default function PedidosLoginPage() {
 
               <button type="submit" disabled={loading} style={{
                 marginTop: '.25rem', width: '100%', padding: '.85rem',
-                background: loading ? 'rgba(14,165,233,.4)' : '#0ea5e9',
+                background: loading ? 'rgba(168,85,247,.4)' : '#a855f7',
                 color: '#fff', fontWeight: 700, fontSize: '.9rem',
-                border: '1px solid rgba(14,165,233,.5)',
+                border: '1px solid rgba(168,85,247,.5)',
                 borderRadius: 9999, cursor: loading ? 'not-allowed' : 'pointer',
                 transition: 'all .2s',
-                boxShadow: loading ? 'none' : '0 4px 16px rgba(14,165,233,.4)',
+                boxShadow: loading ? 'none' : '0 4px 16px rgba(168,85,247,.4)',
                 fontFamily: 'var(--font-montserrat, sans-serif)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem',
               }}
-                onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = '#0284c7'; e.currentTarget.style.transform = 'translateY(-1px)' }}}
-                onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = '#0ea5e9'; e.currentTarget.style.transform = 'translateY(0)' }}}
+                onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = '#9333ea'; e.currentTarget.style.transform = 'translateY(-1px)' }}}
+                onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = '#a855f7'; e.currentTarget.style.transform = 'translateY(0)' }}}
               >
                 {loading ? 'Entrando...' : <><span>Entrar na Plataforma</span> <ArrowRight size={16} /></>}
               </button>
@@ -342,15 +330,15 @@ export default function PedidosLoginPage() {
             <a href="/" style={{
               display: 'flex', alignItems: 'center', gap: '.5rem',
               padding: '.7rem 1rem', borderRadius: 10,
-              border: '1px solid rgba(14,165,233,.25)',
-              background: 'rgba(14,165,233,.08)',
-              color: '#7dd3fc', textDecoration: 'none',
+              border: '1px solid rgba(168,85,247,.25)',
+              background: 'rgba(168,85,247,.08)',
+              color: '#e9d5ff', textDecoration: 'none',
               fontSize: '.78rem', fontWeight: 600,
               transition: 'all .2s',
               fontFamily: 'var(--font-montserrat, sans-serif)',
             }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(14,165,233,.15)'; e.currentTarget.style.borderColor = 'rgba(14,165,233,.5)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(14,165,233,.08)'; e.currentTarget.style.borderColor = 'rgba(14,165,233,.25)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(168,85,247,.15)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,.5)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(168,85,247,.08)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,.25)' }}
             >
               <ArrowRight size={15} style={{ flexShrink: 0, transform: 'rotate(180deg)' }} />
               <span>Voltar ao Hub Principal →</span>
@@ -386,7 +374,7 @@ export default function PedidosLoginPage() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
                 {[
-                  { icon: <Mail size={14} />, label: 'pedidos.education@cidadeviva.org', href: 'mailto:pedidos.education@cidadeviva.org' },
+                  { icon: <Mail size={14} />, label: 'comercial.education@cidadeviva.org', href: 'mailto:comercial.education@cidadeviva.org' },
                   { icon: <Phone size={14} />, label: '(83) 98604-8784', href: 'tel:+5583986048784' },
                   { icon: <MessageCircle size={14} />, label: 'WhatsApp', href: 'https://wa.me/5583986048784' },
                   { icon: <span style={{fontSize:'14px'}}>📷</span>, label: '@cidadeviva.education', href: 'https://instagram.com/cidadeviva.education' },
@@ -397,10 +385,10 @@ export default function PedidosLoginPage() {
                     textDecoration: 'none', transition: 'color .15s',
                     fontFamily: 'var(--font-inter, sans-serif)',
                   }}
-                    onMouseEnter={e => e.currentTarget.style.color = '#38bdf8'}
+                    onMouseEnter={e => e.currentTarget.style.color = '#c084fc'}
                     onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,.45)'}
                   >
-                    <span style={{ color: '#0ea5e9', flexShrink: 0 }}>{item.icon}</span>
+                    <span style={{ color: '#a855f7', flexShrink: 0 }}>{item.icon}</span>
                     {item.label}
                   </a>
                 ))}
@@ -410,20 +398,17 @@ export default function PedidosLoginPage() {
             <div>
               <div style={{
                 fontSize: '.65rem', fontWeight: 700, letterSpacing: '.1em',
-                textTransform: 'uppercase', color: '#0ea5e9', marginBottom: '1rem',
+                textTransform: 'uppercase', color: '#a855f7', marginBottom: '1rem',
                 fontFamily: 'var(--font-montserrat, sans-serif)',
               }}>
                 Módulos da Plataforma
               </div>
               {[
-                'Dashboard de Pedidos',
-                'Gestão de Escolas',
-                'Rastreamento Logístico',
-                'Separação de Materiais',
-                'Acompanhamento de Envios',
-                'Histórico de Pedidos',
-                'Relatórios de Logística',
-                'Integração com CVE',
+                'Briefings por cargo',
+                'Painel de respostas',
+                'Diagnóstico de marca',
+                'Plano de campanhas',
+                'Calendário de conteúdo',
               ].map(item => (
                 <div key={item} style={{
                   color: 'rgba(255,255,255,.35)', fontSize: '.75rem',
@@ -435,7 +420,7 @@ export default function PedidosLoginPage() {
             <div>
               <div style={{
                 fontSize: '.65rem', fontWeight: 700, letterSpacing: '.1em',
-                textTransform: 'uppercase', color: '#0ea5e9', marginBottom: '1rem',
+                textTransform: 'uppercase', color: '#a855f7', marginBottom: '1rem',
                 fontFamily: 'var(--font-montserrat, sans-serif)',
               }}>
                 Links Úteis
@@ -443,7 +428,7 @@ export default function PedidosLoginPage() {
               {[
                 { label: 'Cidade Viva Education', href: 'https://cidadeviva.org/' },
                 { label: 'Hub de Plataformas', href: '/' },
-                { label: 'Gestão Comercial', href: '/login' },
+                { label: 'Gestão Comercial', href: '/hub/comercial/login' },
                 { label: 'FICV Faculdade', href: 'https://ficv.edu.br/' },
               ].map(item => (
                 <a key={item.label} href={item.href} style={{
@@ -451,7 +436,7 @@ export default function PedidosLoginPage() {
                   padding: '.25rem 0', textDecoration: 'none', transition: 'color .15s',
                   fontFamily: 'var(--font-inter, sans-serif)',
                 }}
-                  onMouseEnter={e => e.currentTarget.style.color = '#38bdf8'}
+                  onMouseEnter={e => e.currentTarget.style.color = '#c084fc'}
                   onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,.4)'}
                 >
                   {item.label}
@@ -466,7 +451,7 @@ export default function PedidosLoginPage() {
             display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '.5rem',
           }}>
             <p style={{ fontSize: '.7rem', color: 'rgba(255,255,255,.2)', fontFamily: 'var(--font-montserrat, sans-serif)', letterSpacing: '.03em' }}>
-              © {new Date().getFullYear()} Cidade Viva Education · Sistema de Logística
+              © {new Date().getFullYear()} Cidade Viva Education · Gestão de Marketing
             </p>
             <p style={{ fontSize: '.7rem', color: 'rgba(255,255,255,.15)', fontFamily: 'var(--font-inter, sans-serif)' }}>
               Plataforma de uso exclusivo da equipe interna

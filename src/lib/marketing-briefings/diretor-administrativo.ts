@@ -22,7 +22,19 @@ export const diretorAdministrativo: FormularioBriefingConfig = {
   perguntas: [
     ...perguntasComuns(PRIORIDADES_GERAIS),
 
-    // Bloco 1 — Portfólio e prioridades
+    // Bloco 1 — Posicionamento e negócio
+    {
+      id: 'frase_posicionamento', bloco: 'Posicionamento e negócio',
+      texto: 'Em uma frase que uma pessoa leiga entenda: o que o Cidade Viva Education vende?',
+      tipo: 'texto_longo', obrigatoria: true,
+    },
+    {
+      id: 'carro_chefe', bloco: 'Posicionamento e negócio',
+      texto: 'Qual produto é o carro-chefe — aquele que, se parasse de vender, o negócio pararia?',
+      tipo: 'escolha_unica', obrigatoria: true, permiteOutro: true, opcoes: PRODUTOS,
+    },
+
+    // Bloco 2 — Portfólio e prioridades
     {
       id: 'produtos_disponiveis', bloco: 'Portfólio e prioridades',
       texto: 'Quais produtos estão efetivamente disponíveis para venda hoje?',
@@ -39,7 +51,35 @@ export const diretorAdministrativo: FormularioBriefingConfig = {
       tipo: 'grade', obrigatoria: true, linhas: PRODUTOS, colunas: ESCALA_PRONTIDAO_AMPLIADA,
     },
 
-    // Bloco 2 — Mercado, metas e capacidade
+    // Bloco 2b — Cliente e concorrência
+    {
+      id: 'quem_assina_contrato', bloco: 'Cliente e concorrência',
+      texto: 'De um modo geral (considerando todas as frentes), quem costuma assinar o contrato do lado do cliente?',
+      tipo: 'caixas_selecao', obrigatoria: true, permiteOutro: true,
+      opcoes: ['Mantenedor/proprietário da escola', 'Diretor(a) da escola', 'Coordenador(a) pedagógico(a)', 'Pastor / liderança da igreja', 'Responsável pela família (Oikos)', 'Varia muito, não há um padrão'],
+    },
+    {
+      id: 'sazonalidade_decisao', bloco: 'Cliente e concorrência',
+      texto: 'Em quais meses do ano os clientes realmente decidem comprar ou renovar? Por quê (calendário escolar, ano fiscal, matrículas)?',
+      tipo: 'texto_curto', obrigatoria: true,
+    },
+    {
+      id: 'concorrentes_diretos', bloco: 'Cliente e concorrência',
+      texto: 'Quem vocês consideram concorrente direto hoje, produto a produto?',
+      tipo: 'texto_longo', obrigatoria: true,
+    },
+    {
+      id: 'motivo_escolha_concorrente', bloco: 'Cliente e concorrência',
+      texto: 'Quando um cliente em potencial escolhe o concorrente em vez do Cidade Viva Education, qual costuma ser o motivo (preço, tradição de marca, proximidade, rede de relacionamento)?',
+      tipo: 'texto_longo',
+    },
+    {
+      id: 'diferencial_incopiavel', bloco: 'Cliente e concorrência',
+      texto: 'Do ponto de vista de negócio, o que o Cidade Viva Education faz que nenhum concorrente consegue copiar no curto prazo?',
+      tipo: 'texto_longo', obrigatoria: true,
+    },
+
+    // Bloco 3 — Mercado, metas e capacidade
     {
       id: 'clientes_ticket_meta', bloco: 'Mercado, metas e capacidade',
       texto: 'Informe, quando disponível, clientes ativos, ticket médio e meta de crescimento para o produto que você considera mais prioritário (o carro-chefe).',
@@ -52,6 +92,12 @@ export const diretorAdministrativo: FormularioBriefingConfig = {
         { id: 'meta_crescimento', label: 'Meta de crescimento em 12 meses (nº de clientes)', tipo: 'numero' },
       ],
       naoSeiLabel: 'Não medimos / dado não consolidado',
+    },
+    {
+      id: 'clientes_ticket_meta_demais_produtos', bloco: 'Mercado, metas e capacidade',
+      texto: 'E para os demais produtos ativos — mesmo que de forma aproximada, informe clientes ativos, ticket médio e meta de crescimento de cada um.',
+      observacao: 'Pode escrever em texto livre, produto por produto (ex: "Bíblos: 12 igrejas ativas, ticket ~R$ 800, meta de +5 em 12 meses"). Se não houver dado, escreva "não medimos".',
+      tipo: 'texto_longo',
     },
     {
       id: 'metas_marketing_apoiar', bloco: 'Mercado, metas e capacidade',
@@ -122,6 +168,23 @@ export const diretorAdministrativo: FormularioBriefingConfig = {
       texto: 'Qual resultado o marketing precisa gerar para ser considerado efetivo pela direção administrativa?',
       tipo: 'caixas_selecao', obrigatoria: true, permiteOutro: true,
       opcoes: ['Número de leads gerados', 'Número de novos contratos', 'Redução do ciclo de venda', 'Custo por lead/aquisição', 'Reconhecimento de marca', 'Presença e engajamento em redes sociais'],
+    },
+    {
+      id: 'autorizacao_imagem_geral', bloco: 'Aprovação, riscos e calendário',
+      texto: 'De um modo geral, existe autorização para uso de imagem (fotos/vídeos) de alunos, professores e famílias das escolas e igrejas parceiras em conteúdo de marketing?',
+      tipo: 'escolha_unica', obrigatoria: true, permiteOutro: true,
+      opcoes: ['Sim, previsto em contrato com todas as parceiras', 'Sim, mas caso a caso, por evento', 'Só sem rosto identificável / só ambiente', 'Não temos autorização hoje', 'Varia muito de escola para escola'],
+    },
+    {
+      id: 'objetivo_conteudo_organico', bloco: 'Aprovação, riscos e calendário',
+      texto: 'Qual deve ser o principal objetivo do conteúdo orgânico (redes sociais, blog) nos próximos 12 meses?',
+      tipo: 'caixas_selecao', obrigatoria: true, permiteOutro: true,
+      opcoes: ['Gerar leads', 'Construir autoridade institucional', 'Educar o mercado sobre o método', 'Sustentar e fortalecer a marca', 'Vender diretamente'],
+    },
+    {
+      id: 'decisao_estrategica_oculta', bloco: 'Aprovação, riscos e calendário',
+      texto: 'Existe alguma decisão estratégica já tomada pela administração (mudança de foco, descontinuação de produto, novo mercado) que o time de marketing ainda não sabe?',
+      tipo: 'texto_longo',
     },
     {
       id: 'observacoes_finais', bloco: 'Aprovação, riscos e calendário',

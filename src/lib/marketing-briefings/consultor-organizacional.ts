@@ -104,6 +104,17 @@ export const consultorOrganizacional: FormularioBriefingConfig = {
       tipo: 'texto_curto',
     },
     {
+      id: 'barreira_crescimento_estrutural', bloco: 'Governança e melhorias',
+      texto: 'Do ponto de vista de processos e dados: qual é o principal fator estrutural que limita o crescimento comercial hoje, mesmo que o marketing funcione perfeitamente?',
+      tipo: 'texto_longo', obrigatoria: true,
+    },
+    {
+      id: 'metrica_prioritaria_conteudo_organico', bloco: 'Governança e melhorias',
+      texto: 'Dado o que é hoje efetivamente mensurável, qual métrica de conteúdo orgânico (redes sociais/blog) deveria ser o principal indicador de sucesso?',
+      tipo: 'escolha_unica', obrigatoria: true, permiteOutro: true,
+      opcoes: ['Alcance/impressões', 'Engajamento (curtidas, comentários, compartilhamentos)', 'Leads gerados a partir do conteúdo', 'Crescimento de seguidores', 'Não temos como medir isso hoje'],
+    },
+    {
       id: 'observacoes_finais', bloco: 'Governança e melhorias',
       texto: 'Observações finais — algo importante que não foi perguntado?',
       tipo: 'texto_longo',

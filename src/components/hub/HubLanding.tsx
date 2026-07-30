@@ -56,6 +56,23 @@ const MODULES = [
     features: ['Contratos digitais', 'Cursos e turmas', 'Acompanhamento acadêmico', 'Indicadores institucionais'],
     status: 'ativo',
   },
+  {
+    id: 'marketing',
+    label: 'Gestão de Marketing',
+    tagline: 'Briefing estratégico para o planejamento de marketing',
+    description:
+      'Formulários de briefing por cargo para alimentar o diagnóstico, o posicionamento, o plano de campanhas e o calendário de conteúdo do marketing.',
+    href: '/hub/marketing/login',
+    color: '#a855f7',
+    bg: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 11l18-5v12L3 14v-3z" /><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
+      </svg>
+    ),
+    features: ['Briefings por cargo', 'Material bruto de campo', 'Painel de respostas', 'Planejamento de conteúdo'],
+    status: 'ativo',
+  },
 ]
 
 export default function HubLanding() {
@@ -220,7 +237,7 @@ export default function HubLanding() {
               color: 'rgba(255,255,255,.78)', lineHeight: 1.65,
               maxWidth: 640, marginBottom: '2.5rem',
             }}>
-              Tudo que sua equipe precisa para gerir parcerias, pedidos e contratos da
+              Tudo que sua equipe precisa para gerir parcerias, pedidos, contratos e marketing da
               Cidade Viva Education em um único hub seguro, ágil e centralizado.
             </p>
 
@@ -275,7 +292,7 @@ export default function HubLanding() {
               fontFamily: 'var(--font-cormorant,serif)', fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)',
               fontWeight: 700, color: '#0f172a', lineHeight: 1.15, marginBottom: '1rem', letterSpacing: '-.01em',
             }}>
-              Três módulos, <span style={{ color: '#d97706' }}>um só ecossistema</span>
+              Quatro módulos, <span style={{ color: '#d97706' }}>um só ecossistema</span>
             </h2>
             <p style={{
               fontFamily: 'var(--font-inter,sans-serif)', fontSize: '1rem',

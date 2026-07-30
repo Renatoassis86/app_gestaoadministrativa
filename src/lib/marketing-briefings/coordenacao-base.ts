@@ -103,6 +103,17 @@ export function construirFormularioCoordenacao(p: CoordenacaoParams): Formulario
         tipo: 'texto_curto',
       },
       {
+        id: 'perguntas_frequentes_formacoes', bloco: 'Conteúdo e materiais',
+        texto: 'Nas formações e no contato direto com professores e famílias deste segmento, quais perguntas ou dúvidas se repetem sempre, com as palavras exatas de quem pergunta? Liste quantas lembrar — cada uma pode virar um conteúdo.',
+        observacao: 'Escreva como a pessoa realmente pergunta, não uma versão "arrumada" — isso vira material bruto para o marketing.',
+        tipo: 'texto_longo', obrigatoria: true,
+      },
+      {
+        id: 'diferenciais_obra_literaria', bloco: 'Conteúdo e materiais',
+        texto: 'Sobre os livros e obras literárias usados neste segmento: o que há neles (autores, temas, forma de trabalhar o texto) que pode ser usado como diferencial de venda e que só quem conhece o conteúdo pedagógico de perto sabe explicar?',
+        tipo: 'texto_longo', obrigatoria: true,
+      },
+      {
         id: 'observacoes_finais', bloco: 'Conteúdo e materiais',
         texto: 'Observações finais — algo importante que não foi perguntado?',
         tipo: 'texto_longo',

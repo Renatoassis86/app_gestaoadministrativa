@@ -13,7 +13,7 @@ import {
   Package, FlaskConical, BarChart2, Download,
   Bot, DollarSign, Table2, Info, FileSignature, ClipboardList,
   ExternalLink, GitBranch, Target, CalendarDays, FileAudio,
-  Upload, TrendingUp, Database, BookOpen, Globe, Megaphone
+  Upload, TrendingUp, Database, BookOpen, Globe
 } from 'lucide-react'
 
 interface SidebarProps { profile: Profile | null }
@@ -255,13 +255,15 @@ export default function Sidebar({ profile }: SidebarProps) {
         padding: '1.1rem 1.1rem .9rem',
         borderBottom: '1px solid rgba(255,255,255,.05)',
       }}>
-        <Image
-          src="/images/logo-education.png"
-          alt="Cidade Viva Education"
-          width={144}
-          height={36}
-          style={{ objectFit: 'contain', objectPosition: 'left', filter: 'brightness(0) invert(1)', opacity: .88 }}
-        />
+        <Link href="/comercial" style={{ display: 'block' }}>
+          <Image
+            src="/images/logo-education.png"
+            alt="Cidade Viva Education"
+            width={144}
+            height={36}
+            style={{ objectFit: 'contain', objectPosition: 'left', filter: 'brightness(0) invert(1)', opacity: .88 }}
+          />
+        </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem', marginTop: '.55rem' }}>
           <span style={{
             display: 'inline-block',
@@ -283,7 +285,6 @@ export default function Sidebar({ profile }: SidebarProps) {
         {/* ── Sobre + Tutorial — primeiras abas ────────────────── */}
         <NavItem href="/sobre"    label="Plataforma Education" icon={Info}     active={isActive('/sobre')} />
         <NavItem href="/tutorial" label="Tutorial"     icon={BookOpen} active={isActive('/tutorial')} />
-        <NavItem href="/marketing" label="Gestão de Marketing" icon={Megaphone} active={isActive('/marketing')} />
         <NavDivider />
 
         <SectionLabel>CRM</SectionLabel>

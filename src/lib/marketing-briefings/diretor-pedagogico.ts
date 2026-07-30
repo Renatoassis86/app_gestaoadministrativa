@@ -55,7 +55,35 @@ export const diretorPedagogico: FormularioBriefingConfig = {
       ],
     },
 
-    // Bloco 2 — Produtos e comunicação pedagógica
+    // Bloco 2 — Voz e identidade da marca
+    {
+      id: 'tom_marca_pessoa', bloco: 'Voz e identidade da marca',
+      texto: 'Se a marca do Cidade Viva Education fosse uma pessoa, como ela falaria?',
+      tipo: 'escolha_unica', obrigatoria: true, permiteOutro: true,
+      opcoes: ['Professoral e didática', 'Pastoral e acolhedora', 'Erudita e sofisticada', 'Direta e prática', 'Inspiradora e contemplativa'],
+    },
+    {
+      id: 'tom_proibido', bloco: 'Voz e identidade da marca',
+      texto: 'Que tom de comunicação vocês NÃO querem de jeito nenhum?',
+      tipo: 'texto_curto', obrigatoria: true,
+    },
+    {
+      id: 'palavras_obrigatorias', bloco: 'Voz e identidade da marca',
+      texto: 'Existem palavras ou expressões que devemos usar sempre na comunicação? E alguma que devemos evitar?',
+      tipo: 'texto_longo',
+    },
+    {
+      id: 'referencia_visual_admirada', bloco: 'Voz e identidade da marca',
+      texto: 'Qual referência visual (de qualquer setor, não precisa ser educacional) vocês admiram e gostariam de usar como inspiração?',
+      tipo: 'texto_curto',
+    },
+    {
+      id: 'peca_conteudo_favorita', bloco: 'Voz e identidade da marca',
+      texto: 'Qual peça de conteúdo já publicada pelo Cidade Viva Education vocês mais gostaram? Por quê?',
+      tipo: 'texto_longo',
+    },
+
+    // Bloco 3 — Produtos e comunicação pedagógica
     {
       id: 'prontidao_frentes', bloco: 'Produtos e comunicação pedagógica',
       texto: 'Avalie o nível de prontidão pedagógica de cada frente para ser divulgada.',
@@ -80,7 +108,7 @@ export const diretorPedagogico: FormularioBriefingConfig = {
       tipo: 'texto_curto', obrigatoria: true,
     },
 
-    // Bloco 3 — Limites, autores e temas
+    // Bloco 4 — Limites, autores e temas
     {
       id: 'identidade_publica', bloco: 'Limites, autores e temas',
       texto: 'Existe uma decisão institucional sobre a identidade pública cristã, clássica, confessional ou reformada?',
@@ -106,8 +134,29 @@ export const diretorPedagogico: FormularioBriefingConfig = {
       observacao: 'Se existir, isso pode virar um conteúdo imediato ("os livros que todo educador cristão clássico deveria ler").',
       tipo: 'texto_longo',
     },
+    {
+      id: 'denominacoes_atendidas', bloco: 'Limites, autores e temas',
+      texto: 'Vendemos e falamos com escolas de quais denominações? Há alguma que devemos evitar?',
+      tipo: 'texto_longo', obrigatoria: true,
+    },
+    {
+      id: 'posicao_latim_grego', bloco: 'Limites, autores e temas',
+      texto: 'Qual é a nossa posição pública sobre o ensino de latim e grego? Faz parte do Paideia?',
+      tipo: 'texto_curto',
+    },
+    {
+      id: 'tema_nunca_publicado', bloco: 'Limites, autores e temas',
+      texto: 'Qual tema vocês querem publicar e nunca conseguiram?',
+      tipo: 'texto_curto',
+    },
+    {
+      id: 'sugestao_conteudos_leituras', bloco: 'Limites, autores e temas',
+      texto: 'Alguma sugestão de conteúdos, autores ou leituras adicionais que devem servir de referência para o marketing?',
+      observacao: 'Este material será usado como base de referência — pode listar quantos títulos quiser.',
+      tipo: 'texto_longo',
+    },
 
-    // Bloco 4 — Governança pedagógica
+    // Bloco 5 — Governança pedagógica
     {
       id: 'aprovacao_conteudo', bloco: 'Governança pedagógica',
       texto: 'Quem tem autoridade de aprovação final para cada tipo de conteúdo?',

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Eye, EyeOff, ArrowRight, BarChart3, ClipboardList, Phone, Mail, MessageCircle, Globe } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 
 export default function ComercialLoginPage() {
   const router = useRouter()
@@ -53,13 +54,15 @@ export default function ComercialLoginPage() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         background: 'linear-gradient(to bottom, rgba(15,23,42,.9) 0%, transparent 100%)',
       }}>
-        <Image
-          src="/images/logo-education.png"
-          alt="Cidade Viva Education"
-          width={160} height={44}
-          style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)', opacity: .92 }}
-          priority
-        />
+        <Link href="/" style={{ display: 'flex', alignItems: 'center' }}>
+          <Image
+            src="/images/logo-education.png"
+            alt="Cidade Viva Education"
+            width={160} height={44}
+            style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)', opacity: .92 }}
+            priority
+          />
+        </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', flexWrap: 'wrap' }}>
           <a href="/formulario" style={{
             display: 'inline-flex', alignItems: 'center', gap: '.4rem',
