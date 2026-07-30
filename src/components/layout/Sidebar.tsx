@@ -13,7 +13,7 @@ import {
   Package, FlaskConical, BarChart2, Download,
   Bot, DollarSign, Table2, Info, FileSignature, ClipboardList,
   ExternalLink, GitBranch, Target, CalendarDays, FileAudio,
-  Upload, TrendingUp, Database, BookOpen, Globe
+  Upload, TrendingUp, Database, BookOpen, Globe, Megaphone
 } from 'lucide-react'
 
 interface SidebarProps { profile: Profile | null }
@@ -283,6 +283,7 @@ export default function Sidebar({ profile }: SidebarProps) {
         {/* ── Sobre + Tutorial — primeiras abas ────────────────── */}
         <NavItem href="/sobre"    label="Plataforma Education" icon={Info}     active={isActive('/sobre')} />
         <NavItem href="/tutorial" label="Tutorial"     icon={BookOpen} active={isActive('/tutorial')} />
+        <NavItem href="/marketing" label="Gestão de Marketing" icon={Megaphone} active={isActive('/marketing')} />
         <NavDivider />
 
         <SectionLabel>CRM</SectionLabel>
