@@ -38,8 +38,10 @@ export async function proxy(request: NextRequest) {
       )
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
+        const next = request.nextUrl.searchParams.get('next')
         const url = request.nextUrl.clone()
-        url.pathname = '/'
+        url.search = ''
+        url.pathname = next && next.startsWith('/') && !next.startsWith('//') ? next : '/'
         return NextResponse.redirect(url)
       }
     }
@@ -68,8 +70,11 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
+    const next = request.nextUrl.pathname + request.nextUrl.search
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    url.pathname = pathname.startsWith('/marketing') ? '/hub/marketing/login' : '/login'
+    url.search = ''
+    url.searchParams.set('next', next)
     return NextResponse.redirect(url)
   }
 

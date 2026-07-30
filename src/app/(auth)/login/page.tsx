@@ -26,7 +26,9 @@ export default function LoginPage() {
       setLoading(false)
       return
     }
-    window.location.href = '/comercial'
+    const next = new URLSearchParams(window.location.search).get('next')
+    const destino = next && next.startsWith('/') && !next.startsWith('//') ? next : '/comercial'
+    window.location.href = destino
   }
 
   return (
