@@ -122,8 +122,7 @@ export default function LoginPage() {
             zIndex: 0,
           }}
         >
-          <source src="/videos/hero.mp4" type="video/mp4" />
-          <source src="/videos/bg.mp4" type="video/mp4" />
+          <source src="/videos/institucional.mp4" type="video/mp4" />
         </video>
 
         {/* Overlay gradiente profundo */}
