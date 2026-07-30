@@ -15,20 +15,6 @@ export default function LoginPage() {
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
 
-  // Força o play do vídeo no mobile (iOS/Android bloqueiam autoplay sem interação)
-  const videoRef = React.useRef<HTMLVideoElement>(null)
-  React.useEffect(() => {
-    const v = videoRef.current
-    if (!v) return
-    v.muted = true
-    v.playsInline = true
-    const attempt = () => v.play().catch(() => {})
-    attempt()
-    // iOS às vezes precisa de um segundo try após o DOM estar pronto
-    const t = setTimeout(attempt, 500)
-    return () => clearTimeout(t)
-  }, [])
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -111,19 +97,14 @@ export default function LoginPage() {
         overflow: 'hidden',
       }}>
 
-        {/* Vídeo de fundo */}
-        <video
-          ref={videoRef}
-          autoPlay muted loop playsInline
-          style={{
-            position: 'absolute', inset: 0,
-            width: '100%', height: '100%',
-            objectFit: 'cover', objectPosition: 'center',
-            zIndex: 0,
-          }}
-        >
-          <source src="/videos/institucional.mp4" type="video/mp4" />
-        </video>
+        {/* Imagem de fundo */}
+        <Image
+          src="/images/hero-modulos.png"
+          alt=""
+          fill
+          priority
+          style={{ objectFit: 'cover', objectPosition: 'center', zIndex: 0 }}
+        />
 
         {/* Overlay gradiente profundo */}
         <div style={{
