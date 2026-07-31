@@ -13,7 +13,7 @@ import {
   Package, FlaskConical, BarChart2, Download,
   Bot, DollarSign, Table2, Info, FileSignature, ClipboardList,
   ExternalLink, GitBranch, Target, CalendarDays, FileAudio,
-  Upload, TrendingUp, Database, BookOpen, Globe
+  Upload, TrendingUp, Database, BookOpen, Globe, Crosshair
 } from 'lucide-react'
 
 interface SidebarProps { profile: Profile | null }
@@ -29,6 +29,7 @@ const NAV_CRM = [
 ]
 
 const NAV_PROCESS = [
+  { href: '/comercial/priorizacao',    label: 'Priorização',       icon: Crosshair   },
   { href: '/comercial/jornada-visual', label: 'Jornada Visual',    icon: GitBranch   },
   { href: '/comercial/jornada',        label: 'Jornada Relac.',    icon: Activity    },
   { href: '/comercial/contratos',      label: 'Jornada Contrat.',  icon: FileSignature },
