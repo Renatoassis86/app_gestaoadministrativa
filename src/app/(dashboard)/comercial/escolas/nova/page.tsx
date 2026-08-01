@@ -339,6 +339,37 @@ export default async function EscolaNova({ searchParams }: Props) {
             </div>
           </div>
 
+          {/* ── 6. FINANCEIRO / COMERCIAL ──────────────────────── */}
+          <div style={card}>
+            <div style={cardHeader('#16a34a')}>
+              <div style={dot()}><svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='#fff' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round'><line x1='12' y1='1' x2='12' y2='23'/><path d='M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'/></svg></div>
+              <div style={sectionTitle}>Financeiro / Comercial</div>
+            </div>
+            <div style={cardBody}>
+              <div style={grid2}>
+                <div>
+                  <label style={label}>Mensalidade média real (R$)</label>
+                  <input type="number" name="mensalidade_media" step="0.01" min="0" style={input} placeholder="Ex: 850.00" />
+                </div>
+                <div>
+                  <label style={label}>Sistema de ensino atual</label>
+                  <input type="text" name="sistema_ensino_atual" style={input} placeholder="Ex: material próprio, Objetivo, SAS..." />
+                </div>
+              </div>
+              <div style={{ marginTop: '1.25rem' }}>
+                <label style={label}>Satisfação com o sistema atual</label>
+                <select name="satisfacao_sistema_atual" style={input}>
+                  <option value="">Não informado</option>
+                  <option value="Muito insatisfeito">Muito insatisfeito</option>
+                  <option value="Insatisfeito">Insatisfeito</option>
+                  <option value="Neutro">Neutro</option>
+                  <option value="Satisfeito">Satisfeito</option>
+                  <option value="Muito satisfeito">Muito satisfeito</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           {/* ── AÇÕES ──────────────────────────────────────────── */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: '1rem',

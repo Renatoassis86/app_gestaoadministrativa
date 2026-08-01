@@ -243,6 +243,33 @@ export default async function EscolaEditar({ params }: Props) {
             </div>
           </div>
 
+          <div className="card mb-6">
+            <div className="card-header"><span className="card-title">Financeiro / Comercial</span></div>
+            <div className="card-body">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label className="form-label">Mensalidade média real (R$)</label>
+                  <input type="number" name="mensalidade_media" step="0.01" min="0" className="form-control" defaultValue={e.mensalidade_media ?? ''} placeholder="Ex: 850.00" />
+                </div>
+                <div>
+                  <label className="form-label">Sistema de ensino atual</label>
+                  <input type="text" name="sistema_ensino_atual" className="form-control" defaultValue={e.sistema_ensino_atual ?? ''} placeholder="Ex: material próprio, Objetivo, SAS..." />
+                </div>
+              </div>
+              <div style={{ marginTop: '1rem' }}>
+                <label className="form-label">Satisfação com o sistema atual</label>
+                <select name="satisfacao_sistema_atual" className="form-control" defaultValue={e.satisfacao_sistema_atual ?? ''}>
+                  <option value="">Não informado</option>
+                  <option value="Muito insatisfeito">Muito insatisfeito</option>
+                  <option value="Insatisfeito">Insatisfeito</option>
+                  <option value="Neutro">Neutro</option>
+                  <option value="Satisfeito">Satisfeito</option>
+                  <option value="Muito satisfeito">Muito satisfeito</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           <div style={{ display: 'flex', gap: '.75rem' }}>
             <button type="submit" className="btn btn-primary">Salvar Alterações</button>
             <Link href={`/comercial/escolas/${id}`} className="btn btn-ghost">Cancelar</Link>

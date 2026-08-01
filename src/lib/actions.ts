@@ -128,6 +128,9 @@ export async function upsertEscola(formData: FormData) {
     })(),
     responsavel_id:     formData.get('responsavel_id') as string || null,
     observacoes:        formData.get('observacoes') as string || null,
+    mensalidade_media:         formData.get('mensalidade_media') ? parseFloat(formData.get('mensalidade_media') as string) : null,
+    sistema_ensino_atual:       formData.get('sistema_ensino_atual') as string || null,
+    satisfacao_sistema_atual:   formData.get('satisfacao_sistema_atual') as string || null,
     updated_by:         user.id,
   }
 

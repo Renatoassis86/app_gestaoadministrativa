@@ -11,8 +11,17 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { PIB_PER_CAPITA_UF } from '@/lib/pib-per-capita-uf'
+import pibMunicipioData from '@/lib/data/pib-per-capita-municipio.json'
 import type { EscolaResumo, PerfilPedagogico, StageNegociacao } from '@/types/database'
 import { STAGE_OPTIONS, PERFIL_OPTIONS } from '@/types/database'
+
+function normCidade(s: string | null | undefined): string {
+  return (s ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim()
+}
+const PIB_MUNICIPIO_MAP = new Map<string, number>(
+  (pibMunicipioData as { municipio: string; uf: string; pibPerCapita: number }[])
+    .map(m => [`${normCidade(m.municipio)}|${m.uf}`, m.pibPerCapita])
+)
 
 const STAGE_LABEL: Record<string, string> = Object.fromEntries(STAGE_OPTIONS.map(o => [o.value, o.label]))
 const PERFIL_LABEL: Record<string, string> = Object.fromEntries(PERFIL_OPTIONS.map(o => [o.value, o.label]))
@@ -20,11 +29,12 @@ const PERFIL_LABEL: Record<string, string> = Object.fromEntries(PERFIL_OPTIONS.m
 // ─── Pesos e tabelas de pontuação ──────────────────────────────────────────
 
 const PESOS = {
-  potencial: 0.35,
-  perfil: 0.20,
+  potencial: 0.30,
+  perfil: 0.15,
   pib: 0.15,
   prontidao: 0.20,
   recencia: 0.10,
+  financeiroComercial: 0.10,
 }
 
 const PERFIL_SCORE: Record<PerfilPedagogico, number> = {
@@ -87,6 +97,7 @@ export interface EscolaPriorizada {
   estagioLabel: string
   score: number
   prescricao: Prescricao
+  temDadosCiecc: boolean
 }
 
 export interface EscolaResumoLite {
@@ -138,14 +149,63 @@ function percentil(value: number, todos: number[]): number {
   return Math.round((abaixoOuIgual / todos.length) * 100)
 }
 
+// ─── Sinais da pesquisa CIECC (leads_perfil_escola) ────────────────────────
+// Insatisfação com o sistema atual = oportunidade de troca → pontua alto.
+
+const CSI_SCORE: Record<string, number> = {
+  'muito insatisfeito': 90, 'insatisfeito': 70, 'neutro': 50,
+  'satisfeito': 25, 'muito satisfeito': 10,
+}
+
+function scoreCsi(csi: string | null): number | null {
+  if (!csi) return null
+  return CSI_SCORE[csi.toLowerCase().trim()] ?? null
+}
+
+function scoreNps(nps: number | null): number | null {
+  if (nps === null || nps === undefined) return null
+  return Math.round((10 - nps) * 10) // NPS baixo no sistema atual = maior oportunidade
+}
+
+function scoreInvestimento(v: string | null): number | null {
+  if (!v) return null
+  const s = v.toLowerCase()
+  if (s.includes('prefiro não') || s.includes('não sei')) return null
+  if (s.includes('mais de')) return 90
+  const m = s.match(/(\d[\d.]*)/)
+  if (m) {
+    const n = parseInt(m[1].replace(/\./g, ''), 10)
+    if (n <= 300) return 20
+    if (n <= 700) return 50
+    return 70
+  }
+  return null
+}
+
+interface PerfilCiecc {
+  csi: string | null
+  nps: number | null
+  investimentoAtual: string | null
+}
+
+/** Combina os sinais disponíveis da pesquisa CIECC num único score 0–100 (null = sem dado). */
+function scoreFinanceiroComercial(perfil: PerfilCiecc | undefined): number {
+  if (!perfil) return 50
+  const partes = [scoreCsi(perfil.csi), scoreNps(perfil.nps), scoreInvestimento(perfil.investimentoAtual)]
+    .filter((v): v is number => v !== null)
+  if (partes.length === 0) return 50
+  return Math.round(partes.reduce((a, b) => a + b, 0) / partes.length)
+}
+
 export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
   const supabase = await createClient()
 
-  const [escolasRes, negociacoesRes, contratosRes, registrosRes] = await Promise.all([
+  const [escolasRes, negociacoesRes, contratosRes, registrosRes, ciecPerfilRes] = await Promise.all([
     supabase.from('escolas_resumo').select('*').eq('ativa', true),
     supabase.from('negociacoes').select('escola_id, stage').eq('ativa', true),
     supabase.from('contratos').select('escola_id, contrato_enviado, contrato_assinado'),
     supabase.from('registros').select('escola_id').eq('ativa', true),
+    supabase.from('leads_escola').select('escola_crm_id, leads_perfil_escola(csi, nps, investimento_atual)').not('escola_crm_id', 'is', null),
   ])
 
   if (escolasRes.error) {
@@ -158,6 +218,17 @@ export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
   }
 
   const escolas = (escolasRes.data ?? []) as EscolaResumo[]
+
+  // Perfil da pesquisa CIECC por escola do CRM (quando existe leads_perfil_escola vinculado)
+  const perfilCieccPorEscola = new Map<string, PerfilCiecc>()
+  for (const le of (ciecPerfilRes.data as any[]) ?? []) {
+    const perfil = Array.isArray(le.leads_perfil_escola) ? le.leads_perfil_escola[0] : le.leads_perfil_escola
+    if (le.escola_crm_id && perfil) {
+      perfilCieccPorEscola.set(le.escola_crm_id, {
+        csi: perfil.csi ?? null, nps: perfil.nps ?? null, investimentoAtual: perfil.investimento_atual ?? null,
+      })
+    }
+  }
 
   // Estágio ativo mais avançado por escola
   const stageOrdem = STAGE_SCORE
@@ -214,12 +285,22 @@ export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
 
   // ── Normalizações (percentil dentro do conjunto elegível) ─────────────────
   const potenciais = elegiveis.map(e => e.potencial_financeiro)
-  const estadosPresentes = [...new Set(elegiveis.map(e => e.estado).filter(Boolean))] as string[]
-  const pibsPresentes = estadosPresentes.map(uf => PIB_PER_CAPITA_UF[uf] ?? 0).filter(v => v > 0)
 
-  const scorePib = (uf: string | null): number => {
-    if (!uf || !PIB_PER_CAPITA_UF[uf]) return 50
-    return percentil(PIB_PER_CAPITA_UF[uf], pibsPresentes)
+  const pibValor = (cidade: string | null, uf: string | null): number | null => {
+    if (cidade && uf) {
+      const doMunicipio = PIB_MUNICIPIO_MAP.get(`${normCidade(cidade)}|${uf}`)
+      if (doMunicipio) return doMunicipio
+    }
+    return uf ? PIB_PER_CAPITA_UF[uf] ?? null : null
+  }
+  const pibsPresentesMunicipioOuUf = elegiveis
+    .map(e => pibValor(e.cidade, e.estado))
+    .filter((v): v is number => v !== null)
+
+  const scorePib = (cidade: string | null, uf: string | null): number => {
+    const valor = pibValor(cidade, uf)
+    if (valor === null) return 50
+    return percentil(valor, pibsPresentesMunicipioOuUf)
   }
 
   // ── Score + prescrição por escola elegível ─────────────────────────────────
@@ -228,18 +309,22 @@ export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
     const estagio = estagioPorEscola.get(e.id) ?? null
     const qtdRegistros = registrosPorEscola.get(e.id) ?? 0
 
+    const perfilCiecc = perfilCieccPorEscola.get(e.id)
+
     const potencialScore = percentil(e.potencial_financeiro, potenciais)
     const perfilScore = PERFIL_SCORE[e.perfil_pedagogico] ?? 40
-    const pibScore = scorePib(e.estado)
+    const pibScore = scorePib(e.cidade, e.estado)
     const prontidaoScore = estagio ? STAGE_SCORE[estagio] : (e.probabilidade_atual ?? 0)
     const recenciaScore = scoreRecencia(e.ultimo_contato)
+    const financeiroComercialScore = scoreFinanceiroComercial(perfilCiecc)
 
     const score = Math.round(
       potencialScore * PESOS.potencial +
       perfilScore * PESOS.perfil +
       pibScore * PESOS.pib +
       prontidaoScore * PESOS.prontidao +
-      recenciaScore * PESOS.recencia
+      recenciaScore * PESOS.recencia +
+      financeiroComercialScore * PESOS.financeiroComercial
     )
 
     const dias = diasDesde(e.ultimo_contato)
@@ -271,6 +356,7 @@ export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
         : (e.classificacao_atual ? `Classificado: ${e.classificacao_atual}` : 'Nunca contatada'),
       score,
       prescricao,
+      temDadosCiecc: !!perfilCiecc,
     }
   }).sort((a, b) => b.score - a.score)
 

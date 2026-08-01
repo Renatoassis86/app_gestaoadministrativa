@@ -75,8 +75,8 @@ export default async function PriorizacaoPage({ searchParams }: Props) {
             Como o score é calculado
           </div>
           <p style={{ fontSize: '.78rem', color: 'rgba(255,255,255,.65)', lineHeight: 1.6, fontFamily: 'var(--font-inter,sans-serif)', margin: 0 }}>
-            Potencial financeiro (35%) + afinidade de perfil pedagógico (20%) + PIB per capita da UF (15%) + estágio no funil / prontidão (20%) + recência do último contato (10%).
-            Escolas já parceiras (contrato assinado) saem da fila; escolas sem potencial/porte cadastrado vão para a fila de completar cadastro.
+            Potencial financeiro (30%) + afinidade de perfil pedagógico (15%) + PIB per capita do município — ou da UF quando o município não é encontrado (15%) + estágio no funil / prontidão (20%) + recência do último contato (10%) + sinais da pesquisa CIECC — satisfação, NPS e investimento atual, quando disponíveis (10%).
+            Escolas já parceiras (contrato assinado) saem da fila; escolas sem potencial/porte cadastrado vão para a fila de completar cadastro. O selo <strong style={{ color: '#c4b5fd' }}>CIECC</strong> indica escolas com dados da pesquisa de mercado do congresso.
           </p>
         </div>
 
@@ -129,9 +129,16 @@ export default async function PriorizacaoPage({ searchParams }: Props) {
                     return (
                       <tr key={e.id} style={{ borderTop: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#fff' : '#fafafa' }}>
                         <td style={{ padding: '.75rem 1rem', maxWidth: 200 }}>
-                          <Link href={`/comercial/escolas/${e.id}`} style={{ fontWeight: 700, fontSize: '.8rem', color: '#0f172a', textDecoration: 'none', fontFamily: 'var(--font-montserrat,sans-serif)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {e.nome}
-                          </Link>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '.35rem' }}>
+                            <Link href={`/comercial/escolas/${e.id}`} style={{ fontWeight: 700, fontSize: '.8rem', color: '#0f172a', textDecoration: 'none', fontFamily: 'var(--font-montserrat,sans-serif)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {e.nome}
+                            </Link>
+                            {e.temDadosCiecc && (
+                              <span title="Tem dados da pesquisa CIECC" style={{ fontSize: '.55rem', fontWeight: 800, background: '#f5f3ff', color: '#7c3aed', border: '1px solid #ddd6fe', padding: '.05rem .3rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)', flexShrink: 0 }}>
+                                CIECC
+                              </span>
+                            )}
+                          </div>
                           {e.responsavel_nome && <div style={{ fontSize: '.65rem', color: '#94a3b8' }}>{e.responsavel_nome}</div>}
                         </td>
                         <td style={{ padding: '.75rem 1rem', fontSize: '.78rem', color: '#475569', whiteSpace: 'nowrap' }}>

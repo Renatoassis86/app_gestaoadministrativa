@@ -80,6 +80,9 @@ export interface Escola {
   ativa: boolean
   total_alunos: number
   potencial_financeiro: number
+  mensalidade_media: number | null
+  sistema_ensino_atual: string | null
+  satisfacao_sistema_atual: string | null
   created_by: string | null
   updated_by: string | null
   created_at: string
