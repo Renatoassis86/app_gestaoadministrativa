@@ -2,7 +2,7 @@ import Link from 'next/link'
 import PageHeader from '@/components/layout/PageHeader'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { getFilaPriorizacao, PRESCRICAO_LABEL, PRESCRICAO_COR, type Prescricao } from '@/lib/priorizacao'
-import { LABEL } from '@/types/database'
+import { LABEL, labelPerfil } from '@/types/database'
 import { PriorizacaoCharts } from '@/components/comercial/PriorizacaoCharts'
 import { DeleteEscolaBtn } from '@/components/comercial/DeleteEscolaBtn'
 import { Download, Pencil } from 'lucide-react'
@@ -14,7 +14,27 @@ const card: React.CSSProperties = {
 
 const iconBtn: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  width: 28, height: 28, borderRadius: 7, flexShrink: 0, textDecoration: 'none',
+  width: 26, height: 26, borderRadius: 7, flexShrink: 0, textDecoration: 'none',
+}
+
+const PERFIL_CHIP: Record<string, { bg: string; text: string; border: string }> = {
+  crista_classica: { bg: '#f5f3ff', text: '#7c3aed', border: '#ddd6fe' },
+  crista_catolica: { bg: '#eff6ff', text: '#2563eb', border: '#bfdbfe' },
+  evangelica:      { bg: '#ecfeff', text: '#0891b2', border: '#a5f3fc' },
+  por_principio:   { bg: '#f0fdf4', text: '#16a34a', border: '#86efac' },
+  convencional:    { bg: '#f8fafc', text: '#475569', border: '#e2e8f0' },
+  outro:           { bg: '#f8fafc', text: '#475569', border: '#e2e8f0' },
+}
+
+function formatCurrencyCompact(value: number): string {
+  if (value >= 1_000_000) return `R$ ${(value / 1_000_000).toFixed(1).replace('.', ',')}mi`
+  if (value >= 1_000) return `R$ ${(value / 1_000).toFixed(1).replace('.', ',')}mil`
+  return formatCurrency(value)
+}
+
+function formatDateShort(date: string | null): string {
+  if (!date) return '—'
+  return new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
 }
 
 function linkWhatsapp(telefone: string | null): string | null {
@@ -39,7 +59,8 @@ export default async function PriorizacaoPage({ searchParams }: Props) {
 
   let linhas = fila.filaAbordagem
   if (uf) linhas = linhas.filter(e => e.estado === uf)
-  if (perfil) linhas = linhas.filter(e => e.perfil_pedagogico === perfil)
+  if (perfil === '__sem_perfil__') linhas = linhas.filter(e => !e.perfil_pedagogico)
+  else if (perfil) linhas = linhas.filter(e => e.perfil_pedagogico === perfil)
   if (prescricaoFiltro) linhas = linhas.filter(e => e.prescricao === prescricaoFiltro)
 
   const ufsDisponiveis = [...new Set(fila.filaAbordagem.map(e => e.estado).filter(Boolean))].sort() as string[]
@@ -81,6 +102,7 @@ export default async function PriorizacaoPage({ searchParams }: Props) {
           porEstado={fila.distribuicaoPorEstado}
           porPerfil={fila.distribuicaoPorPerfil}
           porEstagio={fila.distribuicaoPorEstagio}
+          porConfessionalidade={fila.distribuicaoPorConfessionalidade}
         />
 
         {/* ── Metodologia (curto) ────────────────────────────────── */}
@@ -103,6 +125,7 @@ export default async function PriorizacaoPage({ searchParams }: Props) {
           <select name="perfil" defaultValue={perfil} style={{ padding: '.5rem .75rem', fontSize: '.8rem', border: '1.5px solid #e2e8f0', borderRadius: 8, color: '#0f172a', background: '#f8fafc', fontFamily: 'var(--font-inter,sans-serif)' }}>
             <option value="">Todos os perfis</option>
             {Object.entries(LABEL.perfil_pedagogico).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            <option value="__sem_perfil__">Não informado</option>
           </select>
           <select name="prescricao" defaultValue={prescricaoFiltro} style={{ padding: '.5rem .75rem', fontSize: '.8rem', border: '1.5px solid #e2e8f0', borderRadius: 8, color: '#0f172a', background: '#f8fafc', fontFamily: 'var(--font-inter,sans-serif)' }}>
             <option value="">Todas as prescrições</option>
@@ -127,11 +150,22 @@ export default async function PriorizacaoPage({ searchParams }: Props) {
 
           {linhas.length > 0 ? (
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                <colgroup>
+                  <col style={{ width: 30 }} />
+                  <col />
+                  <col style={{ width: 108 }} />
+                  <col style={{ width: 56 }} />
+                  <col style={{ width: 110 }} />
+                  <col style={{ width: 130 }} />
+                  <col style={{ width: 52 }} />
+                  <col style={{ width: 150 }} />
+                  <col style={{ width: 108 }} />
+                </colgroup>
                 <thead>
                   <tr style={{ background: '#f8fafc' }}>
-                    {['Escola', 'Cidade/UF', 'Perfil', 'Alunos', 'Potencial', 'Ticket Médio', 'Estágio', 'Último contato', 'Score', 'Prescrição', 'Ações'].map(col => (
-                      <th key={col} style={{ padding: '.65rem 1rem', textAlign: 'left', fontSize: '.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#64748b', whiteSpace: 'nowrap', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                    {['#', 'Escola', 'Perfil', 'Alunos', 'Financeiro', 'Estágio', 'Contato', 'Prescrição', 'Ações'].map(col => (
+                      <th key={col} style={{ padding: '.55rem .6rem', textAlign: 'left', fontSize: '.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: '#64748b', whiteSpace: 'nowrap', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
                         {col}
                       </th>
                     ))}
@@ -140,11 +174,16 @@ export default async function PriorizacaoPage({ searchParams }: Props) {
                 <tbody>
                   {linhas.map((e, idx) => {
                     const cor = PRESCRICAO_COR[e.prescricao]
+                    const perfilCor = e.perfil_pedagogico ? PERFIL_CHIP[e.perfil_pedagogico] : null
+                    const subtitulo = [e.cidade ? `${e.cidade}/${e.estado}` : e.estado, e.responsavel_nome].filter(Boolean).join(' · ')
                     return (
                       <tr key={e.id} style={{ borderTop: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#fff' : '#fafafa' }}>
-                        <td style={{ padding: '.75rem 1rem', maxWidth: 200 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '.35rem' }}>
-                            <Link href={`/comercial/escolas/${e.id}`} style={{ fontWeight: 700, fontSize: '.8rem', color: '#0f172a', textDecoration: 'none', fontFamily: 'var(--font-montserrat,sans-serif)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '.55rem .6rem', fontSize: '.65rem', color: '#cbd5e1', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                          {idx + 1}
+                        </td>
+                        <td style={{ padding: '.55rem .6rem', minWidth: 0, overflow: 'hidden' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '.35rem', minWidth: 0 }}>
+                            <Link href={`/comercial/escolas/${e.id}`} title={e.nome} style={{ fontWeight: 700, fontSize: '.78rem', color: '#0f172a', textDecoration: 'none', fontFamily: 'var(--font-montserrat,sans-serif)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
                               {e.nome}
                             </Link>
                             {e.temDadosCiecc && (
@@ -153,44 +192,43 @@ export default async function PriorizacaoPage({ searchParams }: Props) {
                               </span>
                             )}
                           </div>
-                          {e.responsavel_nome && <div style={{ fontSize: '.65rem', color: '#94a3b8' }}>{e.responsavel_nome}</div>}
+                          {subtitulo && <div title={subtitulo} style={{ fontSize: '.63rem', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitulo}</div>}
                         </td>
-                        <td style={{ padding: '.75rem 1rem', fontSize: '.78rem', color: '#475569', whiteSpace: 'nowrap' }}>
-                          {e.cidade ? `${e.cidade}/${e.estado}` : (e.estado ?? '—')}
+                        <td style={{ padding: '.55rem .6rem' }}>
+                          {e.perfil_pedagogico ? (
+                            <span style={{ fontSize: '.62rem', fontWeight: 700, background: perfilCor!.bg, color: perfilCor!.text, border: `1px solid ${perfilCor!.border}`, padding: '.15rem .45rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {labelPerfil(e.perfil_pedagogico)}
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: '.72rem', color: '#cbd5e1' }}>—</span>
+                          )}
                         </td>
-                        <td style={{ padding: '.75rem 1rem', fontSize: '.75rem', color: '#475569', whiteSpace: 'nowrap' }}>
-                          {LABEL.perfil_pedagogico[e.perfil_pedagogico] ?? e.perfil_pedagogico}
-                        </td>
-                        <td style={{ padding: '.75rem 1rem', fontSize: '.8rem', fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                        <td style={{ padding: '.55rem .6rem', fontSize: '.78rem', fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)', textAlign: 'center' }}>
                           {e.total_alunos || '—'}
                         </td>
-                        <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', fontWeight: 700, color: '#16a34a', fontFamily: 'var(--font-cormorant,serif)', whiteSpace: 'nowrap' }}>
-                          {formatCurrency(e.potencial_financeiro)}
-                        </td>
-                        <td style={{ padding: '.75rem 1rem', fontSize: '.78rem', color: e.mensalidade_media ? '#0f172a' : '#cbd5e1', whiteSpace: 'nowrap' }}>
-                          {e.mensalidade_media ? formatCurrency(e.mensalidade_media) : 'Não informado'}
-                        </td>
-                        <td style={{ padding: '.75rem 1rem', fontSize: '.72rem', color: '#475569', whiteSpace: 'nowrap' }}>
-                          {e.estagioLabel}
-                        </td>
-                        <td style={{ padding: '.75rem 1rem', fontSize: '.75rem', color: '#64748b', whiteSpace: 'nowrap' }}>
-                          {formatDate(e.ultimo_contato)}
-                        </td>
-                        <td style={{ padding: '.75rem 1rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}>
-                            <div style={{ width: 34, height: 6, borderRadius: 99, background: '#f1f5f9', overflow: 'hidden' }}>
-                              <div style={{ width: `${e.score}%`, height: '100%', background: '#d97706' }} />
-                            </div>
-                            <span style={{ fontSize: '.72rem', fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)' }}>{e.score}</span>
+                        <td style={{ padding: '.55rem .6rem' }}>
+                          <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#16a34a', fontFamily: 'var(--font-cormorant,serif)', whiteSpace: 'nowrap' }}>
+                            {formatCurrencyCompact(e.potencial_financeiro)}
+                          </div>
+                          <div style={{ fontSize: '.62rem', color: e.mensalidade_media ? '#64748b' : '#cbd5e1', whiteSpace: 'nowrap' }}>
+                            {e.mensalidade_media ? `${formatCurrencyCompact(e.mensalidade_media)}/mês` : 'sem ticket'}
                           </div>
                         </td>
-                        <td style={{ padding: '.75rem 1rem' }}>
-                          <span style={{ fontSize: '.65rem', fontWeight: 700, background: cor.bg, color: cor.text, border: `1px solid ${cor.border}`, padding: '.2rem .55rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '.55rem .6rem' }}>
+                          <span style={{ fontSize: '.68rem', fontWeight: 600, background: '#f1f5f9', color: '#334155', padding: '.15rem .5rem', borderRadius: 99, whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {e.estagioLabel}
+                          </span>
+                        </td>
+                        <td title={formatDate(e.ultimo_contato)} style={{ padding: '.55rem .6rem', fontSize: '.72rem', color: '#64748b', whiteSpace: 'nowrap' }}>
+                          {formatDateShort(e.ultimo_contato)}
+                        </td>
+                        <td style={{ padding: '.55rem .6rem' }}>
+                          <span style={{ fontSize: '.62rem', fontWeight: 700, background: cor.bg, color: cor.text, border: `1px solid ${cor.border}`, padding: '.15rem .5rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {PRESCRICAO_LABEL[e.prescricao]}
                           </span>
                         </td>
-                        <td style={{ padding: '.75rem 1rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '.35rem' }}>
+                        <td style={{ padding: '.55rem .6rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '.3rem' }}>
                             <Link href={`/comercial/registros/novo?escola=${e.id}`} title="Registrar interação"
                               style={{ ...iconBtn, background: '#fffbeb', border: '1.5px solid #fde68a', color: '#d97706' }}>
                               <Pencil size={12} />

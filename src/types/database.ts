@@ -46,7 +46,7 @@ export interface Escola {
   id: string
   nome: string
   cnpj: string | null
-  perfil_pedagogico: PerfilPedagogico
+  perfil_pedagogico: PerfilPedagogico | null
   escola_paideia: boolean
   rua: string | null
   numero: string | null
@@ -315,6 +315,24 @@ export const PERFIL_OPTIONS = [
   { value: 'convencional',     label: 'Convencional (Educação Moderna)' },
   { value: 'outro',            label: 'Outro' },
 ]
+
+export const PERFIL_NAO_INFORMADO = 'Não informado'
+
+/** Rótulo de perfil_pedagogico com fallback para "Não informado" (coluna aceita null). */
+export function labelPerfil(v: PerfilPedagogico | null): string {
+  if (!v) return PERFIL_NAO_INFORMADO
+  return PERFIL_OPTIONS.find(o => o.value === v)?.label ?? v
+}
+
+// Resposta real da pesquisa CIECC à pergunta "Qual é a situação atual da sua
+// escola em relação à confessionalidade cristã?" (leads_perfil_escola.confessionalidade).
+// Eixo distinto de perfil_pedagogico — não deve ser usado para inferir método pedagógico.
+export const CONFESSIONALIDADE_LABEL: Record<string, string> = {
+  'Cristã Confessional': 'Cristã Confessional',
+  'Em transição': 'Em transição para confessional',
+  'Em estudo': 'Avaliando a possibilidade',
+  'Não considerada': 'Não é uma direção considerada',
+}
 
 // Apenas valores válidos no enum PostgreSQL origem_lead
 // Para adicionar novos, execute supabase/fix_origem_lead_enum.sql

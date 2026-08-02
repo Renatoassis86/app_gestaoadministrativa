@@ -52,7 +52,7 @@ export async function upsertEscola(formData: FormData) {
   const payload = {
     nome:               formData.get('nome') as string,
     cnpj:               formData.get('cnpj') as string || null,
-    perfil_pedagogico:  formData.get('perfil_pedagogico') as string || 'convencional',
+    perfil_pedagogico:  formData.get('perfil_pedagogico') as string || null,
     escola_paideia:     formData.get('escola_paideia') === 'true',
     rua:                formData.get('rua') as string || null,
     numero:             formData.get('numero') as string || null,

@@ -115,7 +115,8 @@ export default async function EscolaNova({ searchParams }: Props) {
                 </div>
                 <div>
                   <label style={label}>Perfil Pedagógico</label>
-                  <select name="perfil_pedagogico" style={input}>
+                  <select name="perfil_pedagogico" style={input} defaultValue="">
+                    <option value="">Não informado</option>
                     {PERFIL_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>

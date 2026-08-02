@@ -13,7 +13,7 @@ import { createClient } from '@/lib/supabase/server'
 import { PIB_PER_CAPITA_UF } from '@/lib/pib-per-capita-uf'
 import pibMunicipioData from '@/lib/data/pib-per-capita-municipio.json'
 import type { EscolaResumo, PerfilPedagogico, StageNegociacao } from '@/types/database'
-import { STAGE_OPTIONS, PERFIL_OPTIONS } from '@/types/database'
+import { STAGE_OPTIONS, PERFIL_OPTIONS, PERFIL_NAO_INFORMADO, CONFESSIONALIDADE_LABEL } from '@/types/database'
 
 function normCidade(s: string | null | undefined): string {
   return (s ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim()
@@ -44,6 +44,12 @@ const PERFIL_SCORE: Record<PerfilPedagogico, number> = {
   crista_catolica: 75,
   convencional: 40,
   outro: 40,
+}
+const PERFIL_SCORE_SEM_DADO = 50 // sem perfil informado — neutro, não penaliza nem favorece
+
+function scorePerfil(perfil: PerfilPedagogico | null): number {
+  if (!perfil) return PERFIL_SCORE_SEM_DADO
+  return PERFIL_SCORE[perfil] ?? PERFIL_SCORE_SEM_DADO
 }
 
 const STAGE_SCORE: Record<StageNegociacao, number> = {
@@ -88,7 +94,7 @@ export interface EscolaPriorizada {
   nome: string
   cidade: string | null
   estado: string | null
-  perfil_pedagogico: PerfilPedagogico
+  perfil_pedagogico: PerfilPedagogico | null
   potencial_financeiro: number
   total_alunos: number
   mensalidade_media: number | null
@@ -108,7 +114,7 @@ export interface EscolaResumoLite {
   nome: string
   cidade: string | null
   estado: string | null
-  perfil_pedagogico: PerfilPedagogico
+  perfil_pedagogico: PerfilPedagogico | null
   ultimo_contato: string | null
   responsavel_nome: string | null
 }
@@ -126,6 +132,8 @@ export interface FilaPriorizacao {
   distribuicaoPorEstado: { estado: string; quantidade: number }[]
   distribuicaoPorPerfil: { perfil: string; label: string; quantidade: number }[]
   distribuicaoPorEstagio: { estagio: string; quantidade: number }[]
+  /** Resposta real da pesquisa CIECC (confessionalidade) — eixo distinto de perfil_pedagogico. */
+  distribuicaoPorConfessionalidade: { confessionalidade: string; label: string; quantidade: number }[]
 }
 
 function diasDesde(dataIso: string | null): number | null {
@@ -189,6 +197,7 @@ interface PerfilCiecc {
   csi: string | null
   nps: number | null
   investimentoAtual: string | null
+  confessionalidade: string | null
 }
 
 /** Combina os sinais disponíveis da pesquisa CIECC num único score 0–100 (null = sem dado). */
@@ -208,7 +217,7 @@ export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
     supabase.from('negociacoes').select('escola_id, stage').eq('ativa', true),
     supabase.from('contratos').select('escola_id, contrato_enviado, contrato_assinado'),
     supabase.from('registros').select('escola_id').eq('ativa', true),
-    supabase.from('leads_escola').select('escola_crm_id, leads_perfil_escola(csi, nps, investimento_atual)').not('escola_crm_id', 'is', null),
+    supabase.from('leads_escola').select('escola_crm_id, leads_perfil_escola(csi, nps, investimento_atual, confessionalidade)').not('escola_crm_id', 'is', null),
   ])
 
   if (escolasRes.error) {
@@ -217,6 +226,7 @@ export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
       filaAbordagem: [], filaCompletarCadastro: [], clientesAtivos: [],
       resumo: { totalFila: 0, acaoUrgente: 0, aguardandoCadastro: 0, clientesAtivos: 0 },
       distribuicaoPorEstado: [], distribuicaoPorPerfil: [], distribuicaoPorEstagio: [],
+      distribuicaoPorConfessionalidade: [],
     }
   }
 
@@ -229,6 +239,7 @@ export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
     if (le.escola_crm_id && perfil) {
       perfilCieccPorEscola.set(le.escola_crm_id, {
         csi: perfil.csi ?? null, nps: perfil.nps ?? null, investimentoAtual: perfil.investimento_atual ?? null,
+        confessionalidade: perfil.confessionalidade ?? null,
       })
     }
   }
@@ -315,7 +326,7 @@ export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
     const perfilCiecc = perfilCieccPorEscola.get(e.id)
 
     const potencialScore = percentil(e.potencial_financeiro, potenciais)
-    const perfilScore = PERFIL_SCORE[e.perfil_pedagogico] ?? 40
+    const perfilScore = scorePerfil(e.perfil_pedagogico)
     const pibScore = scorePib(e.cidade, e.estado)
     const prontidaoScore = estagio ? STAGE_SCORE[estagio] : (e.probabilidade_atual ?? 0)
     const recenciaScore = scoreRecencia(e.ultimo_contato)
@@ -372,7 +383,8 @@ export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
   for (const e of escolas) {
     const uf = e.estado ?? 'Sem estado'
     porEstadoMap.set(uf, (porEstadoMap.get(uf) ?? 0) + 1)
-    porPerfilMap.set(e.perfil_pedagogico, (porPerfilMap.get(e.perfil_pedagogico) ?? 0) + 1)
+    const perfilKey = e.perfil_pedagogico ?? PERFIL_NAO_INFORMADO
+    porPerfilMap.set(perfilKey, (porPerfilMap.get(perfilKey) ?? 0) + 1)
   }
   const distribuicaoPorEstado = [...porEstadoMap.entries()]
     .map(([estado, quantidade]) => ({ estado, quantidade }))
@@ -381,6 +393,21 @@ export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
 
   const distribuicaoPorPerfil = [...porPerfilMap.entries()]
     .map(([perfil, quantidade]) => ({ perfil, label: PERFIL_LABEL[perfil] ?? perfil, quantidade }))
+    .sort((a, b) => b.quantidade - a.quantidade)
+
+  // Confessionalidade real da pesquisa CIECC (eixo distinto de perfil_pedagogico) —
+  // só contabiliza escolas com resposta vinculada via leads_perfil_escola.
+  const porConfessionalidadeMap = new Map<string, number>()
+  for (const e of escolas) {
+    const confessionalidade = perfilCieccPorEscola.get(e.id)?.confessionalidade
+    if (confessionalidade) {
+      porConfessionalidadeMap.set(confessionalidade, (porConfessionalidadeMap.get(confessionalidade) ?? 0) + 1)
+    }
+  }
+  const distribuicaoPorConfessionalidade = [...porConfessionalidadeMap.entries()]
+    .map(([confessionalidade, quantidade]) => ({
+      confessionalidade, label: CONFESSIONALIDADE_LABEL[confessionalidade] ?? confessionalidade, quantidade,
+    }))
     .sort((a, b) => b.quantidade - a.quantidade)
 
   const porEstagioMap = new Map<string, number>()
@@ -406,5 +433,6 @@ export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
     distribuicaoPorEstado,
     distribuicaoPorPerfil,
     distribuicaoPorEstagio,
+    distribuicaoPorConfessionalidade,
   }
 }

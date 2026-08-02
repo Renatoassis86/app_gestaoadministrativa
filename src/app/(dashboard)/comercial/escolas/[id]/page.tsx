@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { LABEL } from '@/types/database'
+import { LABEL, labelPerfil } from '@/types/database'
 import { EscolaDetailClient } from '@/components/comercial/EscolaDetailClient'
 import { DeleteEscolaBtn } from '@/components/comercial/DeleteEscolaBtn'
 
@@ -208,7 +208,7 @@ export default async function EscolaDetalhe({ params }: Props) {
   const porte = pot < 100_000 ? 'Pequena' : pot < 300_000 ? 'Média' : 'Grande'
   const classif = e.classificacao_atual as string | null
   const classifStyle = classif ? classifStyles[classif] : null
-  const perfil = LABEL.perfil_pedagogico?.[e.perfil_pedagogico] ?? e.perfil_pedagogico
+  const perfil = labelPerfil(e.perfil_pedagogico)
   const origem = LABEL.origem_lead?.[e.origem_lead] ?? e.origem_lead
   const cidade = `${e.cidade ?? ''}${e.estado ? `, ${e.estado}` : ''}`
 

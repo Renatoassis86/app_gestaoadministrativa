@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
 import { createClient } from '@/lib/supabase/server'
 import { getFilaPriorizacao, PRESCRICAO_LABEL } from '@/lib/priorizacao'
-import { LABEL } from '@/types/database'
+import { labelPerfil } from '@/types/database'
 
 export async function GET(_request: NextRequest) {
   const supabase = await createClient()
@@ -15,7 +15,7 @@ export async function GET(_request: NextRequest) {
     'Escola': e.nome,
     'Cidade': e.cidade ?? '',
     'UF': e.estado ?? '',
-    'Perfil Pedagógico': LABEL.perfil_pedagogico[e.perfil_pedagogico] ?? e.perfil_pedagogico,
+    'Perfil Pedagógico': labelPerfil(e.perfil_pedagogico),
     'Potencial Financeiro (R$)': e.potencial_financeiro,
     'Estágio': e.estagioLabel,
     'Último Contato': e.ultimo_contato ?? '',
@@ -28,7 +28,7 @@ export async function GET(_request: NextRequest) {
     'Escola': e.nome,
     'Cidade': e.cidade ?? '',
     'UF': e.estado ?? '',
-    'Perfil Pedagógico': LABEL.perfil_pedagogico[e.perfil_pedagogico] ?? e.perfil_pedagogico,
+    'Perfil Pedagógico': labelPerfil(e.perfil_pedagogico),
     'Último Contato': e.ultimo_contato ?? '',
     'Responsável': e.responsavel_nome ?? '',
   }))
@@ -37,7 +37,7 @@ export async function GET(_request: NextRequest) {
     'Escola': e.nome,
     'Cidade': e.cidade ?? '',
     'UF': e.estado ?? '',
-    'Perfil Pedagógico': LABEL.perfil_pedagogico[e.perfil_pedagogico] ?? e.perfil_pedagogico,
+    'Perfil Pedagógico': labelPerfil(e.perfil_pedagogico),
     'Responsável': e.responsavel_nome ?? '',
   }))
 

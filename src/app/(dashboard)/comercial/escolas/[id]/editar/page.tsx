@@ -112,7 +112,8 @@ export default async function EscolaEditar({ params }: Props) {
                 </div>
                 <div>
                   <label style={label}>Perfil Pedagógico</label>
-                  <select name="perfil_pedagogico" style={input} defaultValue={e.perfil_pedagogico}>
+                  <select name="perfil_pedagogico" style={input} defaultValue={e.perfil_pedagogico ?? ''}>
+                    <option value="">Não informado</option>
                     {PERFIL_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>

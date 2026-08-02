@@ -119,7 +119,6 @@ for (const f of criarNovas) {
     cidade: f.cidade || null, estado: f.estado || null,
     rua: f.rua || null, numero: f.numero || null, complemento: f.complemento || null, bairro: f.bairro || null, cep: f.cep || null,
     email: f.email_responsavel || null,
-    perfil_pedagogico: 'convencional',
     qtd_infantil2: f.infantil2_qtd || 0, qtd_infantil3: f.infantil3_qtd || 0,
     qtd_infantil4: f.infantil4_qtd || 0, qtd_infantil5: f.infantil5_qtd || 0,
     qtd_fund1_ano1: f.fund1_ano1_qtd || 0, qtd_fund1_ano2: f.fund1_ano2_qtd || 0,
