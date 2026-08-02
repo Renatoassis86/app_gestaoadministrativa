@@ -22,7 +22,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
       <MarketingSidebar profile={profile} />
       <div
         className="dashboard-content"
-        style={{ marginLeft: 'var(--sidebar-w)', flex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}
+        style={{ marginLeft: 'var(--sidebar-w)', flex: 1, minWidth: 0, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}
       >
         {children}
       </div>

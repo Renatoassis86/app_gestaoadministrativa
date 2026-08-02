@@ -91,6 +91,9 @@ export interface EscolaPriorizada {
   perfil_pedagogico: PerfilPedagogico
   potencial_financeiro: number
   total_alunos: number
+  mensalidade_media: number | null
+  telefone: string | null
+  contato_nome: string | null
   ultimo_contato: string | null
   responsavel_nome: string | null
   estagioAtivo: StageNegociacao | null
@@ -348,6 +351,9 @@ export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
       perfil_pedagogico: e.perfil_pedagogico,
       potencial_financeiro: e.potencial_financeiro,
       total_alunos: e.total_alunos,
+      mensalidade_media: e.mensalidade_media ?? null,
+      telefone: e.telefone ?? null,
+      contato_nome: e.contato_nome ?? null,
       ultimo_contato: e.ultimo_contato,
       responsavel_nome: e.responsavel_nome,
       estagioAtivo: estagio,

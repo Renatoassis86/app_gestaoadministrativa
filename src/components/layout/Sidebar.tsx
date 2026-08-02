@@ -29,7 +29,7 @@ const NAV_CRM = [
 ]
 
 const NAV_PROCESS = [
-  { href: '/comercial/priorizacao',    label: 'Priorização',       icon: Crosshair   },
+  { href: '/comercial/priorizacao',    label: 'Gestão de Priorização', icon: Crosshair, badge: 'Novo' },
   { href: '/comercial/jornada-visual', label: 'Jornada Visual',    icon: GitBranch   },
   { href: '/comercial/jornada',        label: 'Jornada Relac.',    icon: Activity    },
   { href: '/comercial/contratos',      label: 'Jornada Contrat.',  icon: FileSignature },
@@ -308,6 +308,7 @@ export default function Sidebar({ profile }: SidebarProps) {
             label={item.label}
             icon={item.icon}
             active={isActive(item.href)}
+            badge={(item as any).badge}
           />
         ))}
 

@@ -8,7 +8,7 @@ const CHART_HUE = '#d97706'
 
 function BarraHorizontal({ titulo, dados, altura }: { titulo: string; dados: BarDatum[]; altura: number }) {
   return (
-    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: '1.25rem 1.5rem', boxShadow: '0 1px 4px rgba(15,23,42,.05)' }}>
+    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: '1.25rem 1.5rem', boxShadow: '0 1px 4px rgba(15,23,42,.05)', minWidth: 0 }}>
       <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#475569', marginBottom: '.85rem' }}>
         {titulo}
       </div>
@@ -48,7 +48,7 @@ export function PriorizacaoCharts({
   const dadosEstagio = porEstagio.map(d => ({ label: d.estagio, quantidade: d.quantidade }))
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1.25rem' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: '1.25rem' }}>
       <BarraHorizontal titulo="Escolas por UF (top 10)" dados={dadosEstado} altura={Math.max(dadosEstado.length * 28, 140)} />
       <BarraHorizontal titulo="Escolas por perfil pedagógico" dados={dadosPerfil} altura={Math.max(dadosPerfil.length * 28, 140)} />
       <BarraHorizontal titulo="Escolas por estágio no funil" dados={dadosEstagio} altura={Math.max(dadosEstagio.length * 28, 140)} />

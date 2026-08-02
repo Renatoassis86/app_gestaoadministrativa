@@ -4,11 +4,25 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { getFilaPriorizacao, PRESCRICAO_LABEL, PRESCRICAO_COR, type Prescricao } from '@/lib/priorizacao'
 import { LABEL } from '@/types/database'
 import { PriorizacaoCharts } from '@/components/comercial/PriorizacaoCharts'
-import { Download } from 'lucide-react'
+import { DeleteEscolaBtn } from '@/components/comercial/DeleteEscolaBtn'
+import { Download, Pencil } from 'lucide-react'
 
 const card: React.CSSProperties = {
   background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16,
   overflow: 'hidden', boxShadow: '0 2px 8px rgba(15,23,42,.05)',
+}
+
+const iconBtn: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  width: 28, height: 28, borderRadius: 7, flexShrink: 0, textDecoration: 'none',
+}
+
+function linkWhatsapp(telefone: string | null): string | null {
+  if (!telefone) return null
+  const digitos = telefone.replace(/\D/g, '')
+  if (digitos.length < 8) return null
+  const comDDI = digitos.startsWith('55') ? digitos : `55${digitos}`
+  return `https://wa.me/${comDDI}`
 }
 
 interface Props {
@@ -52,7 +66,7 @@ export default async function PriorizacaoPage({ searchParams }: Props) {
       <div style={{ padding: '1.75rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
         {/* ── KPI Cards ──────────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0,1fr))', gap: '1rem' }}>
           {kpis.map(k => (
             <div key={k.label} style={{ background: k.bg, border: `1.5px solid ${k.border}`, borderTop: `3px solid ${k.cor}`, borderRadius: 14, padding: '1.1rem 1.25rem', boxShadow: '0 1px 4px rgba(15,23,42,.04)' }}>
               <div style={{ fontSize: '.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: k.cor, fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.4rem' }}>{k.label}</div>
@@ -116,7 +130,7 @@ export default async function PriorizacaoPage({ searchParams }: Props) {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc' }}>
-                    {['Escola', 'Cidade/UF', 'Perfil', 'Potencial', 'Estágio', 'Último contato', 'Score', 'Prescrição', ''].map(col => (
+                    {['Escola', 'Cidade/UF', 'Perfil', 'Alunos', 'Potencial', 'Ticket Médio', 'Estágio', 'Último contato', 'Score', 'Prescrição', 'Ações'].map(col => (
                       <th key={col} style={{ padding: '.65rem 1rem', textAlign: 'left', fontSize: '.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#64748b', whiteSpace: 'nowrap', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
                         {col}
                       </th>
@@ -147,8 +161,14 @@ export default async function PriorizacaoPage({ searchParams }: Props) {
                         <td style={{ padding: '.75rem 1rem', fontSize: '.75rem', color: '#475569', whiteSpace: 'nowrap' }}>
                           {LABEL.perfil_pedagogico[e.perfil_pedagogico] ?? e.perfil_pedagogico}
                         </td>
+                        <td style={{ padding: '.75rem 1rem', fontSize: '.8rem', fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                          {e.total_alunos || '—'}
+                        </td>
                         <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', fontWeight: 700, color: '#16a34a', fontFamily: 'var(--font-cormorant,serif)', whiteSpace: 'nowrap' }}>
                           {formatCurrency(e.potencial_financeiro)}
+                        </td>
+                        <td style={{ padding: '.75rem 1rem', fontSize: '.78rem', color: e.mensalidade_media ? '#0f172a' : '#cbd5e1', whiteSpace: 'nowrap' }}>
+                          {e.mensalidade_media ? formatCurrency(e.mensalidade_media) : 'Não informado'}
                         </td>
                         <td style={{ padding: '.75rem 1rem', fontSize: '.72rem', color: '#475569', whiteSpace: 'nowrap' }}>
                           {e.estagioLabel}
@@ -170,9 +190,27 @@ export default async function PriorizacaoPage({ searchParams }: Props) {
                           </span>
                         </td>
                         <td style={{ padding: '.75rem 1rem' }}>
-                          <Link href={`/comercial/registros/novo?escola=${e.id}`} style={{ fontSize: '.7rem', fontWeight: 700, color: '#d97706', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                            Registrar →
-                          </Link>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '.35rem' }}>
+                            <Link href={`/comercial/registros/novo?escola=${e.id}`} title="Registrar interação"
+                              style={{ ...iconBtn, background: '#fffbeb', border: '1.5px solid #fde68a', color: '#d97706' }}>
+                              <Pencil size={12} />
+                            </Link>
+                            <Link href={`/comercial/escolas/${e.id}/editar`} title="Editar escola"
+                              style={{ ...iconBtn, background: '#eff6ff', border: '1.5px solid #bfdbfe', color: '#2563eb' }}>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </Link>
+                            {linkWhatsapp(e.telefone) ? (
+                              <a href={linkWhatsapp(e.telefone)!} target="_blank" rel="noopener noreferrer" title={`WhatsApp — ${e.contato_nome || e.nome}`}
+                                style={{ ...iconBtn, background: '#f0fdf4', border: '1.5px solid #86efac', color: '#16a34a' }}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm0 1.67c2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.82c0 4.54-3.7 8.24-8.25 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.18 8.18 0 0 1-1.26-4.38c0-4.55 3.7-8.24 8.25-8.24zm-4.5 4.31c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.03s.87 2.35 1 2.51c.12.16 1.7 2.6 4.13 3.64 2.02.87 2.43.7 2.87.65.44-.04 1.4-.57 1.6-1.12.2-.55.2-1.02.14-1.12-.06-.1-.22-.16-.46-.28-.24-.12-1.4-.7-1.62-.78-.22-.08-.37-.12-.53.12-.16.24-.6.78-.74.94-.14.16-.27.18-.5.06-.24-.12-1-.37-1.92-1.19a7.2 7.2 0 0 1-1.32-1.64c-.14-.24-.01-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.53-1.32-.74-1.8-.19-.47-.39-.4-.53-.41z"/></svg>
+                              </a>
+                            ) : (
+                              <span title="Sem telefone cadastrado" style={{ ...iconBtn, background: '#f8fafc', border: '1.5px solid #e2e8f0', color: '#cbd5e1' }}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2z"/></svg>
+                              </span>
+                            )}
+                            <DeleteEscolaBtn escolaId={e.id} escolaNome={e.nome} variant="icon" />
+                          </div>
                         </td>
                       </tr>
                     )
