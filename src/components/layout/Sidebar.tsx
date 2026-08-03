@@ -296,6 +296,7 @@ export default function Sidebar({ profile }: SidebarProps) {
             label={item.label}
             icon={item.icon}
             active={isActive(item.href)}
+            badge={(item as any).badge}
           />
         ))}
 
