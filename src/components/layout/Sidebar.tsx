@@ -23,13 +23,13 @@ interface SidebarProps { profile: Profile | null }
 const NAV_CRM = [
   { href: '/comercial',                           label: 'Dashboard',             icon: LayoutDashboard },
   { href: '/comercial/escolas',                   label: 'Escolas',               icon: School          },
+  { href: '/comercial/priorizacao',               label: 'Gestão de Priorização', icon: Crosshair, badge: 'Novo' },
   { href: '/comercial/registros',                 label: 'Registros',             icon: FileText        },
   { href: '/comercial/proposta?tipo=paideia',     label: 'Proposta Paideia',      icon: ClipboardList   },
   { href: '/comercial/proposta?tipo=bilinguismo', label: 'Proposta Bilinguismo', icon: Globe           },
 ]
 
 const NAV_PROCESS = [
-  { href: '/comercial/priorizacao',    label: 'Gestão de Priorização', icon: Crosshair, badge: 'Novo' },
   { href: '/comercial/jornada-visual', label: 'Jornada Visual',    icon: GitBranch   },
   { href: '/comercial/jornada',        label: 'Jornada Relac.',    icon: Activity    },
   { href: '/comercial/contratos',      label: 'Jornada Contrat.',  icon: FileSignature },

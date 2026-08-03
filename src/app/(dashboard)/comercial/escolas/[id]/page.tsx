@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { LABEL, labelPerfil } from '@/types/database'
+import { LABEL, labelPerfil, CONFESSIONALIDADE_LABEL } from '@/types/database'
 import { EscolaDetailClient } from '@/components/comercial/EscolaDetailClient'
 import { DeleteEscolaBtn } from '@/components/comercial/DeleteEscolaBtn'
 
@@ -189,6 +189,7 @@ export default async function EscolaDetalhe({ params }: Props) {
     { data: contrato },
     { data: propostaBilinguismo },
     { data: contratoBilinguismo },
+    { data: leadsEscola },
   ] = await Promise.all([
     supabase.from('escolas_resumo').select('*').eq('id', id).single(),
     supabase.from('registros').select('*, responsavel:profiles!responsavel_id(full_name)').eq('escola_id', id).eq('ativa', true).order('data_contato', { ascending: false }),
@@ -198,9 +199,42 @@ export default async function EscolaDetalhe({ params }: Props) {
     supabase.from('contratos').select('*').eq('escola_id', id).maybeSingle(),
     supabase.from('formularios_bilinguismo').select('*').eq('escola_id', id).order('data_envio', { ascending: false }).limit(1).maybeSingle(),
     supabase.from('contratos_bilinguismo').select('*').eq('escola_id', id).maybeSingle(),
+    supabase.from('leads_escola')
+      .select('*, leads_perfil_escola(*), leads_contato_escola(*)')
+      .eq('escola_crm_id', id)
+      .maybeSingle(),
   ])
 
   if (!escola) notFound()
+
+  const perfilCiecc = (leadsEscola as any)?.leads_perfil_escola
+    ? (Array.isArray((leadsEscola as any).leads_perfil_escola) ? (leadsEscola as any).leads_perfil_escola[0] : (leadsEscola as any).leads_perfil_escola)
+    : null
+  const contatosCiecc = ((leadsEscola as any)?.leads_contato_escola ?? [])
+    .filter((c: any) => c.nome)
+    .sort((a: any, b: any) => (a.ordem ?? 99) - (b.ordem ?? 99))
+
+  // Só entram estatísticas com dado real preenchido na pesquisa — nada inferido/estimado.
+  const statsCiecc: { label: string; value: string }[] = perfilCiecc ? [
+    perfilCiecc.confessionalidade && { label: 'Confessionalidade Cristã', value: CONFESSIONALIDADE_LABEL[perfilCiecc.confessionalidade] ?? perfilCiecc.confessionalidade },
+    perfilCiecc.csi && { label: 'Satisfação com Sistema Atual (CSI)', value: perfilCiecc.csi },
+    (perfilCiecc.nps !== null && perfilCiecc.nps !== undefined) && { label: 'NPS Sistema Atual', value: `${perfilCiecc.nps}/10` },
+    perfilCiecc.investimento_atual && { label: 'Investimento Atual (R$/aluno/ano)', value: perfilCiecc.investimento_atual },
+    perfilCiecc.disposicao_investimento && { label: 'Disposição de Investimento', value: perfilCiecc.disposicao_investimento },
+    perfilCiecc.interesse_solucao && { label: 'Interesse na Solução CVE', value: perfilCiecc.interesse_solucao },
+    perfilCiecc.decisores && { label: 'Decisores na Escola', value: perfilCiecc.decisores },
+    perfilCiecc.prazo_decisao && { label: 'Prazo de Decisão', value: perfilCiecc.prazo_decisao },
+    perfilCiecc.fatores_escolha && { label: 'Fatores de Decisão', value: perfilCiecc.fatores_escolha },
+    (perfilCiecc.importancia_bilingue !== null && perfilCiecc.importancia_bilingue !== undefined) && { label: 'Importância do Ensino Bilíngue', value: `${perfilCiecc.importancia_bilingue}/10` },
+    perfilCiecc.cosmovisao && { label: 'Alinhamento de Cosmovisão Cristã', value: perfilCiecc.cosmovisao },
+    perfilCiecc.formacao_docentes && { label: 'Formação Continuada de Docentes', value: perfilCiecc.formacao_docentes },
+    perfilCiecc.desafios_ecc && { label: 'Desafios p/ Educação Cristã Clássica', value: perfilCiecc.desafios_ecc },
+  ].filter(Boolean) as { label: string; value: string }[] : []
+
+  const participacaoCiecc: string[] = [
+    (leadsEscola as any)?.status_ciecc1 === 'participou' && 'CIECC 2025',
+    (leadsEscola as any)?.status_ciecc2 === 'participou' && 'CIECC 2026',
+  ].filter(Boolean) as string[]
 
   const e = escola as any
   const pot = e.potencial_financeiro ?? 0
@@ -686,6 +720,58 @@ export default async function EscolaDetalhe({ params }: Props) {
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Card: Pesquisa de Mercado (CIECC) — só dados reais, nada inferido */}
+            <div style={cardStyle}>
+              <div style={cardHeaderStyle}>
+                <span style={cardTitleStyle}>Pesquisa de Mercado (CIECC)</span>
+                {participacaoCiecc.length > 0 && (
+                  <span style={{ display: 'flex', gap: '.35rem' }}>
+                    {participacaoCiecc.map(p => (
+                      <span key={p} style={{ fontSize: '.6rem', fontWeight: 800, background: '#f5f3ff', color: '#7c3aed', border: '1px solid #ddd6fe', padding: '.15rem .5rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                        {p}
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </div>
+              <div style={cardBodyStyle}>
+                {!leadsEscola ? (
+                  <div style={{ fontSize: '.83rem', color: '#94a3b8', textAlign: 'center', padding: '1rem 0' }}>
+                    Esta escola ainda não está vinculada a nenhum dado da pesquisa de mercado (CIECC) ou do banco de leads.
+                  </div>
+                ) : statsCiecc.length === 0 ? (
+                  <div style={{ fontSize: '.83rem', color: '#94a3b8', textAlign: 'center', padding: '1rem 0' }}>
+                    Escola participou do congresso CIECC, mas sem respostas detalhadas de perfil comercial ainda.
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem 1.5rem' }}>
+                    {statsCiecc.map(s => (
+                      <div key={s.label}>
+                        <div style={labelStyle}>{s.label}</div>
+                        <div style={{ fontSize: '.83rem', color: '#334155', lineHeight: 1.5 }}>{s.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {contatosCiecc.length > 0 && (
+                  <div style={{ marginTop: statsCiecc.length > 0 ? '1.25rem' : 0, borderTop: statsCiecc.length > 0 ? '1px solid var(--border, #e2e8f0)' : 'none', paddingTop: statsCiecc.length > 0 ? '1rem' : 0 }}>
+                    <div style={labelStyle}>Contatos coletados na pesquisa</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
+                      {contatosCiecc.map((c: any) => (
+                        <div key={c.id} style={{ fontSize: '.8rem', color: '#334155', display: 'flex', flexWrap: 'wrap', gap: '.3rem .6rem' }}>
+                          <span style={{ fontWeight: 700 }}>{c.nome}</span>
+                          {c.cargo && <span style={{ color: '#64748b' }}>· {c.cargo}</span>}
+                          {c.telefone && <span style={{ color: '#64748b' }}>· {c.telefone}</span>}
+                          {c.email && <span style={{ color: '#64748b' }}>· {c.email}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

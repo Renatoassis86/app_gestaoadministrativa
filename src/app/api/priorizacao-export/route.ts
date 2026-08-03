@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
 import { createClient } from '@/lib/supabase/server'
-import { getFilaPriorizacao, PRESCRICAO_LABEL } from '@/lib/priorizacao'
+import { getFilaPriorizacao } from '@/lib/priorizacao'
 import { labelPerfil } from '@/types/database'
 
 export async function GET(_request: NextRequest) {
@@ -15,12 +15,11 @@ export async function GET(_request: NextRequest) {
     'Escola': e.nome,
     'Cidade': e.cidade ?? '',
     'UF': e.estado ?? '',
+    'Alunos (Porte)': e.total_alunos,
+    'PIB per capita (R$)': e.pibPerCapita ?? '',
     'Perfil Pedagógico': labelPerfil(e.perfil_pedagogico),
-    'Potencial Financeiro (R$)': e.potencial_financeiro,
-    'Estágio': e.estagioLabel,
+    'Situação Comercial': e.estagioLabel,
     'Último Contato': e.ultimo_contato ?? '',
-    'Score (0-100)': e.score,
-    'Prescrição': PRESCRICAO_LABEL[e.prescricao],
     'Responsável': e.responsavel_nome ?? '',
   }))
 
@@ -76,12 +75,8 @@ export async function GET(_request: NextRequest) {
     ['Aguardando completar cadastro:', fila.resumo.aguardandoCadastro.toString()],
     ['Parceiras ativas:', fila.resumo.clientesAtivos.toString()],
     [],
-    ['Metodologia do score (0-100):'],
-    ['Potencial financeiro', '35%'],
-    ['Afinidade de perfil pedagógico', '20%'],
-    ['PIB per capita da UF (IBGE, 2023)', '15%'],
-    ['Estágio no funil / prontidão', '20%'],
-    ['Recência do último contato', '10%'],
+    ['Fila de abordagem ordenada por porte (quantidade de alunos), do maior para o menor.'],
+    ['PIB per capita: do município (IBGE, 2021) quando disponível, senão da UF.'],
   ]
   const wsResumo = XLSX.utils.aoa_to_sheet(resumo)
   XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo')
