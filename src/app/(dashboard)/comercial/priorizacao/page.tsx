@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import PageHeader from '@/components/layout/PageHeader'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import { getFilaPriorizacao } from '@/lib/priorizacao'
 import { PriorizacaoCharts } from '@/components/comercial/PriorizacaoCharts'
 import { DeleteEscolaBtn } from '@/components/comercial/DeleteEscolaBtn'
@@ -16,10 +16,10 @@ const iconBtn: React.CSSProperties = {
   width: 26, height: 26, borderRadius: 7, flexShrink: 0, textDecoration: 'none',
 }
 
-function formatCurrencyCompact(value: number): string {
-  if (value >= 1_000_000) return `R$ ${(value / 1_000_000).toFixed(1).replace('.', ',')}mi`
-  if (value >= 1_000) return `R$ ${(value / 1_000).toFixed(1).replace('.', ',')}mil`
-  return formatCurrency(value)
+// Valor cheio, sem abreviação — PIB per capita municipal nunca chega à casa dos
+// milhões, então "R$ 68.571" já é inequívoco (não precisa indicar mil/mi/bi).
+function formatCurrencyInteiro(value: number): string {
+  return `R$ ${Math.round(value).toLocaleString('pt-BR')}`
 }
 
 function formatDateShort(date: string | null): string {
@@ -117,17 +117,18 @@ export default async function PriorizacaoPage({ searchParams }: Props) {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <colgroup>
-                  <col style={{ width: 34 }} />
-                  <col />
-                  <col style={{ width: 70 }} />
+                  <col style={{ width: 30 }} />
+                  <col style={{ width: 190 }} />
+                  <col style={{ width: 60 }} />
+                  <col style={{ width: 130 }} />
+                  <col style={{ width: 130 }} />
+                  <col style={{ width: 200 }} />
                   <col style={{ width: 150 }} />
-                  <col style={{ width: 110 }} />
-                  <col style={{ width: 150 }} />
-                  <col style={{ width: 108 }} />
+                  <col style={{ width: 100 }} />
                 </colgroup>
                 <thead>
                   <tr style={{ background: '#f8fafc' }}>
-                    {['#', 'Escola', 'Alunos', 'Cidade/UF', 'PIB per capita', 'Situação Comercial', 'Ações'].map(col => (
+                    {['#', 'Escola', 'Alunos', 'Cidade/UF', 'PIB Município', 'Perfil', 'Situação Comercial', 'Ações'].map(col => (
                       <th key={col} style={{ padding: '.55rem .6rem', textAlign: 'left', fontSize: '.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: '#64748b', whiteSpace: 'nowrap', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
                         {col}
                       </th>
@@ -140,9 +141,9 @@ export default async function PriorizacaoPage({ searchParams }: Props) {
                       <td style={{ padding: '.55rem .6rem', fontSize: '.65rem', color: '#cbd5e1', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
                         {idx + 1}
                       </td>
-                      <td style={{ padding: '.55rem .6rem', minWidth: 0, overflow: 'hidden' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '.35rem', minWidth: 0 }}>
-                          <Link href={`/comercial/escolas/${e.id}`} title={e.nome} style={{ fontWeight: 700, fontSize: '.78rem', color: '#0f172a', textDecoration: 'none', fontFamily: 'var(--font-montserrat,sans-serif)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+                      <td style={{ padding: '.55rem .6rem', minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', gap: '.3rem .35rem', minWidth: 0 }}>
+                          <Link href={`/comercial/escolas/${e.id}`} title={e.nome} style={{ fontWeight: 700, fontSize: '.78rem', color: '#0f172a', textDecoration: 'none', fontFamily: 'var(--font-montserrat,sans-serif)', lineHeight: 1.35, wordBreak: 'break-word' }}>
                             {e.nome}
                           </Link>
                           {e.temDadosCiecc && (
@@ -151,19 +152,34 @@ export default async function PriorizacaoPage({ searchParams }: Props) {
                             </span>
                           )}
                         </div>
-                        {e.responsavel_nome && <div title={e.responsavel_nome} style={{ fontSize: '.63rem', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.responsavel_nome}</div>}
+                        {e.responsavel_nome && <div title={e.responsavel_nome} style={{ fontSize: '.63rem', color: '#94a3b8', marginTop: '.15rem' }}>{e.responsavel_nome}</div>}
                       </td>
                       <td style={{ padding: '.55rem .6rem', fontSize: '.8rem', fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-montserrat,sans-serif)', textAlign: 'center' }}>
                         {e.total_alunos || '—'}
                       </td>
-                      <td style={{ padding: '.55rem .6rem', fontSize: '.78rem', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '.55rem .6rem', fontSize: '.78rem', color: '#475569', lineHeight: 1.35, wordBreak: 'break-word' }}>
                         {e.cidade ? `${e.cidade}/${e.estado}` : (e.estado ?? '—')}
                       </td>
-                      <td style={{ padding: '.55rem .6rem', fontSize: '.78rem', color: e.pibPerCapita ? '#0f172a' : '#cbd5e1', whiteSpace: 'nowrap' }}>
-                        {e.pibPerCapita ? formatCurrencyCompact(e.pibPerCapita) : 'sem dado'}
+                      <td style={{ padding: '.55rem .6rem' }}>
+                        {e.pibPerCapita ? (
+                          <>
+                            <div style={{ fontSize: '.78rem', color: '#0f172a', fontWeight: 600 }}>{formatCurrencyInteiro(e.pibPerCapita)}</div>
+                            <div style={{ fontSize: '.62rem', color: '#94a3b8' }}>por hab./ano</div>
+                            {e.pctDoEstado !== null && (
+                              <div style={{ fontSize: '.62rem', color: '#7c3aed', marginTop: '.1rem' }}>
+                                {e.pctDoEstado.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}% do PIB do estado
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <span style={{ fontSize: '.72rem', color: '#cbd5e1' }}>sem dado</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '.55rem .6rem', fontSize: '.72rem', color: '#475569', lineHeight: 1.45, wordBreak: 'break-word' }}>
+                        {e.perfilResumo ?? <span style={{ color: '#cbd5e1' }}>sem dado</span>}
                       </td>
                       <td style={{ padding: '.55rem .6rem' }}>
-                        <span style={{ fontSize: '.68rem', fontWeight: 600, background: e.estagioAtivo ? '#fffbeb' : '#f1f5f9', color: e.estagioAtivo ? '#b45309' : '#334155', border: e.estagioAtivo ? '1px solid #fde68a' : 'none', padding: '.15rem .5rem', borderRadius: 99, whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <span title={e.estagioLabel} style={{ fontSize: '.68rem', fontWeight: 600, background: e.estagioAtivo ? '#fffbeb' : '#f1f5f9', color: e.estagioAtivo ? '#b45309' : '#334155', border: e.estagioAtivo ? '1px solid #fde68a' : 'none', padding: '.15rem .5rem', borderRadius: 99, display: 'inline-block', maxWidth: '100%', lineHeight: 1.3, wordBreak: 'break-word' }}>
                           {e.estagioLabel}
                         </span>
                         {e.ultimo_contato && (

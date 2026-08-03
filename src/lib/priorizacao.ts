@@ -14,14 +14,20 @@ import { createClient } from '@/lib/supabase/server'
 import { PIB_PER_CAPITA_UF } from '@/lib/pib-per-capita-uf'
 import pibMunicipioData from '@/lib/data/pib-per-capita-municipio.json'
 import type { EscolaResumo, PerfilPedagogico, StageNegociacao } from '@/types/database'
-import { STAGE_OPTIONS, PERFIL_OPTIONS, PERFIL_NAO_INFORMADO, CONFESSIONALIDADE_LABEL } from '@/types/database'
+import { STAGE_OPTIONS, PERFIL_OPTIONS, PERFIL_NAO_INFORMADO, CONFESSIONALIDADE_LABEL, labelPerfil } from '@/types/database'
 
 function normCidade(s: string | null | undefined): string {
   return (s ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim()
 }
-const PIB_MUNICIPIO_MAP = new Map<string, number>(
-  (pibMunicipioData as { municipio: string; uf: string; pibPerCapita: number }[])
-    .map(m => [`${normCidade(m.municipio)}|${m.uf}`, m.pibPerCapita])
+
+interface PibMunicipio { pibPerCapita: number; pctDoEstado: number | null }
+
+// Fonte: IBGE Contas Regionais, ano 2021 (Produto Interno Bruto per capita, a preços
+// correntes — já em R$ absolutos, não em milhares). pctDoEstado = % do PIB total do
+// município sobre a soma do PIB de todos os municípios da mesma UF, mesmo ano.
+const PIB_MUNICIPIO_MAP = new Map<string, PibMunicipio>(
+  (pibMunicipioData as { municipio: string; uf: string; pibPerCapita: number; pctDoEstado: number | null }[])
+    .map(m => [`${normCidade(m.municipio)}|${m.uf}`, { pibPerCapita: m.pibPerCapita, pctDoEstado: m.pctDoEstado }])
 )
 
 const STAGE_LABEL: Record<string, string> = Object.fromEntries(STAGE_OPTIONS.map(o => [o.value, o.label]))
@@ -42,6 +48,10 @@ export interface EscolaPriorizada {
   perfil_pedagogico: PerfilPedagogico | null
   total_alunos: number
   pibPerCapita: number | null
+  /** % do PIB do município sobre o total da UF — null quando o valor de PIB veio só da UF (sem dado municipal). */
+  pctDoEstado: number | null
+  /** Confessionalidade, satisfação com sistema atual e interesse na solução (pesquisa CIECC), já formatado "A | B | C". */
+  perfilResumo: string | null
   telefone: string | null
   contato_nome: string | null
   ultimo_contato: string | null
@@ -80,6 +90,8 @@ export interface FilaPriorizacao {
 
 interface PerfilCiecc {
   confessionalidade: string | null
+  csi: string | null
+  interesseSolucao: string | null
 }
 
 export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
@@ -89,7 +101,7 @@ export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
     supabase.from('escolas_resumo').select('*').eq('ativa', true),
     supabase.from('negociacoes').select('escola_id, stage').eq('ativa', true),
     supabase.from('contratos').select('escola_id, contrato_enviado, contrato_assinado'),
-    supabase.from('leads_escola').select('escola_crm_id, leads_perfil_escola(confessionalidade)').not('escola_crm_id', 'is', null),
+    supabase.from('leads_escola').select('escola_crm_id, leads_perfil_escola(confessionalidade, csi, interesse_solucao)').not('escola_crm_id', 'is', null),
   ])
 
   if (escolasRes.error) {
@@ -109,7 +121,11 @@ export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
   for (const le of (ciecPerfilRes.data as any[]) ?? []) {
     const perfil = Array.isArray(le.leads_perfil_escola) ? le.leads_perfil_escola[0] : le.leads_perfil_escola
     if (le.escola_crm_id && perfil) {
-      perfilCieccPorEscola.set(le.escola_crm_id, { confessionalidade: perfil.confessionalidade ?? null })
+      perfilCieccPorEscola.set(le.escola_crm_id, {
+        confessionalidade: perfil.confessionalidade ?? null,
+        csi: perfil.csi ?? null,
+        interesseSolucao: perfil.interesse_solucao ?? null,
+      })
     }
   }
 
@@ -128,12 +144,23 @@ export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
     contratoPorEscola.set(c.escola_id, { enviado: !!c.contrato_enviado, assinado: !!c.contrato_assinado })
   }
 
-  const pibValor = (cidade: string | null, uf: string | null): number | null => {
+  const pibInfo = (cidade: string | null, uf: string | null): { valor: number; pctDoEstado: number | null } | null => {
     if (cidade && uf) {
       const doMunicipio = PIB_MUNICIPIO_MAP.get(`${normCidade(cidade)}|${uf}`)
-      if (doMunicipio) return doMunicipio
+      if (doMunicipio) return { valor: doMunicipio.pibPerCapita, pctDoEstado: doMunicipio.pctDoEstado }
     }
-    return uf ? PIB_PER_CAPITA_UF[uf] ?? null : null
+    const daUf = uf ? PIB_PER_CAPITA_UF[uf] ?? null : null
+    return daUf !== null ? { valor: daUf, pctDoEstado: null } : null
+  }
+
+  function perfilResumoTexto(perfilPedagogico: PerfilPedagogico | null, ciecc: PerfilCiecc | undefined): string | null {
+    const partes = [
+      perfilPedagogico ? labelPerfil(perfilPedagogico) : null,
+      ciecc?.confessionalidade ? (CONFESSIONALIDADE_LABEL[ciecc.confessionalidade] ?? ciecc.confessionalidade) : null,
+      ciecc?.csi ? `Satisfação atual: ${ciecc.csi}` : null,
+      ciecc?.interesseSolucao ? `Interesse: ${ciecc.interesseSolucao}` : null,
+    ].filter((p): p is string => !!p)
+    return partes.length > 0 ? partes.join(' | ') : null
   }
 
   // ── Separação: clientes ativos / sem porte cadastrado / elegíveis ──────────
@@ -174,12 +201,15 @@ export async function getFilaPriorizacao(): Promise<FilaPriorizacao> {
   const filaAbordagem: EscolaPriorizada[] = elegiveis.map(e => {
     const estagio = estagioPorEscola.get(e.id) ?? null
     const perfilCiecc = perfilCieccPorEscola.get(e.id)
+    const pib = pibInfo(e.cidade, e.estado)
 
     return {
       id: e.id, nome: e.nome, cidade: e.cidade, estado: e.estado,
       perfil_pedagogico: e.perfil_pedagogico,
       total_alunos: e.total_alunos,
-      pibPerCapita: pibValor(e.cidade, e.estado),
+      pibPerCapita: pib?.valor ?? null,
+      pctDoEstado: pib?.pctDoEstado ?? null,
+      perfilResumo: perfilResumoTexto(e.perfil_pedagogico, perfilCiecc),
       telefone: e.telefone ?? null,
       contato_nome: e.contato_nome ?? null,
       ultimo_contato: e.ultimo_contato,
