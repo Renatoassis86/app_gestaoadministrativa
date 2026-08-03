@@ -66,7 +66,7 @@ create table escolas (
   id                  uuid primary key default uuid_generate_v4(),
   nome                text not null,
   cnpj                text,
-  perfil_pedagogico   perfil_pedagogico not null default 'convencional',
+  perfil_pedagogico   perfil_pedagogico, -- nullable, sem default (ver supabase/fix_perfil_pedagogico_nullable.sql) — "Não informado" quando ausente
   escola_paideia      boolean not null default false,
 
   -- Endereço
