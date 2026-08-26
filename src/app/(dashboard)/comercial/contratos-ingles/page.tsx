@@ -187,7 +187,14 @@ export default async function ContratosInglesPage({ searchParams }: Props) {
                     <label style={lbl}>Pacote Contratado *</label>
                     <select
                       name="pacote_contratado"
-                      defaultValue={c?.pacote_contratado ?? propostaBilinguismo?.pacote_interesse ?? 'silver'}
+                      defaultValue={c?.pacote_contratado ?? propostaBilinguismo?.pacote_interesse ?? 'bronze'}
+                      onChange={(e) => {
+                        const prices: Record<string, number> = { bronze: 29900, silver: 57900, gold: 84900 }
+                        const valInput = e.target.form?.querySelector('input[name="valor_anual"]') as HTMLInputElement | null
+                        if (valInput && prices[e.target.value]) {
+                          valInput.value = String(prices[e.target.value])
+                        }
+                      }}
                       style={{ ...inp, fontWeight: 700 }}
                     >
                       <option value="bronze">Bronze (R$ 29.900/ano)</option>
@@ -202,7 +209,7 @@ export default async function ContratosInglesPage({ searchParams }: Props) {
                       name="valor_anual"
                       type="number"
                       step="0.01"
-                      defaultValue={c?.valor_anual ?? PACOTE_PRECOS[propostaBilinguismo?.pacote_interesse ?? 'silver'] ?? 57900}
+                      defaultValue={c?.valor_anual ?? (propostaBilinguismo?.pacote_interesse ? PACOTE_PRECOS[propostaBilinguismo.pacote_interesse] : undefined) ?? 29900}
                       style={{ ...inp, fontWeight: 700, fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem' }}
                     />
                   </div>
