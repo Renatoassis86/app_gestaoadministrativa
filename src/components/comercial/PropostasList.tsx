@@ -67,6 +67,7 @@ export interface FormularioBilinguismo {
   data_envio: string
   email_responsavel: string
   nome_escola: string
+  nome_fantasia?: string | null
   cnpj: string
   rua: string | null
   numero: string | null
@@ -83,6 +84,8 @@ export interface FormularioBilinguismo {
   legal_celular?: string | null
   legal_cargo?: string | null
   pacote_interesse: string
+  vencimento_primeira_parcela?: string | null
+  numero_parcelas?: number | null
   escola_id: string | null
 }
 
@@ -95,7 +98,7 @@ function fmtData(d: string) {
   return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-function fmtDateOnly(d: string | null) {
+function fmtDateOnly(d?: string | null) {
   if (!d) return '—'
   return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
@@ -433,16 +436,21 @@ export function PropostasList({
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '.5rem', paddingRight: '2rem' }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '.3rem', fontSize: '.62rem', fontWeight: 700, color: pCor, background: pBg, border: `1px solid ${pBorder}`, padding: '.15rem .5rem', borderRadius: 99, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
-                      <Globe size={10} /> {pNome} {pPreco ? `(${fmtMoeda(pPreco)}/ano)` : ''}
+                      <Globe size={10} /> {pNome}
                     </span>
                     <span style={{ fontSize: '.62rem', fontWeight: 600, color: '#64748b', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
                       {fmtData(f.data_envio)}
                     </span>
                   </div>
 
-                  <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.2rem', fontWeight: 700, color: '#0f172a', lineHeight: 1.2, marginBottom: '.35rem' }}>
+                  <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.2rem', fontWeight: 700, color: '#0f172a', lineHeight: 1.2, marginBottom: '.15rem' }}>
                     {f.nome_escola}
                   </div>
+                  {f.nome_fantasia && (
+                    <div style={{ fontSize: '.75rem', fontWeight: 600, color: '#0284c7', marginBottom: '.35rem', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
+                      {f.nome_fantasia}
+                    </div>
+                  )}
 
                   {(f.cidade || f.estado) && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '.3rem', fontSize: '.72rem', color: '#475569', marginBottom: '.5rem' }}>
@@ -738,12 +746,22 @@ function DetalhesBilinguismoModal({ formulario: f, onClose }: {
           {/* Dados Gerais */}
           <Section label="🏫 Dados da Escola">
             <Grid items={[
+              ['Razão Social', f.nome_escola],
+              ['Nome Fantasia', f.nome_fantasia],
               ['CNPJ', f.cnpj],
               ['E-mail do responsável', f.email_responsavel],
               ['Logradouro', [f.rua, f.numero, f.complemento].filter(Boolean).join(', ')],
               ['Bairro', f.bairro],
               ['Cidade/UF', [f.cidade, f.estado].filter(Boolean).join(' / ')],
               ['CEP', f.cep],
+            ]} />
+          </Section>
+
+          {/* Condições de Pagamento & Parcelamento */}
+          <Section label="📅 Condições de Pagamento e Contrato">
+            <Grid items={[
+              ['Data Vencimento 1ª Parcela', fmtDateOnly(f.vencimento_primeira_parcela)],
+              ['Número de Parcelas', f.numero_parcelas ? `${f.numero_parcelas} parcelas` : '12 parcelas'],
             ]} />
           </Section>
 

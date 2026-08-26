@@ -17,24 +17,27 @@ export interface ActionResult {
 export async function enviarFormularioBilinguismo(formData: FormData) {
   const supabase = await createClient()
 
-  const email_responsavel     = (formData.get('email_responsavel') as string || '').trim()
-  const nome_escola           = (formData.get('nome_escola') as string || '').trim()
-  const cnpj                  = (formData.get('cnpj') as string || '').trim()
-  const rua                   = (formData.get('rua') as string || '').trim() || null
-  const numero                = (formData.get('numero') as string || '').trim() || null
-  const complemento           = (formData.get('complemento') as string || '').trim() || null
-  const bairro                = (formData.get('bairro') as string || '').trim() || null
-  const cidade                = (formData.get('cidade') as string || '').trim() || null
-  const estado                = (formData.get('estado') as string || '').trim().toUpperCase() || null
-  const cep                   = (formData.get('cep') as string || '').trim() || null
-  const nome_representante    = (formData.get('nome_representante_legal') as string || '').trim() || null
-  const legal_cpf             = (formData.get('legal_cpf') as string || '').trim() || null
-  const legal_rg              = (formData.get('legal_rg') as string || '').trim() || null
-  const legal_orgao           = (formData.get('legal_orgao') as string || '').trim() || null
-  const legal_email           = (formData.get('legal_email') as string || '').trim() || null
-  const legal_celular         = (formData.get('legal_celular') as string || '').trim() || null
-  const legal_cargo           = (formData.get('legal_cargo') as string || '').trim() || null
-  const pacote_interesse      = (formData.get('pacote_interesse') as string || 'silver').trim().toLowerCase()
+  const email_responsavel          = (formData.get('email_responsavel') as string || '').trim()
+  const nome_escola                = (formData.get('nome_escola') as string || '').trim()
+  const nome_fantasia              = (formData.get('nome_fantasia') as string || '').trim() || null
+  const cnpj                       = (formData.get('cnpj') as string || '').trim()
+  const rua                        = (formData.get('rua') as string || '').trim() || null
+  const numero                     = (formData.get('numero') as string || '').trim() || null
+  const complemento                = (formData.get('complemento') as string || '').trim() || null
+  const bairro                     = (formData.get('bairro') as string || '').trim() || null
+  const cidade                     = (formData.get('cidade') as string || '').trim() || null
+  const estado                     = (formData.get('estado') as string || '').trim().toUpperCase() || null
+  const cep                        = (formData.get('cep') as string || '').trim() || null
+  const nome_representante         = (formData.get('nome_representante_legal') as string || '').trim() || null
+  const legal_cpf                  = (formData.get('legal_cpf') as string || '').trim() || null
+  const legal_rg                   = (formData.get('legal_rg') as string || '').trim() || null
+  const legal_orgao                = (formData.get('legal_orgao') as string || '').trim() || null
+  const legal_email                = (formData.get('legal_email') as string || '').trim() || null
+  const legal_celular              = (formData.get('legal_celular') as string || '').trim() || null
+  const legal_cargo                = (formData.get('legal_cargo') as string || '').trim() || null
+  const pacote_interesse           = (formData.get('pacote_interesse') as string || 'silver').trim().toLowerCase()
+  const vencimento_primeira_parcela = (formData.get('vencimento_primeira_parcela') as string || '').trim() || null
+  const numero_parcelas            = parseInt(formData.get('numero_parcelas') as string) || 12
 
   if (!email_responsavel || !nome_escola || !cnpj || !nome_representante) {
     throw new Error('Por favor, preencha todos os campos obrigatórios (*).')
@@ -93,6 +96,7 @@ export async function enviarFormularioBilinguismo(formData: FormData) {
   const payload = {
     email_responsavel,
     nome_escola,
+    nome_fantasia,
     cnpj,
     rua,
     numero,
@@ -109,17 +113,20 @@ export async function enviarFormularioBilinguismo(formData: FormData) {
     legal_celular,
     legal_cargo,
     pacote_interesse,
+    vencimento_primeira_parcela,
+    numero_parcelas,
     escola_id: escolaId,
   }
 
   let { error } = await supabase.from('formularios_bilinguismo').insert(payload)
 
-  // Fallback de resiliência: se as colunas adicionais de representante legal ainda não tiverem sido executadas no SQL Editor do Supabase
-  if (error && (error.message.includes('legal_') || error.message.includes('column'))) {
+  // Fallback de resiliência: se as colunas adicionais ainda não tiverem sido executadas no SQL Editor do Supabase
+  if (error && (error.message.includes('legal_') || error.message.includes('column') || error.message.includes('vencimento_'))) {
     console.warn('⚠️ Tentando salvar payload simplificado devido a colunas pendentes no banco Supabase:', error.message)
     const payloadBasico = {
       email_responsavel,
       nome_escola,
+      nome_fantasia,
       cnpj,
       rua,
       numero,
@@ -130,6 +137,8 @@ export async function enviarFormularioBilinguismo(formData: FormData) {
       cep,
       nome_representante_legal: nome_representante,
       pacote_interesse,
+      vencimento_primeira_parcela,
+      numero_parcelas,
       escola_id: escolaId,
     }
     const res2 = await supabase.from('formularios_bilinguismo').insert(payloadBasico)
@@ -163,6 +172,9 @@ export async function upsertContratoBilinguismo(formData: FormData) {
   const pacote_contratado = (formData.get('pacote_contratado') as string || 'bronze').toLowerCase()
   const rawValor = parseFloat(formData.get('valor_anual') as string)
   const valor_anual = !isNaN(rawValor) && rawValor > 0 ? rawValor : (PACOTE_PRECOS[pacote_contratado] ?? 29900)
+  const nome_fantasia = (formData.get('nome_fantasia') as string || '').trim() || null
+  const vencimento_primeira_parcela = (formData.get('vencimento_primeira_parcela') as string || '').trim() || null
+  const numero_parcelas = parseInt(formData.get('numero_parcelas') as string) || 12
 
   const payload = {
     escola_id,
@@ -180,6 +192,9 @@ export async function upsertContratoBilinguismo(formData: FormData) {
     tempo_contrato:      parseInt(formData.get('tempo_contrato') as string) || 12,
     pacote_contratado,
     valor_anual,
+    nome_fantasia,
+    vencimento_primeira_parcela,
+    numero_parcelas,
     updated_at: new Date().toISOString(),
   }
 

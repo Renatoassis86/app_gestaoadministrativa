@@ -141,8 +141,6 @@ export default function FormularioBilinguismoPublico() {
         </div>
 
         <form action={enviarFormularioBilinguismo}>
-          <input type="hidden" name="pacote_interesse" value="silver" />
-
           {/* DADOS DO FORMULÁRIO */}
           <div style={{ background: '#fff', borderRadius: 18, padding: '2rem', boxShadow: '0 4px 16px rgba(15,23,42,.06)', marginBottom: '1.5rem', border: '1px solid #e2e8f0' }}>
 
@@ -158,8 +156,12 @@ export default function FormularioBilinguismoPublico() {
 
             <Section title="Dados da Instituição de Ensino">
               <Row>
-                <Field label="Nome da Escola / Razão Social" name="nome_escola" required placeholder="Nome oficial da escola" />
+                <Field label="Razão Social da Escola" name="nome_escola" required placeholder="Razão social oficial" />
+                <Field label="Nome Fantasia (opcional)" name="nome_fantasia" placeholder="Nome como a escola é conhecida" />
+              </Row>
+              <Row>
                 <Field label="CNPJ" name="cnpj" required placeholder="00.000.000/0000-00" value={cnpj} onChange={handleCnpjChange} />
+                <div style={{ flex: 1 }}></div>
               </Row>
               <Row>
                 <div style={{ gridColumn: 'span 2' }}>
@@ -177,6 +179,37 @@ export default function FormularioBilinguismoPublico() {
                   <Field label="Cidade" name="cidade" placeholder="Nome da cidade" />
                 </div>
                 <Field label="Estado (UF)" name="estado" options={ESTADOS_BR} />
+              </Row>
+            </Section>
+
+            <Section title="Plano & Condições do Contrato">
+              <Row>
+                <div>
+                  <label style={{ display: 'block', fontSize: '.82rem', fontWeight: 600, color: '#334155', marginBottom: '.4rem', fontFamily: 'var(--font-montserrat, sans-serif)' }}>
+                    Pacote Selecionado <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <select name="pacote_interesse" required defaultValue="silver" style={{
+                    width: '100%', padding: '.65rem .85rem', fontSize: '.875rem', border: '1.5px solid #CBD5E1',
+                    borderRadius: 10, background: '#fff', outline: 'none', fontFamily: 'var(--font-inter, sans-serif)', fontWeight: 600
+                  }}>
+                    <option value="bronze">Pacote Bronze</option>
+                    <option value="silver">Pacote Silver</option>
+                    <option value="gold">Pacote Gold</option>
+                  </select>
+                </div>
+                <Field
+                  label="Data de Vencimento da 1ª Parcela"
+                  name="vencimento_primeira_parcela"
+                  type="date"
+                  required
+                />
+                <Field
+                  label="Número de Parcelas"
+                  name="numero_parcelas"
+                  type="number"
+                  placeholder="12"
+                  value={undefined}
+                />
               </Row>
             </Section>
 

@@ -182,7 +182,7 @@ export default async function ContratosInglesPage({ searchParams }: Props) {
                 </div>
               </div>
               <div style={body}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
                   <div>
                     <label style={lbl}>Pacote Contratado *</label>
                     <select
@@ -214,6 +214,40 @@ export default async function ContratosInglesPage({ searchParams }: Props) {
                       type="number"
                       min="1"
                       defaultValue={c?.tempo_contrato ?? 12}
+                      style={{ ...inp, textAlign: 'center', fontWeight: 700 }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.25rem' }}>
+                  <div>
+                    <label style={lbl}>Nome Fantasia (Opcional)</label>
+                    <input
+                      name="nome_fantasia"
+                      defaultValue={c?.nome_fantasia ?? propostaBilinguismo?.nome_fantasia ?? ''}
+                      placeholder="Ex: Colégio Saber"
+                      style={inp}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={lbl}>Vencimento 1ª Parcela</label>
+                    <input
+                      name="vencimento_primeira_parcela"
+                      type="date"
+                      defaultValue={c?.vencimento_primeira_parcela ?? propostaBilinguismo?.vencimento_primeira_parcela ?? ''}
+                      style={inp}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={lbl}>Número de Parcelas</label>
+                    <input
+                      name="numero_parcelas"
+                      type="number"
+                      min="1"
+                      max="36"
+                      defaultValue={c?.numero_parcelas ?? propostaBilinguismo?.numero_parcelas ?? 12}
                       style={{ ...inp, textAlign: 'center', fontWeight: 700 }}
                     />
                   </div>

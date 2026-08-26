@@ -240,6 +240,24 @@ export function EscolaDetailClient({
                     {PACOTE_NOMES[propostaBilinguismo.pacote_interesse] ?? propostaBilinguismo.pacote_interesse}
                   </div>
                 </div>
+                {propostaBilinguismo.nome_fantasia && (
+                  <div>
+                    <div style={{ fontSize: '.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Nome Fantasia</div>
+                    <div style={{ fontSize: '.88rem', fontWeight: 700, color: '#0f172a' }}>{propostaBilinguismo.nome_fantasia}</div>
+                  </div>
+                )}
+                <div>
+                  <div style={{ fontSize: '.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Vencimento 1ª Parcela</div>
+                  <div style={{ fontSize: '.88rem', fontWeight: 700, color: '#0f172a' }}>
+                    {propostaBilinguismo.vencimento_primeira_parcela ? formatDate(propostaBilinguismo.vencimento_primeira_parcela) : '—'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Nº de Parcelas</div>
+                  <div style={{ fontSize: '.88rem', fontWeight: 700, color: '#0f172a' }}>
+                    {propostaBilinguismo.numero_parcelas ? `${propostaBilinguismo.numero_parcelas}x` : '12x'}
+                  </div>
+                </div>
                 <div>
                   <div style={{ fontSize: '.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Representante Legal</div>
                   <div style={{ fontSize: '.88rem', fontWeight: 700, color: '#0f172a' }}>{propostaBilinguismo.nome_representante_legal}</div>
@@ -271,6 +289,18 @@ export function EscolaDetailClient({
                   <div style={{ fontSize: '.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Pacote Contratado</div>
                   <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0d9488', fontFamily: 'var(--font-montserrat,sans-serif)' }}>
                     {PACOTE_NOMES[contratoBilinguismo.pacote_contratado] ?? contratoBilinguismo.pacote_contratado}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Vencimento 1ª Parcela</div>
+                  <div style={{ fontSize: '.88rem', fontWeight: 700, color: '#0f172a' }}>
+                    {contratoBilinguismo.vencimento_primeira_parcela ? formatDate(contratoBilinguismo.vencimento_primeira_parcela) : '—'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Nº de Parcelas</div>
+                  <div style={{ fontSize: '.88rem', fontWeight: 700, color: '#0f172a' }}>
+                    {contratoBilinguismo.numero_parcelas ? `${contratoBilinguismo.numero_parcelas}x` : '12x'}
                   </div>
                 </div>
                 <div>
