@@ -73,6 +73,23 @@ const MODULES = [
     features: ['Briefings por cargo', 'Material bruto de campo', 'Painel de respostas', 'Planejamento de conteúdo'],
     status: 'ativo',
   },
+  {
+    id: 'financeiro',
+    label: 'Gestão Financeira',
+    tagline: 'Controle financeiro da Cidade Viva Education',
+    description:
+      'Gestão de fluxo de caixa, contas a pagar e a receber, e indicadores financeiros da Cidade Viva Education.',
+    href: 'https://financeiroeducation.arkosintelligence.com/login',
+    color: '#0891b2',
+    bg: 'linear-gradient(135deg, #ecfeff 0%, #cffafe 100%)',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+      </svg>
+    ),
+    features: ['Fluxo de caixa', 'Contas a pagar e a receber', 'Indicadores financeiros', 'Relatórios gerenciais'],
+    status: 'ativo',
+  },
 ]
 
 export default function HubLanding() {
@@ -208,8 +225,8 @@ export default function HubLanding() {
               color: 'rgba(255,255,255,.78)', lineHeight: 1.65,
               maxWidth: 640, marginBottom: '2.5rem',
             }}>
-              Tudo que sua equipe precisa para gerir parcerias, pedidos, contratos e marketing da
-              Cidade Viva Education em um único hub seguro, ágil e centralizado.
+              Tudo que sua equipe precisa para gerir parcerias, pedidos, contratos, marketing e finanças
+              da Cidade Viva Education em um único hub seguro, ágil e centralizado.
             </p>
 
             <div style={{ display: 'flex', gap: '.85rem', flexWrap: 'wrap' }}>
@@ -263,7 +280,7 @@ export default function HubLanding() {
               fontFamily: 'var(--font-cormorant,serif)', fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)',
               fontWeight: 700, color: '#0f172a', lineHeight: 1.15, marginBottom: '1rem', letterSpacing: '-.01em',
             }}>
-              Quatro módulos, <span style={{ color: '#d97706' }}>um só ecossistema</span>
+              Cinco módulos, <span style={{ color: '#d97706' }}>um só ecossistema</span>
             </h2>
             <p style={{
               fontFamily: 'var(--font-inter,sans-serif)', fontSize: '1rem',
