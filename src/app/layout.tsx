@@ -30,6 +30,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://education.arkosintelligence.com'),
   title: 'CVE Gestão Comercial — Cidade Viva Education',
   description: 'Plataforma de inteligência comercial da Cidade Viva Education',
   openGraph: {
