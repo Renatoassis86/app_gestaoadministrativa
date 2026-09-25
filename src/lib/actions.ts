@@ -905,6 +905,62 @@ export async function enviarPrevisaoPedido(formData: FormData) {
   redirect('/formulario-pedidos/obrigado')
 }
 
+// ─── Previsão de Pedidos (equipe interna — autenticado) ──────────────────────
+
+export async function atualizarPrevisaoPedido(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/hub/pedidos/login')
+
+  const id = formData.get('id') as string
+  if (!id) throw new Error('id é obrigatório')
+
+  const toNum = (k: string) => parseInt(formData.get(k) as string) || 0
+
+  const payload = {
+    nome_instituicao:     formData.get('nome_instituicao') as string,
+    cnpj:                 formData.get('cnpj') as string || null,
+    endereco:             formData.get('endereco') as string || null,
+    representante_legal:  formData.get('representante_legal') as string || null,
+    responsavel_nome:     formData.get('responsavel_nome') as string,
+    responsavel_telefone: formData.get('responsavel_telefone') as string,
+    ano_letivo:           parseInt(formData.get('ano_letivo') as string) || new Date().getFullYear() + 1,
+    data_inicio_letivo:   formData.get('data_inicio_letivo') as string || null,
+    data_fim_letivo:      formData.get('data_fim_letivo') as string || null,
+    formato_calendario:   formData.get('formato_calendario') as string || null,
+    series_adotadas:      formData.getAll('series_adotadas') as string[],
+    infantil2_qtd:        toNum('infantil2_qtd'),
+    infantil3_qtd:        toNum('infantil3_qtd'),
+    infantil4_qtd:        toNum('infantil4_qtd'),
+    infantil5_qtd:        toNum('infantil5_qtd'),
+    fund1_ano1_qtd:       toNum('fund1_ano1_qtd'),
+    fund1_ano2_qtd:       toNum('fund1_ano2_qtd'),
+    fund1_ano3_qtd:       toNum('fund1_ano3_qtd'),
+    fund1_ano4_qtd:       toNum('fund1_ano4_qtd'),
+    fund1_ano5_qtd:       toNum('fund1_ano5_qtd'),
+    observacoes_material: formData.get('observacoes_material') as string || null,
+    status:               formData.get('status') as string || 'recebido',
+  }
+
+  const { error } = await supabase.from('previsoes_pedidos').update(payload).eq('id', id)
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/hub/pedidos')
+  redirect('/hub/pedidos')
+}
+
+export async function deletarPrevisaoPedido(id: string): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Não autenticado' }
+
+  const { error } = await supabase.from('previsoes_pedidos').delete().eq('id', id)
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/hub/pedidos')
+  return { success: true, id }
+}
+
 // ─── Usuários (gerente only) ─────────────────────────────────────────────────
 
 /**

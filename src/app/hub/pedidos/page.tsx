@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { signOut } from '@/lib/actions'
 import { ClipboardList, School, Users2, CalendarRange, ExternalLink, LogOut, Inbox } from 'lucide-react'
+import { PrevisaoRowActions } from '@/components/pedidos/PrevisaoRowActions'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -197,7 +198,7 @@ export default async function PedidosDashboard() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.82rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
                   <thead>
                     <tr style={{ background: '#F8FAFC', textAlign: 'left' }}>
-                      {['Instituição', 'CNPJ', 'Responsável', 'Telefone', 'Ano letivo', 'Alunos previstos', 'Status', 'Enviado em'].map(h => (
+                      {['Instituição', 'CNPJ', 'Responsável', 'Telefone', 'Ano letivo', 'Alunos previstos', 'Status', 'Enviado em', 'Ações'].map(h => (
                         <th key={h} style={{ padding: '.7rem 1rem', fontSize: '.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.05em', color: '#64748b', whiteSpace: 'nowrap' }}>
                           {h}
                         </th>
@@ -226,6 +227,14 @@ export default async function PedidosDashboard() {
                           </td>
                           <td style={{ padding: '.7rem 1rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>
                             {new Date(p.created_at).toLocaleDateString('pt-BR')}
+                          </td>
+                          <td style={{ padding: '.7rem 1rem' }}>
+                            <PrevisaoRowActions
+                              id={p.id}
+                              nomeInstituicao={p.nome_instituicao}
+                              telefone={p.responsavel_telefone}
+                              anoLetivo={p.ano_letivo}
+                            />
                           </td>
                         </tr>
                       )
