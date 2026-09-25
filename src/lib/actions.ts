@@ -894,37 +894,13 @@ export async function enviarPrevisaoPedido(formData: FormData) {
     observacoes_material: formData.get('observacoes_material') as string || null,
   }
 
-  const { data, error } = await supabase
-    .from('previsoes_pedidos')
-    .insert(payload)
-    .select('id')
-    .single()
+  // Sem .select() de propósito: quem envia é anônimo e a política de SELECT
+  // exige login — pedir o retorno do insert (RETURNING) reavalia essa política
+  // e faria o Postgres rejeitar o insert com "violates row-level security policy".
+  // O vínculo com a escola do CRM (tabela `escolas`, que também exige login para
+  // ler/gravar) é feito depois pela equipe, autenticada, não aqui.
+  const { error } = await supabase.from('previsoes_pedidos').insert(payload)
   if (error) throw new Error(error.message)
-
-  // Vincula automaticamente à escola do CRM, por CNPJ ou nome (mesma lógica do /formulario)
-  const cnpj = payload.cnpj
-  const nome = payload.nome_instituicao
-
-  let escolaId: string | null = null
-
-  if (cnpj) {
-    const { data: porCnpj } = await supabase.from('escolas').select('id').eq('cnpj', cnpj).single()
-    escolaId = porCnpj?.id ?? null
-  }
-  if (!escolaId && nome) {
-    const { data: porNome } = await supabase
-      .from('escolas')
-      .select('id')
-      .ilike('nome', nome)
-      .eq('ativa', true)
-      .limit(1)
-      .single()
-    escolaId = porNome?.id ?? null
-  }
-
-  if (escolaId) {
-    await supabase.from('previsoes_pedidos').update({ escola_id: escolaId }).eq('id', data.id)
-  }
 
   redirect('/formulario-pedidos/obrigado')
 }
