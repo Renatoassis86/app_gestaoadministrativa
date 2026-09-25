@@ -863,6 +863,72 @@ export async function enviarFormularioPublico(formData: FormData) {
   redirect('/formulario/obrigado')
 }
 
+// ─── Previsão de Pedidos (formulário público — sem auth) ─────────────────────
+
+export async function enviarPrevisaoPedido(formData: FormData) {
+  const supabase = await createClient()
+
+  const toNum = (k: string) => parseInt(formData.get(k) as string) || 0
+
+  const payload = {
+    nome_instituicao:     formData.get('nome_instituicao') as string,
+    cnpj:                 formData.get('cnpj') as string || null,
+    endereco:             formData.get('endereco') as string || null,
+    representante_legal:  formData.get('representante_legal') as string || null,
+    responsavel_nome:     formData.get('responsavel_nome') as string,
+    responsavel_telefone: formData.get('responsavel_telefone') as string,
+    ano_letivo:           parseInt(formData.get('ano_letivo') as string) || new Date().getFullYear() + 1,
+    data_inicio_letivo:   formData.get('data_inicio_letivo') as string || null,
+    data_fim_letivo:      formData.get('data_fim_letivo') as string || null,
+    formato_calendario:   formData.get('formato_calendario') as string || null,
+    series_adotadas:      formData.getAll('series_adotadas') as string[],
+    infantil2_qtd:        toNum('infantil2_qtd'),
+    infantil3_qtd:        toNum('infantil3_qtd'),
+    infantil4_qtd:        toNum('infantil4_qtd'),
+    infantil5_qtd:        toNum('infantil5_qtd'),
+    fund1_ano1_qtd:       toNum('fund1_ano1_qtd'),
+    fund1_ano2_qtd:       toNum('fund1_ano2_qtd'),
+    fund1_ano3_qtd:       toNum('fund1_ano3_qtd'),
+    fund1_ano4_qtd:       toNum('fund1_ano4_qtd'),
+    fund1_ano5_qtd:       toNum('fund1_ano5_qtd'),
+    observacoes_material: formData.get('observacoes_material') as string || null,
+  }
+
+  const { data, error } = await supabase
+    .from('previsoes_pedidos')
+    .insert(payload)
+    .select('id')
+    .single()
+  if (error) throw new Error(error.message)
+
+  // Vincula automaticamente à escola do CRM, por CNPJ ou nome (mesma lógica do /formulario)
+  const cnpj = payload.cnpj
+  const nome = payload.nome_instituicao
+
+  let escolaId: string | null = null
+
+  if (cnpj) {
+    const { data: porCnpj } = await supabase.from('escolas').select('id').eq('cnpj', cnpj).single()
+    escolaId = porCnpj?.id ?? null
+  }
+  if (!escolaId && nome) {
+    const { data: porNome } = await supabase
+      .from('escolas')
+      .select('id')
+      .ilike('nome', nome)
+      .eq('ativa', true)
+      .limit(1)
+      .single()
+    escolaId = porNome?.id ?? null
+  }
+
+  if (escolaId) {
+    await supabase.from('previsoes_pedidos').update({ escola_id: escolaId }).eq('id', data.id)
+  }
+
+  redirect('/formulario-pedidos/obrigado')
+}
+
 // ─── Usuários (gerente only) ─────────────────────────────────────────────────
 
 /**
