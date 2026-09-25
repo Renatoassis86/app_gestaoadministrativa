@@ -1,4 +1,22 @@
+import type { Metadata } from 'next'
 import { enviarPrevisaoPedido } from '@/lib/actions'
+
+export const metadata: Metadata = {
+  title: 'Gestão de Pedidos — Cidade Viva Education',
+  description: 'Escolas parceiras enviam aqui a previsão de matrículas por série e como querem receber o material do próximo ano letivo.',
+  openGraph: {
+    title: 'Gestão de Pedidos — Cidade Viva Education',
+    description: 'Previsão de matrículas por série e como a escola quer receber o material do próximo ano letivo.',
+    images: [{ url: '/images/hero-modulos.png', width: 1672, height: 941, alt: 'Cidade Viva Education — Gestão de Pedidos' }],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Gestão de Pedidos — Cidade Viva Education',
+    description: 'Previsão de matrículas por série e como a escola quer receber o material do próximo ano letivo.',
+    images: ['/images/hero-modulos.png'],
+  },
+}
 
 const SERIES = [
   ['Infantil II', 'infantil2'],
