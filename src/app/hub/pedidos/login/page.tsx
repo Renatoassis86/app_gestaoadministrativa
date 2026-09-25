@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Eye, EyeOff, ArrowRight, Truck, Phone, Mail, MessageCircle } from 'lucide-react'
+import { Eye, EyeOff, ArrowRight, Truck, Phone, Mail, MessageCircle, ClipboardList } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -192,6 +192,43 @@ export default function PedidosLoginPage() {
                   </a>
                 </div>
               </div>
+            </div>
+
+            <div style={{
+              background: 'rgba(255,255,255,.04)',
+              border: '1px solid rgba(255,255,255,.12)',
+              borderLeft: '4px solid #38bdf8',
+              borderRadius: 14, padding: '1.1rem 1.35rem',
+              backdropFilter: 'blur(8px)',
+              maxWidth: 500,
+              marginTop: '1.1rem',
+              display: 'flex', alignItems: 'center', gap: '1rem',
+            }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                background: 'rgba(56,189,248,.15)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <ClipboardList size={19} color="#38bdf8" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '.85rem', fontWeight: 700, color: '#fff', marginBottom: '.15rem', fontFamily: 'var(--font-inter, sans-serif)' }}>
+                  É escola parceira?
+                </div>
+                <div style={{ fontSize: '.78rem', color: 'rgba(255,255,255,.55)', fontFamily: 'var(--font-inter, sans-serif)' }}>
+                  Envie sua previsão de pedidos do próximo ano letivo.
+                </div>
+              </div>
+              <a href="/formulario-pedidos" target="_blank" rel="noopener noreferrer" style={{
+                display: 'inline-flex', alignItems: 'center', gap: '.35rem', flexShrink: 0,
+                background: 'transparent', color: '#38bdf8',
+                border: '1px solid rgba(56,189,248,.4)',
+                padding: '.5rem 1rem', borderRadius: 9999,
+                fontSize: '.78rem', fontWeight: 700, textDecoration: 'none',
+                fontFamily: 'var(--font-montserrat, sans-serif)',
+              }}>
+                Abrir formulário <ArrowRight size={13} />
+              </a>
             </div>
           </div>
 
