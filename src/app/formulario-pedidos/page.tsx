@@ -1,19 +1,20 @@
 import type { Metadata } from 'next'
 import { enviarPrevisaoPedido } from '@/lib/actions'
+import { EnderecoEntregaField } from '@/components/pedidos/EnderecoEntregaField'
 
 export const metadata: Metadata = {
   title: 'Gestão de Pedidos — Cidade Viva Education',
-  description: 'Escolas parceiras enviam aqui a previsão de matrículas por série e como querem receber o material do próximo ano letivo.',
+  description: 'Escolas parceiras enviam aqui a previsão de matrículas por série e o endereço de entrega do material do próximo ano letivo.',
   openGraph: {
     title: 'Gestão de Pedidos — Cidade Viva Education',
-    description: 'Previsão de matrículas por série e como a escola quer receber o material do próximo ano letivo.',
+    description: 'Previsão de matrículas por série e endereço de entrega do material do próximo ano letivo.',
     images: [{ url: '/images/hero-modulos.png', width: 1672, height: 941, alt: 'Cidade Viva Education — Gestão de Pedidos' }],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Gestão de Pedidos — Cidade Viva Education',
-    description: 'Previsão de matrículas por série e como a escola quer receber o material do próximo ano letivo.',
+    description: 'Previsão de matrículas por série e endereço de entrega do material do próximo ano letivo.',
     images: ['/images/hero-modulos.png'],
   },
 }
@@ -110,7 +111,7 @@ export default function FormularioPedidosPublico() {
             maxWidth: 560, margin: '0 auto',
             fontFamily: 'var(--font-inter, sans-serif)',
           }}>
-            Preencha com a previsão de alunos por série para {anoLetivo} e como sua escola deseja receber o material. Isso garante que a separação e o envio dos pedidos aconteçam sem atraso.
+            Preencha com a previsão de alunos por série para {anoLetivo} e o endereço de entrega do material. Isso garante que a separação e o envio dos pedidos aconteçam sem atraso.
           </p>
         </div>
 
@@ -125,6 +126,7 @@ export default function FormularioPedidosPublico() {
                 <Field label="CNPJ" name="cnpj" required />
               </Row>
               <Field label="Endereço completo da Instituição (com CEP)" name="endereco" required />
+              <EnderecoEntregaField />
               <Row>
                 <Field label="Representante Legal" name="representante_legal" required />
               </Row>
@@ -169,10 +171,6 @@ export default function FormularioPedidosPublico() {
                   <Field key={key} label={label} name={`${key}_qtd`} type="number" required defaultValue="0" />
                 ))}
               </Row>
-            </Section>
-
-            <Section title="Como sua escola quer receber o material?">
-              <Field label="Observações sobre a entrega do material" name="observacoes_material" type="textarea" />
             </Section>
 
             <button type="submit"

@@ -1,7 +1,8 @@
 -- ============================================================
 -- Módulo de Gestão de Pedidos — Previsão de Pedidos das Escolas Parceiras
--- Formulário público (schools parceiras informam, por série, a previsão
--- de pedidos para o próximo ano letivo + observações sobre o material)
+-- Formulário público (escolas parceiras informam, por série, a previsão
+-- de pedidos para o próximo ano letivo + endereço de entrega do material,
+-- quando diferente do endereço da instituição)
 -- ============================================================
 
 create table if not exists previsoes_pedidos (
@@ -45,15 +46,22 @@ create table if not exists previsoes_pedidos (
   fund1_ano4_qtd        int not null default 0,
   fund1_ano5_qtd        int not null default 0,
 
-  -- Como a escola quer receber o material (kit por aluno, por série, embalagem etc.)
-  observacoes_material  text,
-
   -- Triagem interna da equipe de pedidos
   status                text not null default 'recebido', -- 'recebido' | 'em_analise' | 'confirmado'
 
   created_at            timestamptz not null default now(),
   updated_at            timestamptz not null default now()
 );
+
+-- Entrega do material: por padrão o mesmo endereço da instituição (acima);
+-- se a flag vier desmarcada, o endereço de entrega é outro, informado à parte.
+-- Via ALTER (em vez de só na criação da tabela) pra funcionar tanto na
+-- primeira execução quanto se a tabela já existir sem essas colunas.
+alter table previsoes_pedidos add column if not exists mesmo_endereco_entrega boolean not null default true;
+alter table previsoes_pedidos add column if not exists endereco_entrega_material text;
+
+-- Substituída pela flag + endereço de entrega acima
+alter table previsoes_pedidos drop column if exists observacoes_material;
 
 create index if not exists idx_previsoes_pedidos_escola on previsoes_pedidos(escola_id);
 create index if not exists idx_previsoes_pedidos_ano    on previsoes_pedidos(ano_letivo);

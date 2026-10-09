@@ -70,9 +70,10 @@ async function main() {
     await page.fill('input[name="fund1_ano1_qtd"]', '20');
     log('✓ Quantitativos preenchidos', 'green');
 
-    log('\n📦 ETAPA 7: Preencher observações do material...', 'bold');
-    await page.fill('textarea[name="observacoes_material"]', 'Teste automatizado do robô: kit individual por aluno, separado por série.');
-    log('✓ Observações preenchidas', 'green');
+    log('\n📦 ETAPA 7: Desmarcar "mesmo endereço" e preencher endereço de entrega...', 'bold');
+    await page.uncheck('input[name="mesmo_endereco_entrega"]');
+    await page.fill('input[name="endereco_entrega_material"]', 'Rua de Entrega Teste, 456, Bairro Teste, João Pessoa - PB, CEP 58000-111');
+    log('✓ Endereço de entrega preenchido', 'green');
 
     log('\n📤 ETAPA 8: Enviar formulário...', 'bold');
     await page.click('button[type="submit"]');

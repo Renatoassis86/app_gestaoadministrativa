@@ -874,6 +874,8 @@ export async function enviarPrevisaoPedido(formData: FormData) {
     nome_instituicao:     formData.get('nome_instituicao') as string,
     cnpj:                 formData.get('cnpj') as string || null,
     endereco:             formData.get('endereco') as string || null,
+    mesmo_endereco_entrega: formData.get('mesmo_endereco_entrega') === 'on',
+    endereco_entrega_material: formData.get('mesmo_endereco_entrega') === 'on' ? null : (formData.get('endereco_entrega_material') as string || null),
     representante_legal:  formData.get('representante_legal') as string || null,
     responsavel_nome:     formData.get('responsavel_nome') as string,
     responsavel_telefone: formData.get('responsavel_telefone') as string,
@@ -891,7 +893,6 @@ export async function enviarPrevisaoPedido(formData: FormData) {
     fund1_ano3_qtd:       toNum('fund1_ano3_qtd'),
     fund1_ano4_qtd:       toNum('fund1_ano4_qtd'),
     fund1_ano5_qtd:       toNum('fund1_ano5_qtd'),
-    observacoes_material: formData.get('observacoes_material') as string || null,
   }
 
   // Sem .select() de propósito: quem envia é anônimo e a política de SELECT
@@ -921,6 +922,8 @@ export async function atualizarPrevisaoPedido(formData: FormData) {
     nome_instituicao:     formData.get('nome_instituicao') as string,
     cnpj:                 formData.get('cnpj') as string || null,
     endereco:             formData.get('endereco') as string || null,
+    mesmo_endereco_entrega: formData.get('mesmo_endereco_entrega') === 'on',
+    endereco_entrega_material: formData.get('mesmo_endereco_entrega') === 'on' ? null : (formData.get('endereco_entrega_material') as string || null),
     representante_legal:  formData.get('representante_legal') as string || null,
     responsavel_nome:     formData.get('responsavel_nome') as string,
     responsavel_telefone: formData.get('responsavel_telefone') as string,
@@ -938,7 +941,6 @@ export async function atualizarPrevisaoPedido(formData: FormData) {
     fund1_ano3_qtd:       toNum('fund1_ano3_qtd'),
     fund1_ano4_qtd:       toNum('fund1_ano4_qtd'),
     fund1_ano5_qtd:       toNum('fund1_ano5_qtd'),
-    observacoes_material: formData.get('observacoes_material') as string || null,
     status:               formData.get('status') as string || 'recebido',
   }
 

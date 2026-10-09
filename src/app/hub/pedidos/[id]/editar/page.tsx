@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { atualizarPrevisaoPedido } from '@/lib/actions'
 import { ArrowLeft } from 'lucide-react'
+import { EnderecoEntregaField } from '@/components/pedidos/EnderecoEntregaField'
 
 export const dynamic = 'force-dynamic'
 
@@ -105,6 +106,7 @@ export default async function EditarPrevisaoPage({ params }: { params: Promise<{
                 <Field label="CNPJ" name="cnpj" defaultValue={p.cnpj ?? ''} />
               </Row>
               <Field label="Endereço completo" name="endereco" defaultValue={p.endereco ?? ''} />
+              <EnderecoEntregaField defaultChecked={p.mesmo_endereco_entrega ?? true} defaultValue={p.endereco_entrega_material ?? ''} />
               <Row>
                 <Field label="Representante Legal" name="representante_legal" defaultValue={p.representante_legal ?? ''} />
               </Row>
@@ -147,10 +149,6 @@ export default async function EditarPrevisaoPage({ params }: { params: Promise<{
                   <Field key={key} label={label} name={`${key}_qtd`} type="number" required defaultValue={String(p[`${key}_qtd`] ?? 0)} />
                 ))}
               </Row>
-            </Section>
-
-            <Section title="Como a escola quer receber o material">
-              <Field label="Observações sobre a entrega do material" name="observacoes_material" type="textarea" defaultValue={p.observacoes_material ?? ''} />
             </Section>
 
             <button type="submit"
