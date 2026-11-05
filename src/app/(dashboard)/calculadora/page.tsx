@@ -48,7 +48,13 @@ interface SegmentoCalc {
   comissaoAbs: number            // valor absoluto (R$)
   qtdAlunos: number              // quantidade de alunos neste segmento
   parcelas: number
+  precoFinal: number             // valor final ao pai informado (só na ótica "calcular comissão")
 }
+
+// Ótica da calculadora:
+//  'preco'    = informa custo + comissão → calcula o valor final ao pai
+//  'comissao' = informa custo + valor final ao pai → calcula a comissão
+type ModoCalculo = 'preco' | 'comissao'
 
 interface Resultado {
   custo: number
@@ -67,6 +73,10 @@ interface Resultado {
   diferenca: number
   parcela_valida: boolean
   qtd_alunos: number
+  comissao_pct: number            // comissão efetiva sobre o custo (%)
+  // Tudo que não é custo nem comissão (taxas %, taxa fixa, manutenção, nota fiscal) — único total de despesa
+  // que o comercial pode informar à escola; os componentes ficam como uso interno.
+  despesa_financeira_total: number
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -81,28 +91,55 @@ function calcular(
   parcelas: number,
   qtdAlunos: number,
 ): Resultado {
-  // Taxa de cartão e taxa fixa por parcela sempre calculadas com base em 12x — ver nota acima.
-  const taxa_cartao = TAXA_CARTAO_PARCELADO
-
   // Comissão: percentual OU valor absoluto
   const comissao_valor = comissaoTipo === 'pct'
     ? custo * (comissaoPct / 100)
     : comissaoAbs
 
   const liquido_desejado = custo + comissao_valor
-
-  const taxa_fixa_eskolare = TAXA_FIXA_PARCELA * PARCELAS_BASE_PRECO
-  const denominador        = 1 - TAXA_PLATAFORMA - taxa_cartao
+  const denominador = 1 - TAXA_PLATAFORMA - TAXA_CARTAO_PARCELADO
 
   // Preço final por kit = (líquido + taxa fixa + manutenção da plataforma + nota fiscal) / denominador
   const preco_final = Math.ceil(
-    ((liquido_desejado + taxa_fixa_eskolare + CUSTO_MANUTENCAO_PLATAFORMA + CUSTO_NOTA_FISCAL) / denominador) * 100
+    ((liquido_desejado + TAXA_FIXA_PARCELA * PARCELAS_BASE_PRECO + CUSTO_MANUTENCAO_PLATAFORMA + CUSTO_NOTA_FISCAL) / denominador) * 100
   ) / 100
-  // Valor da parcela usa a forma de pagamento REAL escolhida pela família — o preço já está fixado acima
+
+  return montarResultado(custo, comissao_valor, preco_final, parcelas, qtdAlunos)
+}
+
+// Ótica inversa: o valor final ao pai já está definido — descobre a comissão que sobra.
+// É a mesma fórmula de calcular(), resolvida para o líquido:
+//   líquido = preço final × (1 − taxas %) − taxa fixa − manutenção − nota fiscal
+//   comissão = líquido − custo
+function calcularComissao(
+  custo: number,
+  precoFinal: number,
+  parcelas: number,
+  qtdAlunos: number,
+): Resultado {
+  const denominador = 1 - TAXA_PLATAFORMA - TAXA_CARTAO_PARCELADO
+  const liquido = precoFinal * denominador - TAXA_FIXA_PARCELA * PARCELAS_BASE_PRECO - CUSTO_MANUTENCAO_PLATAFORMA - CUSTO_NOTA_FISCAL
+  return montarResultado(custo, liquido - custo, precoFinal, parcelas, qtdAlunos)
+}
+
+function montarResultado(
+  custo: number,
+  comissao_valor: number,
+  preco_final: number,
+  parcelas: number,
+  qtdAlunos: number,
+): Resultado {
+  // Taxa de cartão e taxa fixa por parcela sempre calculadas com base em 12x — ver nota acima.
+  const taxa_cartao        = TAXA_CARTAO_PARCELADO
+  const taxa_fixa_eskolare = TAXA_FIXA_PARCELA * PARCELAS_BASE_PRECO
+  const denominador        = 1 - TAXA_PLATAFORMA - taxa_cartao
+  const liquido_desejado   = custo + comissao_valor
+
+  // Valor da parcela usa a forma de pagamento REAL escolhida pela família — o preço já está fixado
   const valor_parcela = Math.round((preco_final / parcelas) * 100) / 100
   const liquido_real  = preco_final * denominador - taxa_fixa_eskolare - CUSTO_MANUTENCAO_PLATAFORMA - CUSTO_NOTA_FISCAL
 
-  // Despesas do parcelamento em R$ (informativo — derivadas do preço final já calculado acima)
+  // Despesas do parcelamento em R$ (informativo — derivadas do preço final)
   const taxa_plataforma_valor    = preco_final * TAXA_PLATAFORMA
   const taxa_cartao_valor        = preco_final * taxa_cartao
   const total_taxas_parcelamento = taxa_plataforma_valor + taxa_cartao_valor + taxa_fixa_eskolare
@@ -117,7 +154,25 @@ function calcular(
     diferenca: liquido_real - liquido_desejado,
     parcela_valida: valor_parcela >= VALOR_MIN_PARCELA,
     qtd_alunos: qtdAlunos,
+    comissao_pct: custo > 0 ? (comissao_valor / custo) * 100 : 0,
+    despesa_financeira_total: preco_final - custo - comissao_valor,
   }
+}
+
+// Etiqueta de divulgação: o comercial só pode passar à escola os valores marcados como públicos
+function Tag({ publico }: { publico: boolean }) {
+  return (
+    <span style={{
+      display: 'inline-block', padding: '1px 7px', borderRadius: 99, whiteSpace: 'nowrap',
+      fontSize: '.52rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.05em',
+      fontFamily: 'var(--font-montserrat,sans-serif)',
+      background: publico ? '#f0fdf4' : '#f1f5f9',
+      color: publico ? '#16a34a' : '#64748b',
+      border: `1px solid ${publico ? '#86efac' : '#cbd5e1'}`,
+    }}>
+      {publico ? 'Pode informar à escola' : 'Uso interno'}
+    </span>
+  )
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -153,8 +208,10 @@ export default function CalculadoraPage() {
       comissaoAbs: 0,
       qtdAlunos: 0,
       parcelas: 12,
+      precoFinal: 0,
     }))
   )
+  const [modo,       setModo]       = useState<ModoCalculo>('preco')
   const [calculados, setCalculados] = useState<Record<string, Resultado>>({})
   const [calculou,   setCalculou]   = useState(false)
   const [memoriaSeg, setMemoriaSeg] = useState<string | null>(null)
@@ -175,16 +232,32 @@ export default function CalculadoraPage() {
     segmentos.filter(s => s.ativo).forEach(s => {
       // "Mesmo valor" só se aplica a comissão e parcelas — custo e qtd. de alunos são sempre da própria turma
       const ref = (s.igualPrimeiro && primeiroAtivo && s.id !== primeiroAtivo.id) ? primeiroAtivo : s
-      res[s.id] = calcular(
-        s.custo, ref.comissaoTipo, ref.comissaoPct, ref.comissaoAbs,
-        ref.parcelas, s.qtdAlunos,
-      )
+      // Ótica "calcular comissão": o valor final ao pai é sempre da própria turma; só as parcelas podem ser herdadas
+      res[s.id] = modo === 'comissao'
+        ? calcularComissao(s.custo, s.precoFinal, ref.parcelas, s.qtdAlunos)
+        : calcular(
+            s.custo, ref.comissaoTipo, ref.comissaoPct, ref.comissaoAbs,
+            ref.parcelas, s.qtdAlunos,
+          )
     })
     setCalculados(res)
     setCalculou(true)
   }
 
   const ativos = segmentos.filter(s => s.ativo)
+
+  const trocarModo = (novo: ModoCalculo) => {
+    if (novo === modo) return
+    setModo(novo)
+    setCalculados({})
+    setCalculou(false)
+  }
+
+  // Descrição curta da comissão para cartões/tabela: na ótica "preço" segue o tipo digitado; na ótica "comissão" é o % efetivo
+  const descComissao = (ref: SegmentoCalc, r: Resultado) =>
+    modo === 'comissao'
+      ? `${r.comissao_pct.toFixed(1)}% sobre o custo`
+      : ref.comissaoTipo === 'pct' ? `${ref.comissaoPct}% sobre custo` : 'valor fixo'
 
   // Resumo financeiro da proposta inteira — soma de todos os segmentos ativos já calculados
   const faturamentoEducation = ativos.reduce((acc, s) => {
@@ -211,6 +284,42 @@ export default function CalculadoraPage() {
       <PageHeader title="Calculadora Eskolare" subtitle="Precificação por segmento e turma" />
       <div style={{ padding: '1.75rem 2.5rem' }}>
 
+        {/* ── Tipo de cálculo ─────────────────────────────────── */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.07em', color: '#0f172a', marginBottom: '.75rem' }}>
+            Escolha o tipo de cálculo
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+            {([
+              { id: 'preco',    titulo: 'Calcular o valor final',  desc: 'Informe o custo de aquisição e a comissão — a calculadora entrega o valor final ao pai.' },
+              { id: 'comissao', titulo: 'Calcular a comissão',     desc: 'Informe o custo de aquisição e o valor final ao pai — a calculadora entrega a comissão.' },
+            ] as const).map(o => {
+              const sel = modo === o.id
+              return (
+                <button key={o.id} type="button" onClick={() => trocarModo(o.id)} aria-pressed={sel}
+                  style={{
+                    textAlign: 'left', cursor: 'pointer', padding: '1rem 1.25rem', borderRadius: 14,
+                    background: sel ? '#0f172a' : '#fff',
+                    border: `2px solid ${sel ? '#d97706' : '#e2e8f0'}`,
+                    boxShadow: sel ? '0 4px 16px rgba(217,119,6,.18)' : '0 1px 4px rgba(15,23,42,.05)',
+                    transition: 'all .15s',
+                  }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', marginBottom: '.35rem' }}>
+                    <span style={{
+                      width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+                      border: `2px solid ${sel ? '#d97706' : '#cbd5e1'}`,
+                      background: sel ? '#d97706' : 'transparent',
+                      boxShadow: sel ? 'inset 0 0 0 3px #0f172a' : 'none',
+                    }} />
+                    <span style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.85rem', fontWeight: 800, color: sel ? '#fff' : '#0f172a' }}>{o.titulo}</span>
+                  </div>
+                  <div style={{ fontSize: '.75rem', lineHeight: 1.5, color: sel ? 'rgba(255,255,255,.6)' : '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>{o.desc}</div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
         {/* ── Explicação ──────────────────────────────────────── */}
         <div style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', borderRadius: 16, padding: '1.25rem 1.75rem', marginBottom: '1.5rem', display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
           <div style={{ flex: 1 }}>
@@ -218,7 +327,9 @@ export default function CalculadoraPage() {
               ✦ Lógica de cálculo
             </div>
             <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '.5rem' }}>
-              Preço final = custo + comissão + nota fiscal + manutenção da plataforma + taxas Eskolare
+              {modo === 'preco'
+                ? 'Preço final = custo + comissão + nota fiscal + manutenção da plataforma + taxas Eskolare'
+                : 'Comissão = valor final ao pai − taxas Eskolare − manutenção da plataforma − nota fiscal − custo'}
             </div>
             <div style={{ fontSize: '.78rem', color: 'rgba(255,255,255,.55)', lineHeight: 1.65, fontFamily: 'var(--font-inter,sans-serif)' }}>
               A manutenção da plataforma (<strong style={{ color: '#d97706' }}>{fmt(CUSTO_MANUTENCAO_PLATAFORMA)}</strong>, R$73,02 + 2% ISS por dentro + {fmt(CUSTO_SUPORTE_LOJA)} de suporte da loja) e a nota fiscal
@@ -298,12 +409,12 @@ export default function CalculadoraPage() {
                       </div>
                       <span style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.82rem', fontWeight: 800, color: '#fff' }}>{s.label}</span>
                       {herdando && <span style={{ fontSize: '.65rem', background: '#dbeafe', color: '#1d4ed8', padding: '.15rem .5rem', borderRadius: 99, fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)' }}>
-                        Comissão/parcelas = {primeiroAtivo?.label}
+                        {modo === 'comissao' ? 'Parcelas' : 'Comissão/parcelas'} = {primeiroAtivo?.label}
                       </span>}
                     </div>
                     {!isPrimeiro && (
                       <label style={{ display: 'flex', alignItems: 'center', gap: '.5rem', cursor: 'pointer' }}>
-                        <span style={{ fontSize: '.72rem', color: 'rgba(255,255,255,.6)', fontFamily: 'var(--font-montserrat,sans-serif)' }}>Comissão/parcelas iguais</span>
+                        <span style={{ fontSize: '.72rem', color: 'rgba(255,255,255,.6)', fontFamily: 'var(--font-montserrat,sans-serif)' }}>{modo === 'comissao' ? 'Parcelas iguais' : 'Comissão/parcelas iguais'}</span>
                         <div onClick={() => update(s.id, 'igualPrimeiro', !s.igualPrimeiro)}
                           style={{ width: 36, height: 20, borderRadius: 10, cursor: 'pointer', background: s.igualPrimeiro ? '#d97706' : '#cbd5e1', position: 'relative', transition: 'background .2s' }}>
                           <div style={{ position: 'absolute', top: 2, left: s.igualPrimeiro ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'left .2s' }} />
@@ -324,7 +435,21 @@ export default function CalculadoraPage() {
                       <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>Valor pago pela escola</div>
                     </div>
 
-                    {/* Comissão — editável, ou igual ao primeiro segmento quando o toggle está ligado */}
+                    {/* Ótica "calcular comissão": valor final ao pai no lugar da comissão — sempre da própria turma */}
+                    {modo === 'comissao' ? (
+                    <div>
+                      <label style={lblStyle}>Valor Final ao Pai (R$)</label>
+                      <div style={{ position: 'relative' }}>
+                        <span style={{ position: 'absolute', left: '.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '.78rem', color: '#94a3b8', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)', pointerEvents: 'none' }}>R$</span>
+                        <input type="number" min="0" step="0.01" value={s.precoFinal}
+                          onChange={e => update(s.id, 'precoFinal', parseFloat(e.target.value) || 0)}
+                          onWheel={e => (e.target as HTMLInputElement).blur()}
+                          style={{ ...inpStyle, paddingLeft: '2.25rem' }} placeholder="Ex: 2.100,00" />
+                      </div>
+                      <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.25rem', fontFamily: 'var(--font-inter,sans-serif)' }}>Preço total cobrado da família</div>
+                    </div>
+                    ) : (
+                    /* Comissão — editável, ou igual ao primeiro segmento quando o toggle está ligado */
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.35rem' }}>
                         <label style={{ ...lblStyle, marginBottom: 0 }}>Comissão</label>
@@ -374,6 +499,7 @@ export default function CalculadoraPage() {
                         {herdando ? `Igual à ${primeiroAtivo?.label}` : (s.comissaoTipo === 'pct' ? 'Margem sobre o custo' : 'Valor fixo por kit')}
                       </div>
                     </div>
+                    )}
 
                     {/* Qtd alunos — sempre editável e própria da turma */}
                     <div>
@@ -433,6 +559,10 @@ export default function CalculadoraPage() {
             <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.07em', color: '#0f172a', marginBottom: '1.25rem' }}>
               3. Resultados por segmento
             </div>
+            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '.5rem', marginTop: '-.75rem', marginBottom: '1.25rem', fontSize: '.75rem', color: '#64748b', fontFamily: 'var(--font-inter,sans-serif)' }}>
+              <Tag publico /> apenas custo de aquisição, comissão, despesa financeira total e valor final podem ser passados à escola.
+              <Tag publico={false} /> detalhamento para controle do comercial — não repassar.
+            </div>
 
             {/* Cartões */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px,1fr))', gap: '1.1rem', marginBottom: '2rem' }}>
@@ -446,21 +576,25 @@ export default function CalculadoraPage() {
                       <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#d97706', marginBottom: '.2rem' }}>Segmento</div>
                       <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.2rem', fontWeight: 700, color: '#fff' }}>{s.label}</div>
                       <div style={{ fontSize: '.68rem', color: 'rgba(255,255,255,.4)', marginTop: '.15rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                        {r.qtd_alunos} aluno{r.qtd_alunos !== 1 ? 's' : ''} · manutenção: {fmt(r.custo_manutencao)}/kit
+                        {r.qtd_alunos} aluno{r.qtd_alunos !== 1 ? 's' : ''}
                       </div>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid #f1f5f9' }}>
                       {[
-                        { label: 'Custo de Aquisição', value: fmt(r.custo), sub: 'escola paga', bg: '#f8fafc' },
-                        { label: 'Comissão', value: fmt(r.comissao_valor), sub: ref.comissaoTipo === 'pct' ? `${ref.comissaoPct}% sobre custo` : 'valor fixo', bg: '#f5f3ff' },
-                        { label: 'Nota Fiscal', value: fmt(r.custo_nota_fiscal), sub: 'por venda', bg: '#fdf4ff' },
-                        { label: 'Manutenção da Plataforma', value: fmt(r.custo_manutencao), sub: 'por kit, integral', bg: '#eff6ff' },
-                        { label: 'Despesas de Parcelamento', value: fmt(r.total_taxas_parcelamento), sub: `plataforma + cartão (${r.taxa_cartao_pct.toFixed(2)}%) + taxa fixa`, bg: '#fef2f2' },
-                        { label: 'Valor Final ao Pai', value: fmt(r.preco_final), sub: ref.parcelas === 1 ? 'à vista' : `${ref.parcelas}x de ${fmt(r.valor_parcela)}`, bg: '#fffbeb', big: true, full: true },
+                        // Valores que o comercial pode informar à escola
+                        { label: 'Custo de Aquisição', value: fmt(r.custo), sub: 'escola paga', bg: '#f8fafc', publico: true },
+                        { label: 'Comissão', value: fmt(r.comissao_valor), sub: descComissao(ref, r), bg: '#f5f3ff', big: modo === 'comissao', publico: true },
+                        { label: 'Despesa Financeira Total', value: fmt(r.despesa_financeira_total), sub: 'taxas, manutenção e nota fiscal', bg: '#fef2f2', publico: true },
+                        { label: 'Valor Final ao Pai', value: fmt(r.preco_final), sub: ref.parcelas === 1 ? 'à vista' : `${ref.parcelas}x de ${fmt(r.valor_parcela)}`, bg: '#fffbeb', big: true, publico: true },
+                        // Detalhamento — uso interno, não repassar
+                        { label: 'Nota Fiscal', value: fmt(r.custo_nota_fiscal), sub: 'por venda', bg: '#fdf4ff', publico: false },
+                        { label: 'Manutenção da Plataforma', value: fmt(r.custo_manutencao), sub: 'por kit, integral', bg: '#eff6ff', publico: false },
+                        { label: 'Despesas de Parcelamento', value: fmt(r.total_taxas_parcelamento), sub: `plataforma + cartão (${r.taxa_cartao_pct.toFixed(2)}%) + taxa fixa`, bg: '#f8fafc', publico: false, full: true },
                       ].map(m => (
                         <div key={m.label} style={{ gridColumn: (m as any).full ? '1 / -1' : undefined, background: m.bg, padding: '.85rem 1rem', borderRight: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9' }}>
                           <div style={{ fontSize: '.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#94a3b8', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.2rem' }}>{m.label}</div>
+                          <div style={{ marginBottom: '.3rem' }}><Tag publico={m.publico} /></div>
                           <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: (m as any).big ? '1.3rem' : '1.1rem', fontWeight: 800, color: (m as any).big ? '#d97706' : '#0f172a', lineHeight: 1 }}>{m.value}</div>
                           <div style={{ fontSize: '.62rem', color: '#94a3b8', marginTop: '.2rem', fontFamily: 'var(--font-inter,sans-serif)' }}>{m.sub}</div>
                         </div>
@@ -469,10 +603,12 @@ export default function CalculadoraPage() {
 
                     <div style={{ padding: '.85rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <div style={{ fontSize: '.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#94a3b8', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.15rem' }}>Líquido Real</div>
+                        <div style={{ fontSize: '.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#94a3b8', fontFamily: 'var(--font-montserrat,sans-serif)', marginBottom: '.15rem' }}>Líquido Real <Tag publico={false} /></div>
                         <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1rem', fontWeight: 800, color: '#16a34a' }}>{fmt(r.liquido_real)}</div>
                       </div>
-                      {r.parcela_valida
+                      {r.comissao_valor < 0
+                        ? <span style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5', padding: '.25rem .75rem', borderRadius: 99, fontSize: '.65rem', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)' }}>⚠ Comissão negativa</span>
+                        : r.parcela_valida
                         ? <span style={{ background: '#f0fdf4', color: '#16a34a', border: '1px solid #86efac', padding: '.25rem .75rem', borderRadius: 99, fontSize: '.65rem', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)' }}>✓ Válido</span>
                         : <span style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5', padding: '.25rem .75rem', borderRadius: 99, fontSize: '.65rem', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)' }}>⚠ Parcela abaixo de R$30</span>
                       }
@@ -493,8 +629,16 @@ export default function CalculadoraPage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#f8fafc' }}>
-                      {['Segmento','Alunos','Custo Kit','Comissão','Nota Fiscal','Taxas Eskolare','Manutenção','Preço Final','Parcela','Líquido Real','Status'].map(col => (
-                        <th key={col} style={{ padding: '.65rem 1rem', textAlign: 'left', fontSize: '.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#64748b', borderBottom: '1px solid #e2e8f0', fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap' }}>{col}</th>
+                      {([
+                        ['Segmento', null], ['Alunos', null],
+                        ['Custo Kit', true], ['Comissão', true], ['Despesa Financeira', true],
+                        ['Nota Fiscal', false], ['Taxas Eskolare', false], ['Manutenção', false],
+                        ['Preço Final', true], ['Parcela', null], ['Líquido Real', false], ['Status', null],
+                      ] as [string, boolean | null][]).map(([col, publico]) => (
+                        <th key={col} style={{ padding: '.65rem 1rem', textAlign: 'left', fontSize: '.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#64748b', borderBottom: '1px solid #e2e8f0', fontFamily: 'var(--font-montserrat,sans-serif)', whiteSpace: 'nowrap' }}>
+                          {col}
+                          {publico !== null && <div style={{ marginTop: 3 }}><Tag publico={publico} /></div>}
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -513,9 +657,10 @@ export default function CalculadoraPage() {
                           <td style={{ padding: '.75rem 1rem', fontWeight: 700, color: '#7c3aed', fontFamily: 'var(--font-cormorant,serif)', fontSize: '.95rem' }}>
                             {fmt(r.comissao_valor)}
                             <span style={{ display: 'block', fontSize: '.62rem', color: '#94a3b8', fontFamily: 'var(--font-montserrat,sans-serif)', fontWeight: 600 }}>
-                              {ref.comissaoTipo === 'pct' ? `${ref.comissaoPct}%` : 'valor fixo'}
+                              {modo === 'comissao' ? `${r.comissao_pct.toFixed(1)}%` : (ref.comissaoTipo === 'pct' ? `${ref.comissaoPct}%` : 'valor fixo')}
                             </span>
                           </td>
+                          <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', fontWeight: 700, color: '#dc2626', fontFamily: 'var(--font-inter,sans-serif)' }}>{fmt(r.despesa_financeira_total)}</td>
                           <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#a855f7', fontFamily: 'var(--font-inter,sans-serif)' }}>{fmt(r.custo_nota_fiscal)}</td>
                           <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#dc2626', fontFamily: 'var(--font-inter,sans-serif)' }}>{fmt(r.total_taxas_parcelamento)}</td>
                           <td style={{ padding: '.75rem 1rem', fontSize: '.82rem', color: '#0ea5e9', fontFamily: 'var(--font-inter,sans-serif)' }}>{fmt(r.custo_manutencao)}</td>
@@ -525,7 +670,7 @@ export default function CalculadoraPage() {
                           </td>
                           <td style={{ padding: '.75rem 1rem', fontWeight: 700, color: '#16a34a', fontFamily: 'var(--font-cormorant,serif)', fontSize: '.95rem' }}>{fmt(r.liquido_real)}</td>
                           <td style={{ padding: '.75rem 1rem' }}>
-                            {r.parcela_valida
+                            {r.parcela_valida && r.comissao_valor >= 0
                               ? <span style={{ background: '#f0fdf4', color: '#16a34a', border: '1px solid #86efac', padding: '.15rem .55rem', borderRadius: 99, fontSize: '.62rem', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)' }}>✓</span>
                               : <span style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5', padding: '.15rem .55rem', borderRadius: 99, fontSize: '.62rem', fontWeight: 700, fontFamily: 'var(--font-montserrat,sans-serif)' }}>⚠</span>
                             }
@@ -537,7 +682,7 @@ export default function CalculadoraPage() {
                     <tr style={{ background: '#0f172a' }}>
                       <td style={{ padding: '.75rem 1rem', fontWeight: 700, fontSize: '.78rem', color: '#d97706', fontFamily: 'var(--font-montserrat,sans-serif)' }}>TOTAL</td>
                       <td style={{ padding: '.75rem 1rem', textAlign: 'center', fontWeight: 800, color: '#fff', fontFamily: 'var(--font-cormorant,serif)', fontSize: '.95rem' }}>{totalAlunos}</td>
-                      <td colSpan={5} style={{ padding: '.75rem 1rem', fontSize: '.72rem', color: 'rgba(255,255,255,.4)', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                      <td colSpan={6} style={{ padding: '.75rem 1rem', fontSize: '.72rem', color: 'rgba(255,255,255,.4)', fontFamily: 'var(--font-inter,sans-serif)' }}>
                         Manutenção da plataforma: {fmt(CUSTO_MANUTENCAO_PLATAFORMA)}/kit × {totalAlunos} kits = {fmt(CUSTO_MANUTENCAO_PLATAFORMA * totalAlunos)}
                       </td>
                       <td colSpan={4} style={{ padding: '.75rem 1rem', fontSize: '.72rem', color: 'rgba(255,255,255,.4)', fontFamily: 'var(--font-inter,sans-serif)' }}>
@@ -584,10 +729,10 @@ export default function CalculadoraPage() {
                 <div style={{ background: '#0f172a', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '.75rem' }}>
                   <div>
                     <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#d97706' }}>
-                      📋 Memória de cálculo — para uso comercial
+                      📋 Memória de cálculo — para uso comercial <Tag publico={false} />
                     </div>
                     <div style={{ fontSize: '.72rem', color: 'rgba(255,255,255,.45)', marginTop: '.15rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                      Explicação passo a passo de como o preço final é formado, para apresentar à escola
+                      Passo a passo completo de como o preço final é formado — não apresentar à escola
                     </div>
                   </div>
                   {ativos.length > 1 && (
@@ -609,7 +754,48 @@ export default function CalculadoraPage() {
                 </div>
 
                 <ol style={{ padding: '1.25rem 1.75rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '.7rem' }}>
-                  {[
+                  {(modo === 'comissao' ? [
+                    {
+                      texto: <>Valor final ao pai <span style={{ color: '#94a3b8' }}>(preço total informado para a família)</span></>,
+                      valor: fmt(resMemoria.preco_final), destaque: true,
+                    },
+                    {
+                      texto: <>Taxas percentuais Eskolare descontadas no repasse <span style={{ color: '#94a3b8' }}>(plataforma 1,5% + cartão {resMemoria.taxa_cartao_pct.toFixed(2)}% — sempre calculada em 12x)</span></>,
+                      valor: `− ${fmt(resMemoria.taxa_plataforma_valor + resMemoria.taxa_cartao_valor)}`,
+                    },
+                    {
+                      texto: <>Taxa fixa Eskolare por parcela <span style={{ color: '#94a3b8' }}>(R$ 0,30 × {PARCELAS_BASE_PRECO} parcelas)</span></>,
+                      valor: `− ${fmt(resMemoria.taxa_fixa_eskolare)}`,
+                    },
+                    {
+                      texto: <>Manutenção da plataforma <span style={{ color: '#94a3b8' }}>(R$73,02 + 2% ISS por dentro + {fmt(CUSTO_SUPORTE_LOJA)} de suporte da loja)</span></>,
+                      valor: `− ${fmt(resMemoria.custo_manutencao)}`,
+                    },
+                    {
+                      texto: <>Nota fiscal <span style={{ color: '#94a3b8' }}>(uma nota por venda/kit)</span></>,
+                      valor: `− ${fmt(resMemoria.custo_nota_fiscal)}`,
+                    },
+                    {
+                      texto: <strong>Líquido que sobra para a Cidade Viva (custo + comissão)</strong>,
+                      valor: fmt(resMemoria.liquido_real), destaque: true,
+                    },
+                    {
+                      texto: <>Custo de aquisição do kit <span style={{ color: '#94a3b8' }}>(valor pago pela escola ao fornecedor)</span></>,
+                      valor: `− ${fmt(resMemoria.custo)}`,
+                    },
+                    {
+                      texto: <strong>Comissão do consultor comercial = líquido − custo</strong>,
+                      valor: fmt(resMemoria.comissao_valor), destaque: true, cor: resMemoria.comissao_valor < 0 ? '#dc2626' : '#7c3aed',
+                    },
+                    {
+                      texto: <>Comissão sobre o custo</>,
+                      valor: `${resMemoria.comissao_pct.toFixed(2)}%`,
+                    },
+                    {
+                      texto: <>Forma de pagamento <span style={{ color: '#94a3b8' }}>(escolhida pela família — não altera a comissão)</span></>,
+                      valor: refMemoria.parcelas === 1 ? 'À vista' : `${refMemoria.parcelas}x de ${fmt(resMemoria.valor_parcela)}`,
+                    },
+                  ] : [
                     {
                       texto: <>Custo de aquisição do kit <span style={{ color: '#94a3b8' }}>(valor pago pela escola ao fornecedor)</span></>,
                       valor: fmt(resMemoria.custo),
@@ -666,7 +852,7 @@ export default function CalculadoraPage() {
                       texto: <>Conferência — líquido real recebido pela Cidade Viva <span style={{ color: '#94a3b8' }}>(deve bater com o líquido desejado no passo 3)</span></>,
                       valor: fmt(resMemoria.liquido_real), cor: '#16a34a',
                     },
-                  ].map((item, i) => (
+                  ]).map((item, i) => (
                     <li key={i} style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '1rem',
                       padding: (item as any).destaque ? '.6rem .9rem' : '0', borderRadius: 8,
@@ -692,7 +878,7 @@ export default function CalculadoraPage() {
             {/* Tabela de taxas */}
             <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: '1.1rem 1.5rem', boxShadow: '0 1px 4px rgba(15,23,42,.05)' }}>
               <div style={{ fontFamily: 'var(--font-montserrat,sans-serif)', fontSize: '.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.07em', color: '#d97706', marginBottom: '.75rem' }}>
-                Taxas Eskolare aplicadas
+                Taxas Eskolare aplicadas <Tag publico={false} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem' }}>
                 {[
