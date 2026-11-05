@@ -170,7 +170,7 @@ function Tag({ publico }: { publico: boolean }) {
       color: publico ? '#16a34a' : '#64748b',
       border: `1px solid ${publico ? '#86efac' : '#cbd5e1'}`,
     }}>
-      {publico ? 'Pode informar à escola' : 'Uso interno'}
+      {publico ? 'Informar à escola' : 'Uso interno'}
     </span>
   )
 }
