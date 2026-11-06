@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { lerQuantidades } from '@/lib/pedidos'
 import { calcPotencial, calcProbabilidade, calcClassificacao } from '@/types/database'
 import type { StageNegociacao } from '@/types/database'
 
@@ -868,8 +869,6 @@ export async function enviarFormularioPublico(formData: FormData) {
 export async function enviarPrevisaoPedido(formData: FormData) {
   const supabase = await createClient()
 
-  const toNum = (k: string) => parseInt(formData.get(k) as string) || 0
-
   const payload = {
     nome_instituicao:     formData.get('nome_instituicao') as string,
     cnpj:                 formData.get('cnpj') as string || null,
@@ -884,15 +883,7 @@ export async function enviarPrevisaoPedido(formData: FormData) {
     data_fim_letivo:      formData.get('data_fim_letivo') as string || null,
     formato_calendario:   formData.get('formato_calendario') as string || null,
     series_adotadas:      formData.getAll('series_adotadas') as string[],
-    infantil2_qtd:        toNum('infantil2_qtd'),
-    infantil3_qtd:        toNum('infantil3_qtd'),
-    infantil4_qtd:        toNum('infantil4_qtd'),
-    infantil5_qtd:        toNum('infantil5_qtd'),
-    fund1_ano1_qtd:       toNum('fund1_ano1_qtd'),
-    fund1_ano2_qtd:       toNum('fund1_ano2_qtd'),
-    fund1_ano3_qtd:       toNum('fund1_ano3_qtd'),
-    fund1_ano4_qtd:       toNum('fund1_ano4_qtd'),
-    fund1_ano5_qtd:       toNum('fund1_ano5_qtd'),
+    ...lerQuantidades(formData),   // série × tipo de kit (completo / sem inglês / só inglês)
   }
 
   // Sem .select() de propósito: quem envia é anônimo e a política de SELECT
@@ -916,8 +907,6 @@ export async function atualizarPrevisaoPedido(formData: FormData) {
   const id = formData.get('id') as string
   if (!id) throw new Error('id é obrigatório')
 
-  const toNum = (k: string) => parseInt(formData.get(k) as string) || 0
-
   const payload = {
     nome_instituicao:     formData.get('nome_instituicao') as string,
     cnpj:                 formData.get('cnpj') as string || null,
@@ -932,15 +921,7 @@ export async function atualizarPrevisaoPedido(formData: FormData) {
     data_fim_letivo:      formData.get('data_fim_letivo') as string || null,
     formato_calendario:   formData.get('formato_calendario') as string || null,
     series_adotadas:      formData.getAll('series_adotadas') as string[],
-    infantil2_qtd:        toNum('infantil2_qtd'),
-    infantil3_qtd:        toNum('infantil3_qtd'),
-    infantil4_qtd:        toNum('infantil4_qtd'),
-    infantil5_qtd:        toNum('infantil5_qtd'),
-    fund1_ano1_qtd:       toNum('fund1_ano1_qtd'),
-    fund1_ano2_qtd:       toNum('fund1_ano2_qtd'),
-    fund1_ano3_qtd:       toNum('fund1_ano3_qtd'),
-    fund1_ano4_qtd:       toNum('fund1_ano4_qtd'),
-    fund1_ano5_qtd:       toNum('fund1_ano5_qtd'),
+    ...lerQuantidades(formData),   // série × tipo de kit (completo / sem inglês / só inglês)
     status:               formData.get('status') as string || 'recebido',
   }
 

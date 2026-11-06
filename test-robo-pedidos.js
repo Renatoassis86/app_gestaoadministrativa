@@ -68,6 +68,8 @@ async function main() {
     await page.fill('input[name="infantil2_qtd"]', '12');
     await page.fill('input[name="infantil3_qtd"]', '15');
     await page.fill('input[name="fund1_ano1_qtd"]', '20');
+    await page.fill('input[name="infantil2_sem_ingles_qtd"]', '5');
+    await page.fill('input[name="fund1_ano1_so_ingles_qtd"]', '7');
     log('✓ Quantitativos preenchidos', 'green');
 
     log('\n📦 ETAPA 7: Desmarcar "mesmo endereço" e preencher endereço de entrega...', 'bold');

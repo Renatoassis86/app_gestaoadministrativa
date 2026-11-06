@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import { enviarPrevisaoPedido } from '@/lib/actions'
 import { EnderecoEntregaField } from '@/components/pedidos/EnderecoEntregaField'
+import { QuantidadesKitGrid } from '@/components/pedidos/QuantidadesKitGrid'
+import { SERIES_PEDIDOS } from '@/lib/pedidos'
 
 export const metadata: Metadata = {
   title: 'Gestão de Pedidos — Cidade Viva Education',
-  description: 'Escolas parceiras enviam aqui a previsão de matrículas por série e o endereço de entrega do material do próximo ano letivo.',
+  description: 'Escolas parceiras enviam aqui a previsão de pedidos por série (kit completo, sem Inglês ou só Inglês) e o endereço de entrega do material do próximo ano letivo.',
   openGraph: {
     title: 'Gestão de Pedidos — Cidade Viva Education',
     description: 'Previsão de matrículas por série e endereço de entrega do material do próximo ano letivo.',
@@ -19,17 +21,7 @@ export const metadata: Metadata = {
   },
 }
 
-const SERIES = [
-  ['Infantil II', 'infantil2'],
-  ['Infantil III', 'infantil3'],
-  ['Infantil IV', 'infantil4'],
-  ['Infantil V', 'infantil5'],
-  ['1º ano - Fund I', 'fund1_ano1'],
-  ['2º ano - Fund I', 'fund1_ano2'],
-  ['3º ano - Fund I', 'fund1_ano3'],
-  ['4º ano - Fund I', 'fund1_ano4'],
-  ['5º ano - Fund I', 'fund1_ano5'],
-] as const
+const SERIES = SERIES_PEDIDOS.map(s => [s.label, s.id] as const)
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -162,15 +154,8 @@ export default function FormularioPedidosPublico() {
               <Field label="Formato do calendário letivo" name="formato_calendario" required options={['Bimestral', 'Trimestral', 'Semestral']} />
             </Section>
 
-            <Section title="Previsão de Alunos por Série">
-              <p style={{ fontSize: '.82rem', color: '#718096', marginBottom: '1rem' }}>
-                Informe "0" nas séries que não serão adotadas pela instituição.
-              </p>
-              <Row>
-                {SERIES.map(([label, key]) => (
-                  <Field key={key} label={label} name={`${key}_qtd`} type="number" required defaultValue="0" />
-                ))}
-              </Row>
+            <Section title="Previsão de Pedidos por Série e Tipo de Kit">
+              <QuantidadesKitGrid />
             </Section>
 
             <button type="submit"

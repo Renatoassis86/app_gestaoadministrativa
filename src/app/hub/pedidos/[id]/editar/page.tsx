@@ -4,20 +4,12 @@ import { createClient } from '@/lib/supabase/server'
 import { atualizarPrevisaoPedido } from '@/lib/actions'
 import { ArrowLeft } from 'lucide-react'
 import { EnderecoEntregaField } from '@/components/pedidos/EnderecoEntregaField'
+import { QuantidadesKitGrid } from '@/components/pedidos/QuantidadesKitGrid'
+import { SERIES_PEDIDOS } from '@/lib/pedidos'
 
 export const dynamic = 'force-dynamic'
 
-const SERIES = [
-  ['Infantil II', 'infantil2'],
-  ['Infantil III', 'infantil3'],
-  ['Infantil IV', 'infantil4'],
-  ['Infantil V', 'infantil5'],
-  ['1º ano - Fund I', 'fund1_ano1'],
-  ['2º ano - Fund I', 'fund1_ano2'],
-  ['3º ano - Fund I', 'fund1_ano3'],
-  ['4º ano - Fund I', 'fund1_ano4'],
-  ['5º ano - Fund I', 'fund1_ano5'],
-] as const
+const SERIES = SERIES_PEDIDOS.map(s => [s.label, s.id] as const)
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -143,12 +135,8 @@ export default async function EditarPrevisaoPage({ params }: { params: Promise<{
               <Field label="Formato do calendário letivo" name="formato_calendario" defaultValue={p.formato_calendario ?? 'Bimestral'} options={['Bimestral', 'Trimestral', 'Semestral']} />
             </Section>
 
-            <Section title="Previsão de Alunos por Série">
-              <Row>
-                {SERIES.map(([label, key]) => (
-                  <Field key={key} label={label} name={`${key}_qtd`} type="number" required defaultValue={String(p[`${key}_qtd`] ?? 0)} />
-                ))}
-              </Row>
+            <Section title="Previsão de Pedidos por Série e Tipo de Kit">
+              <QuantidadesKitGrid valores={p} />
             </Section>
 
             <button type="submit"

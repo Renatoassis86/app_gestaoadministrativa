@@ -4,21 +4,10 @@ import { createClient } from '@/lib/supabase/server'
 import { signOut } from '@/lib/actions'
 import { ClipboardList, School, Users2, CalendarRange, ExternalLink, LogOut, Inbox } from 'lucide-react'
 import { PrevisaoRowActions } from '@/components/pedidos/PrevisaoRowActions'
+import { SERIES_PEDIDOS, TIPOS_KIT, colunaQtd, totaisDaLinha, type TipoKitId } from '@/lib/pedidos'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
-
-const SERIES = [
-  ['Infantil II', 'infantil2_qtd'],
-  ['Infantil III', 'infantil3_qtd'],
-  ['Infantil IV', 'infantil4_qtd'],
-  ['Infantil V', 'infantil5_qtd'],
-  ['1º ano Fund I', 'fund1_ano1_qtd'],
-  ['2º ano Fund I', 'fund1_ano2_qtd'],
-  ['3º ano Fund I', 'fund1_ano3_qtd'],
-  ['4º ano Fund I', 'fund1_ano4_qtd'],
-  ['5º ano Fund I', 'fund1_ano5_qtd'],
-] as const
 
 const STATUS: Record<string, { label: string; cor: string; bg: string; border: string }> = {
   recebido:   { label: 'Recebido',   cor: '#0ea5e9', bg: '#eff6ff', border: '#bfdbfe' },
@@ -26,9 +15,6 @@ const STATUS: Record<string, { label: string; cor: string; bg: string; border: s
   confirmado: { label: 'Confirmado', cor: '#16a34a', bg: '#f0fdf4', border: '#86efac' },
 }
 
-function totalAlunosDaLinha(p: Record<string, any>) {
-  return SERIES.reduce((soma, [, key]) => soma + (Number(p[key]) || 0), 0)
-}
 
 export default async function PedidosDashboard() {
   const supabase = await createClient()
@@ -44,19 +30,25 @@ export default async function PedidosDashboard() {
 
   const totalPrevisoes = previsoes.length
   const totalEscolas = new Set(previsoes.map(p => (p.cnpj || p.nome_instituicao || '').toLowerCase())).size
-  const totalAlunos = previsoes.reduce((soma, p) => soma + totalAlunosDaLinha(p), 0)
+  const totaisPorLinha = previsoes.map(p => totaisDaLinha(p))
+  const totalKits = totaisPorLinha.reduce((soma, t) => soma + t.total, 0)
   const anoLetivoFoco = previsoes[0]?.ano_letivo ?? new Date().getFullYear() + 1
 
-  const totalPorSerie = SERIES.map(([label, key]) => ({
-    label,
-    total: previsoes.reduce((soma, p) => soma + (Number(p[key]) || 0), 0),
-  }))
-  const maiorSerie = Math.max(1, ...totalPorSerie.map(s => s.total))
+  // Série × tipo de kit, somando todas as previsões
+  const totalPorSerie = SERIES_PEDIDOS.map(s => {
+    const porTipo = Object.fromEntries(TIPOS_KIT.map(t => [
+      t.id, previsoes.reduce((soma, p) => soma + (Number(p[colunaQtd(s.id, t)]) || 0), 0),
+    ])) as Record<TipoKitId, number>
+    return { label: s.label, ...porTipo, total: porTipo.completo + porTipo.sem_ingles + porTipo.so_ingles }
+  })
+  const totalPorTipo = Object.fromEntries(TIPOS_KIT.map(t => [
+    t.id, totaisPorLinha.reduce((soma, l) => soma + l[t.id], 0),
+  ])) as Record<TipoKitId, number>
 
   const kpis = [
     { label: 'Previsões recebidas', value: totalPrevisoes, icon: Inbox,        cor: '#0ea5e9', bg: '#eff6ff', border: '#bfdbfe' },
     { label: 'Escolas parceiras',   value: totalEscolas,   icon: School,       cor: '#7c3aed', bg: '#faf5ff', border: '#d8b4fe' },
-    { label: 'Alunos previstos',    value: totalAlunos,    icon: Users2,       cor: '#16a34a', bg: '#f0fdf4', border: '#86efac' },
+    { label: 'Kits previstos',      value: totalKits,      icon: Users2,       cor: '#16a34a', bg: '#f0fdf4', border: '#86efac' },
     { label: 'Ano letivo em foco',  value: anoLetivoFoco,  icon: CalendarRange, cor: '#d97706', bg: '#fffbeb', border: '#fcd34d' },
   ]
 
@@ -170,22 +162,34 @@ export default async function PedidosDashboard() {
             {/* Previsão por série */}
             <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, padding: '1.25rem 1.5rem' }}>
               <div style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '1rem' }}>
-                Previsão de alunos por série — {anoLetivoFoco}
+                Previsão de kits por série — {anoLetivoFoco}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
-                {totalPorSerie.map(s => (
-                  <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '.85rem' }}>
-                    <div style={{ width: 110, flexShrink: 0, fontSize: '.78rem', color: '#334155', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                      {s.label}
-                    </div>
-                    <div style={{ flex: 1, background: '#F1F5F9', borderRadius: 6, height: 10, overflow: 'hidden' }}>
-                      <div style={{ width: `${(s.total / maiorSerie) * 100}%`, background: '#0ea5e9', height: '100%', borderRadius: 6 }} />
-                    </div>
-                    <div style={{ width: 40, textAlign: 'right', fontSize: '.8rem', fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                      {s.total}
-                    </div>
-                  </div>
-                ))}
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.82rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
+                  <thead>
+                    <tr style={{ background: '#F8FAFC', textAlign: 'right' }}>
+                      <th style={{ padding: '.6rem 1rem', textAlign: 'left', fontSize: '.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.05em', color: '#64748b' }}>Série</th>
+                      {TIPOS_KIT.map(t => (
+                        <th key={t.id} style={{ padding: '.6rem 1rem', fontSize: '.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.05em', color: '#64748b', whiteSpace: 'nowrap' }}>{t.label}</th>
+                      ))}
+                      <th style={{ padding: '.6rem 1rem', fontSize: '.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.05em', color: '#0369a1' }}>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {totalPorSerie.map(s => (
+                      <tr key={s.label} style={{ borderTop: '1px solid #F1F5F9', textAlign: 'right' }}>
+                        <td style={{ padding: '.55rem 1rem', textAlign: 'left', color: '#334155' }}>{s.label}</td>
+                        {TIPOS_KIT.map(t => <td key={t.id} style={{ padding: '.55rem 1rem', color: '#475569' }}>{s[t.id]}</td>)}
+                        <td style={{ padding: '.55rem 1rem', fontWeight: 700, color: '#0f172a' }}>{s.total}</td>
+                      </tr>
+                    ))}
+                    <tr style={{ borderTop: '2px solid #E2E8F0', textAlign: 'right', background: '#F0F9FF' }}>
+                      <td style={{ padding: '.6rem 1rem', textAlign: 'left', fontWeight: 800, color: '#0369a1' }}>Total</td>
+                      {TIPOS_KIT.map(t => <td key={t.id} style={{ padding: '.6rem 1rem', fontWeight: 800, color: '#0369a1' }}>{totalPorTipo[t.id]}</td>)}
+                      <td style={{ padding: '.6rem 1rem', fontWeight: 800, color: '#0369a1' }}>{totalKits}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
 
@@ -198,7 +202,7 @@ export default async function PedidosDashboard() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.82rem', fontFamily: 'var(--font-inter,sans-serif)' }}>
                   <thead>
                     <tr style={{ background: '#F8FAFC', textAlign: 'left' }}>
-                      {['Instituição', 'CNPJ', 'Responsável', 'Telefone', 'Ano letivo', 'Alunos previstos', 'Status', 'Enviado em', 'Ações'].map(h => (
+                      {['Instituição', 'CNPJ', 'Responsável', 'Telefone', 'Ano letivo', 'Kits previstos', 'Status', 'Enviado em', 'Ações'].map(h => (
                         <th key={h} style={{ padding: '.7rem 1rem', fontSize: '.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.05em', color: '#64748b', whiteSpace: 'nowrap' }}>
                           {h}
                         </th>
@@ -206,8 +210,9 @@ export default async function PedidosDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {previsoes.map(p => {
+                    {previsoes.map((p, i) => {
                       const st = STATUS[p.status] ?? STATUS.recebido
+                      const kits = totaisPorLinha[i]
                       return (
                         <tr key={p.id} style={{ borderTop: '1px solid #F1F5F9' }}>
                           <td style={{ padding: '.7rem 1rem', fontWeight: 600, color: '#0f172a' }}>{p.nome_instituicao}</td>
@@ -215,7 +220,12 @@ export default async function PedidosDashboard() {
                           <td style={{ padding: '.7rem 1rem', color: '#475569' }}>{p.responsavel_nome}</td>
                           <td style={{ padding: '.7rem 1rem', color: '#475569', whiteSpace: 'nowrap' }}>{p.responsavel_telefone}</td>
                           <td style={{ padding: '.7rem 1rem', color: '#475569' }}>{p.ano_letivo}</td>
-                          <td style={{ padding: '.7rem 1rem', fontWeight: 700, color: '#0f172a' }}>{totalAlunosDaLinha(p)}</td>
+                          <td style={{ padding: '.7rem 1rem', whiteSpace: 'nowrap' }}>
+                            <div style={{ fontWeight: 700, color: '#0f172a' }}>{kits.total}</div>
+                            <div style={{ fontSize: '.68rem', color: '#94a3b8' }}>
+                              {kits.completo} compl. · {kits.sem_ingles} s/ Inglês · {kits.so_ingles} só Inglês
+                            </div>
+                          </td>
                           <td style={{ padding: '.7rem 1rem' }}>
                             <span style={{
                               display: 'inline-block', padding: '.2rem .6rem', borderRadius: 9999,
