@@ -33,6 +33,7 @@ const NAV_PROCESS = [
   { href: '/comercial/jornada-visual', label: 'Jornada Visual',    icon: GitBranch   },
   { href: '/comercial/jornada',        label: 'Jornada Relac.',    icon: Activity    },
   { href: '/comercial/contratos',      label: 'Jornada Contrat.',  icon: FileSignature },
+  { href: '/contratos',                label: 'Contratos Education', icon: FileSignature, badge: 'Novo' },
   { href: '/comercial/contratos-ingles', label: 'Contratos Inglês', icon: FileSignature },
   { href: '/comercial/pipeline',       label: 'Pipeline',          icon: Kanban      },
   { href: '/comercial/amostras',       label: 'Envio Amostras',    icon: Package     },
