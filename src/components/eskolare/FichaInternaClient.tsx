@@ -132,7 +132,7 @@ export function FichaInternaClient({ f }: { f: FichaInterna }) {
       <section style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: '1rem 1.2rem' }}>
         <h3 style={{ margin: '0 0 .3rem', fontSize: '.95rem' }}>Dados da ficha</h3>
         <p style={{ fontSize: '.78rem', color: '#64748b', margin: '0 0 .8rem' }}>
-          O que você preencher aqui aparece para a escola com os botões "Está correto" e "Corrigir". Campos em branco ficam para a escola preencher.
+          O que você preencher aqui aparece para a escola já preenchido, editável, com o botão "Está correto". Campos em branco ficam para a escola preencher.
         </p>
         <button style={{ ...btn('#0ea5e9', true), marginBottom: '.8rem' }} disabled={pendente || finalizada}
           onClick={() => start(async () => { const r = await atualizarDaPlataforma(f.id); setMsg(r.ok ? (r.preenchidos ? `${r.preenchidos} campo(s) preenchido(s) com dados da plataforma.` : 'Nada novo na plataforma: todos os campos disponíveis já estão preenchidos.') : (r.error ?? 'Erro.')); router.refresh() })}>

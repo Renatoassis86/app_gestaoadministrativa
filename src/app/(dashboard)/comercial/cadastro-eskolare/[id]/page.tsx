@@ -46,7 +46,7 @@ export default async function FichaEskolare({ params }: { params: Promise<{ id: 
       <PageHeader title="Ficha Eskolare" subtitle={ficha.escolaNome} />
       <div style={{ padding: '1.25rem 1.75rem 3rem' }}>
         <Link href="/comercial/cadastro-eskolare" style={{ fontSize: '.8rem', color: '#0ea5e9', fontWeight: 700, display: 'inline-block', marginBottom: '.8rem' }}>← Voltar para a lista</Link>
-        <FichaInternaClient key={JSON.stringify(ficha.dados) + ficha.status} f={ficha} />
+        <FichaInternaClient key={JSON.stringify(ficha.dados)} f={ficha} />
       </div>
     </>
   )

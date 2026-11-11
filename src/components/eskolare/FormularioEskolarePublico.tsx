@@ -15,7 +15,6 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
   const [ficha, setFicha] = useState(inicial)
   const [valores, setValores] = useState<Record<string, string>>(() => Object.fromEntries(Object.entries(inicial.campos).map(([k, v]) => [k, v.valor])))
   const [situacoes, setSituacoes] = useState<Record<string, string>>(() => Object.fromEntries(Object.entries(inicial.campos).map(([k, v]) => [k, v.situacao])))
-  const [corrigindo, setCorrigindo] = useState<Record<string, boolean>>({})
   const [erros, setErros] = useState<Record<string, string>>({})
   const [salvando, setSalvando] = useState(0)
   const [salvoEm, setSalvoEm] = useState<Date | null>(null)
@@ -176,12 +175,13 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
     const valor = valores[c.chave] ?? ''
     const sit = situacoes[c.chave] ?? 'branco'
     const erro = erros[c.chave]
-    const preMode = sit === 'pre' && !corrigindo[c.chave] && !leitura && c.tipo !== 'logo' && !vazio(valor)
+    const preMode = sit === 'pre' && !leitura && c.tipo !== 'logo' && c.tipo !== 'opcoes' && !vazio(valor)
 
     return (
       <div key={c.chave} style={{ marginBottom: '1.1rem' }}>
         <label htmlFor={c.chave} style={{ display: 'block', fontSize: '.88rem', fontWeight: 700, color: '#1e293b', marginBottom: '.3rem' }}>
           {c.rotulo}{c.obrigatorio && <span style={{ color: '#dc2626' }}> *</span>}
+          {preMode && <span style={{ marginLeft: '.5rem', fontSize: '.68rem', color: '#0369a1', fontWeight: 800 }}>PRÉ-PREENCHIDO</span>}
           {sit === 'confirmado' && <span style={{ marginLeft: '.5rem', fontSize: '.68rem', color: '#047857', fontWeight: 800 }}>✓ CONFIRMADO</span>}
           {sit === 'corrigido' && <span style={{ marginLeft: '.5rem', fontSize: '.68rem', color: '#b45309', fontWeight: 800 }}>✎ CORRIGIDO</span>}
         </label>
@@ -209,21 +209,22 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
               </button>
             ))}
           </div>
-        ) : preMode ? (
-          <div style={{ border: '1.5px solid #bae6fd', background: '#f0f9ff', borderRadius: 12, padding: '.7rem .8rem' }}>
-            <div style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a', wordBreak: 'break-word' }}>{valor}</div>
-            <div style={{ display: 'flex', gap: '.5rem', marginTop: '.6rem', flexWrap: 'wrap' }}>
-              <button type="button" onClick={() => confirmar(c)} style={{ flex: '1 1 120px', padding: '.6rem', borderRadius: 9999, border: 'none', background: '#059669', color: '#fff', fontWeight: 800, fontSize: '.9rem', cursor: 'pointer' }}>✓ Está correto</button>
-              <button type="button" onClick={() => setCorrigindo(x => ({ ...x, [c.chave]: true }))} style={{ flex: '1 1 120px', padding: '.6rem', borderRadius: 9999, border: '2px solid #0ea5e9', background: '#fff', color: '#0369a1', fontWeight: 800, fontSize: '.9rem', cursor: 'pointer' }}>✎ Corrigir</button>
-            </div>
-          </div>
         ) : (
-          <input id={c.chave} value={valor} disabled={leitura}
-            onChange={ev => alterar(c, ev.target.value)} onBlur={() => { if (!erros[c.chave]) { clearTimeout(timers.current[c.chave]); void persistir(c.chave, valores[c.chave] ?? '') } }}
-            inputMode={c.tipo === 'inteiro' ? 'numeric' : c.tipo === 'dinheiro' ? 'decimal' : c.tipo === 'whatsapp' || c.tipo === 'cep' || c.tipo === 'cnpj' || c.tipo === 'cpf' ? 'numeric' : c.tipo === 'email' ? 'email' : 'text'}
-            type={c.tipo === 'email' ? 'email' : 'text'} autoComplete="off"
-            placeholder={c.tipo === 'whatsapp' ? '(DD) 9XXXX-XXXX' : c.tipo === 'cnpj' ? '00.000.000/0000-00' : c.tipo === 'cpf' ? '000.000.000-00' : c.tipo === 'cep' ? '00000-000' : c.tipo === 'dinheiro' ? '0,00' : ''}
-            style={{ ...inputStyle, borderColor: erro ? '#dc2626' : '#cbd5e1', background: leitura ? '#f1f5f9' : '#fff' }} />
+          <div>
+            <input id={c.chave} value={valor} disabled={leitura}
+              onChange={ev => alterar(c, ev.target.value)}
+              onBlur={() => { if (!erros[c.chave] && pendentes.current.has(c.chave)) { clearTimeout(timers.current[c.chave]); void persistir(c.chave, valores[c.chave] ?? '') } }}
+              inputMode={c.tipo === 'inteiro' ? 'numeric' : c.tipo === 'dinheiro' ? 'decimal' : c.tipo === 'whatsapp' || c.tipo === 'cep' || c.tipo === 'cnpj' || c.tipo === 'cpf' ? 'numeric' : c.tipo === 'email' ? 'email' : 'text'}
+              type={c.tipo === 'email' ? 'email' : 'text'} autoComplete="off"
+              placeholder={c.tipo === 'whatsapp' ? '(DD) 9XXXX-XXXX' : c.tipo === 'cnpj' ? '00.000.000/0000-00' : c.tipo === 'cpf' ? '000.000.000-00' : c.tipo === 'cep' ? '00000-000' : c.tipo === 'dinheiro' ? '0,00' : ''}
+              style={{ ...inputStyle, borderColor: erro ? '#dc2626' : preMode ? '#7dd3fc' : '#cbd5e1', background: leitura ? '#f1f5f9' : preMode ? '#f0f9ff' : '#fff' }} />
+            {preMode && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', marginTop: '.45rem', flexWrap: 'wrap' }}>
+                <button type="button" onClick={() => confirmar(c)} style={{ padding: '.45rem .9rem', borderRadius: 9999, border: 'none', background: '#059669', color: '#fff', fontWeight: 800, fontSize: '.85rem', cursor: 'pointer' }}>✓ Está correto</button>
+                <span style={{ fontSize: '.74rem', color: '#64748b' }}>Já preenchemos para você ganhar tempo. Se algo estiver diferente, é só editar acima.</span>
+              </div>
+            )}
+          </div>
         )}
         {erro && <p role="alert" style={{ color: '#b91c1c', fontSize: '.8rem', margin: '.3rem 0 0' }}>{erro}</p>}
       </div>
