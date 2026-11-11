@@ -96,8 +96,9 @@ export async function salvarCampoPublico(token: string, chave: string, valor: st
   // Leitura-modificação-gravação com checagem otimista (updated_at): dois salvamentos simultâneos
   // (ex.: aba em segundo plano + digitação) não apagam o campo um do outro; quem perde reler e tenta de novo.
   let cur = f, situacao = 'branco', pct = 0, anterior = '', primeiraResposta = false, gravou = false
-  for (let t = 0; t < 8 && !gravou; t++) {
+  for (let t = 0; t < 20 && !gravou; t++) {
     if (t > 0) {
+      await new Promise(r => setTimeout(r, 30 + Math.random() * 120))
       const { data: n } = await admin.from('eskolare_fichas').select('*').eq('id', f.id).maybeSingle()
       if (!n) return { ok: false, error: 'Ficha não encontrada.' }
       if (!statusEditavelPelaEscola(n.status)) return { ok: false, error: 'Esta ficha já foi enviada e está somente para leitura.' }
@@ -112,13 +113,13 @@ export async function salvarCampoPublico(token: string, chave: string, valor: st
     dados[chave] = novo; sit[chave] = situacao
     primeiraResposta = cur.status === 'enviada'
     pct = calcularPreenchimento(dados).pct
-    const upd: Record<string, any> = { dados, situacao: sit, pct_preenchido: pct, ultima_resposta_por: 'escola' }
+    const upd: Record<string, any> = { dados, situacao: sit, pct_preenchido: pct, ultima_resposta_por: 'escola',
+      sessao_expira: new Date(Date.now() + SESSAO_HORAS * 3600_000).toISOString(), ultimo_acesso_em: new Date().toISOString() }   // sessão deslizante na mesma gravação
     if (primeiraResposta) upd.status = 'em_preenchimento'
     const { data: ok } = await admin.from('eskolare_fichas').update(upd).eq('id', cur.id).eq('updated_at', cur.updated_at).select('id')
     gravou = !!(ok && ok.length)
   }
   if (!gravou) return { ok: false, error: 'Não foi possível salvar agora. Tente novamente.' }
-  await renovarSessao(admin, f.id)
   await renovarCookie(token)
   if (acao === 'salvar' && anterior !== novo) {
     await registrarEvento(admin, f, 'campo', 'escola', { campo: chave, de: anterior, para: novo, situacao })

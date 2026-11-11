@@ -96,7 +96,14 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
     }
   }, [leitura])                                                                     // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function persistir(chave: string, valor: string, acao: 'salvar' | 'confirmar' = 'salvar') {
+  // Salva um campo por vez, na ordem em que foram digitados (evita disputa entre gravações da mesma ficha).
+  const fila = useRef<Promise<unknown>>(Promise.resolve())
+  function persistir(chave: string, valor: string, acao: 'salvar' | 'confirmar' = 'salvar') {
+    const p = fila.current.then(() => executarPersistencia(chave, valor, acao))
+    fila.current = p.catch(() => undefined)
+    return p
+  }
+  async function executarPersistencia(chave: string, valor: string, acao: 'salvar' | 'confirmar' = 'salvar') {
     setSalvando(n => n + 1)
     let r
     try { r = await salvarCampoPublico(token, chave, valor, acao) }
