@@ -39,8 +39,14 @@ export function FichaInternaClient({ f }: { f: FichaInterna }) {
   const st = STATUS_FICHA.find(s => s.id === f.status) ?? STATUS_FICHA[0]
   const nomeEscola = valores.nome_loja || f.escolaNome
 
-  const msg1 = `Olá! Para montar a loja da ${nomeEscola} na Eskolare, precisamos que você confirme alguns dados da escola. Acesse pelo link:\n${acesso?.link ?? ''}`
-  const msg2 = `Seu PIN de acesso: ${acesso?.pin ?? ''}`
+  const mensagem = `Olá! Para montar a loja da ${nomeEscola} na Eskolare, precisamos que você confirme alguns dados da escola e preencha o que ainda está em aberto.
+
+Acesse pelo link:
+${acesso?.link ?? ''}
+
+Seu PIN de acesso: ${acesso?.pin ?? ''}
+
+Pode preencher aos poucos: tudo fica salvo como rascunho e só é enviado quando você clicar em Enviar. Qualquer dúvida, é só responder esta mensagem.`
 
   function executar(fn: () => Promise<{ ok: boolean; error?: string; link?: string; pin?: string }>, ok?: string) {
     setMsg('')
@@ -101,7 +107,7 @@ export function FichaInternaClient({ f }: { f: FichaInterna }) {
       <section style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: '1rem 1.2rem' }}>
         <h3 style={{ margin: '0 0 .6rem', fontSize: '.95rem' }}>Acesso da escola (link + PIN)</h3>
         <p style={{ fontSize: '.8rem', color: '#64748b', margin: '0 0 .7rem' }}>
-          {!f.temAcesso ? 'Ainda não há link. Gere o link e o PIN e envie à escola por WhatsApp (em duas mensagens separadas).'
+          {!f.temAcesso ? 'Ainda não há link. Gere o link e o PIN e envie à escola por WhatsApp, em uma única mensagem.'
             : f.revogado ? 'O link foi revogado. Gere um novo acesso para reativar.'
             : 'Link ativo. O PIN só aparece no momento em que é gerado; se for perdido, gere outro.'}
           {f.bloqueadoAte && new Date(f.bloqueadoAte) > new Date() && <strong style={{ color: '#b91c1c' }}> Acesso bloqueado até {new Date(f.bloqueadoAte).toLocaleTimeString('pt-BR')} (PIN errado 5 vezes).</strong>}
@@ -121,8 +127,7 @@ export function FichaInternaClient({ f }: { f: FichaInterna }) {
             <div style={{ fontSize: '.82rem', margin: '.5rem 0', wordBreak: 'break-all' }}>Link: <code>{acesso.link}</code></div>
             <div style={{ fontSize: '1.4rem', fontWeight: 900, letterSpacing: '.3em', margin: '.3rem 0' }}>{acesso.pin}</div>
             <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
-              <button style={btn('#059669')} onClick={() => copiar(msg1, 'm1')}>{copiado === 'm1' ? '✓ Copiada' : 'Copiar mensagem 1 (link)'}</button>
-              <button style={btn('#059669')} onClick={() => copiar(msg2, 'm2')}>{copiado === 'm2' ? '✓ Copiada' : 'Copiar mensagem 2 (PIN)'}</button>
+              <button style={btn('#059669')} onClick={() => copiar(mensagem, 'm')}>{copiado === 'm' ? '✓ Mensagem copiada' : 'Copiar mensagem (link + PIN)'}</button>
             </div>
           </div>
         )}

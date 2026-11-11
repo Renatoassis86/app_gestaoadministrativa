@@ -8,7 +8,22 @@ import { FormularioEskolarePublico } from '@/components/eskolare/FormularioEskol
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'Cadastro da loja Eskolare 2027 — Cidade Viva Education',
+  description: 'Confirme os dados da sua escola para montar a loja na Eskolare.',
   robots: { index: false, follow: false },        // link privado: nunca indexar
+  // Pré-visualização do link (WhatsApp etc.): mesma imagem inicial dos demais links da plataforma.
+  // Título genérico de propósito: o nome da escola não pode aparecer no preview de um link privado.
+  openGraph: {
+    title: 'Cadastro da loja Eskolare 2027 — Cidade Viva Education',
+    description: 'Confirme os dados da sua escola para montar a loja na Eskolare.',
+    images: [{ url: '/images/hero-modulos.png', width: 1672, height: 941, alt: 'Cidade Viva Education' }],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Cadastro da loja Eskolare 2027 — Cidade Viva Education',
+    description: 'Confirme os dados da sua escola para montar a loja na Eskolare.',
+    images: ['/images/hero-modulos.png'],
+  },
 }
 
 function Moldura({ children }: { children: React.ReactNode }) {
