@@ -6,7 +6,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { CAMPOS, calcularPreenchimento, campoPorChave } from '@/lib/eskolare-campos'
 import { validarValor, soDigitos } from '@/lib/eskolare-validacao'
 import { gerarPin, gerarToken, hashPin } from '@/lib/eskolare-seguranca'
-import { exigirComercial, linkFicha, montarPrefill, registrarEvento, situacaoInicial } from '@/lib/eskolare-servidor'
+import { exigirComercial, linkFicha, registrarEvento, situacaoInicial } from '@/lib/eskolare-servidor'
+import { montarPrefill } from '@/lib/eskolare-prefill'
 
 export interface Resultado { ok: boolean; error?: string; id?: string; link?: string; pin?: string; erros?: Record<string, string>; importadas?: number }
 
@@ -18,6 +19,35 @@ async function carregar(admin: ReturnType<typeof createAdminClient>, id: string)
   return data
 }
 
+// Prévia: o que a plataforma já sabe da escola, e de onde veio cada dado, antes de criar a ficha.
+export async function previaPrefill(escolaId: string, ciclo: number): Promise<{ ok: boolean; error?: string; itens?: Array<{ chave: string; rotulo: string; valor: string; fonte: string }>; faltam?: string[] }> {
+  const u = await exigirComercial(); if (!u) return NEGADO
+  const admin = createAdminClient()
+  const { valores, fontes } = await montarPrefill(admin, escolaId, ciclo)
+  const itens = CAMPOS.filter(c => valores[c.chave]).map(c => ({ chave: c.chave, rotulo: c.rotulo, valor: c.tipo === 'cpf' && u.role !== 'gerente' ? '•••' : valores[c.chave], fonte: fontes[c.chave] }))
+  return { ok: true, itens, faltam: calcularPreenchimento(valores).faltando }
+}
+
+// Busca de novo nas fontes da plataforma e preenche só o que está em branco (nunca sobrescreve nada).
+export async function atualizarDaPlataforma(id: string): Promise<Resultado & { preenchidos?: number }> {
+  const u = await exigirComercial(); if (!u) return NEGADO
+  const admin = createAdminClient()
+  const f = await carregar(admin, id); if (!f) return { ok: false, error: 'Ficha não encontrada.' }
+  const { valores, fontes } = await montarPrefill(admin, f.escola_id, f.ciclo)
+  const pre = { ...(f.pre ?? {}) }, dados = { ...(f.dados ?? {}) }, sit = { ...(f.situacao ?? {}) }, fon = { ...(f.fontes ?? {}) }
+  let preenchidos = 0
+  for (const [k, v] of Object.entries(valores)) {
+    if ((dados[k] ?? '').toString().trim() !== '') continue
+    pre[k] = v; dados[k] = v; sit[k] = 'pre'; fon[k] = fontes[k]; preenchidos++
+  }
+  if (preenchidos) {
+    await admin.from('eskolare_fichas').update({ pre, dados, situacao: sit, fontes: fon, pct_preenchido: calcularPreenchimento(dados).pct }).eq('id', id)
+    await registrarEvento(admin, f, 'campo', 'comercial', { atualizados_da_plataforma: preenchidos })
+  }
+  revalidatePath(`/comercial/cadastro-eskolare/${id}`)
+  return { ok: true, preenchidos }
+}
+
 export async function criarFicha(escolaId: string, ciclo: number, responsavel: string): Promise<Resultado> {
   const u = await exigirComercial(); if (!u) return NEGADO
   if (!escolaId) return { ok: false, error: 'Escolha a escola.' }
@@ -27,10 +57,10 @@ export async function criarFicha(escolaId: string, ciclo: number, responsavel: s
   const { data: existente } = await admin.from('eskolare_fichas').select('id').eq('escola_id', escolaId).eq('ciclo', ciclo).maybeSingle()
   if (existente) return { ok: false, error: `Esta escola já tem ficha de ${ciclo}.`, id: existente.id }
 
-  const pre = await montarPrefill(admin, escolaId, ciclo)
+  const { valores: pre, fontes } = await montarPrefill(admin, escolaId, ciclo)
   const dados = { ...pre }
   const { data: ficha, error } = await admin.from('eskolare_fichas').insert({
-    escola_id: escolaId, ciclo, responsavel_comercial: responsavel, pre, dados, situacao: situacaoInicial(pre),
+    escola_id: escolaId, ciclo, responsavel_comercial: responsavel, pre, dados, fontes, situacao: situacaoInicial(pre),
     pct_preenchido: calcularPreenchimento(dados).pct, created_by: u.user.id,
   }).select('id, escola_id, ciclo').single()
   if (error || !ficha) return { ok: false, error: `Não foi possível criar a ficha: ${error?.message}` }
@@ -176,9 +206,10 @@ export async function importarPlanilha(formData: FormData): Promise<Resultado> {
 
     let f = (await admin.from('eskolare_fichas').select('*').eq('escola_id', escola.id).eq('ciclo', ciclo).maybeSingle()).data
     if (!f) {
-      const pre = { ...(await montarPrefill(admin, escola.id, ciclo)), ...valores }
+      const auto = await montarPrefill(admin, escola.id, ciclo)
+      const pre = { ...auto.valores, ...valores }
       const { data: nova } = await admin.from('eskolare_fichas').insert({
-        escola_id: escola.id, ciclo, responsavel_comercial: resp, pre, dados: pre, situacao: situacaoInicial(pre),
+        escola_id: escola.id, ciclo, responsavel_comercial: resp, pre, dados: pre, fontes: auto.fontes, situacao: situacaoInicial(pre),
         pct_preenchido: calcularPreenchimento(pre).pct, created_by: u.user.id,
       }).select('*').single()
       f = nova

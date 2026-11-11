@@ -1,10 +1,10 @@
 'use client'
 
-import { useMemo, useRef, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { STATUS_FICHA } from '@/lib/eskolare-campos'
-import { criarFicha, importarPlanilha } from '@/lib/eskolare-actions'
+import { criarFicha, importarPlanilha, previaPrefill } from '@/lib/eskolare-actions'
 
 export interface LinhaFicha {
   id: string; escola: string; cnpj: string; responsavel: string | null; status: string; pct: number
@@ -30,6 +30,22 @@ export function ListaFichasClient({ linhas, escolas }: { linhas: LinhaFicha[]; e
   const [aviso, setAviso] = useState('')
   const [pendente, start] = useTransition()
   const arq = useRef<HTMLInputElement>(null)
+  const [previa, setPrevia] = useState<{ itens: Array<{ chave: string; rotulo: string; valor: string; fonte: string }>; faltam: string[] } | null>(null)
+  const [carregandoPrevia, setCarregandoPrevia] = useState(false)
+
+  // Ao escolher a escola, mostra o que a plataforma já sabe dela e de onde veio cada dado.
+  useEffect(() => {
+    if (!escolaId) { setPrevia(null); return }
+    let ativo = true
+    setCarregandoPrevia(true)
+    previaPrefill(escolaId, ciclo).then(r => { if (ativo) { setPrevia(r.ok ? { itens: r.itens ?? [], faltam: r.faltam ?? [] } : null); setCarregandoPrevia(false) } })
+    return () => { ativo = false }
+  }, [escolaId, ciclo])
+  const porFonte = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const i of previa?.itens ?? []) m.set(i.fonte, (m.get(i.fonte) ?? 0) + 1)
+    return [...m.entries()]
+  }, [previa])
 
   const cont = (s: string) => linhas.filter(l => l.status === s).length
   const filtradas = useMemo(() => {
@@ -91,7 +107,7 @@ export function ListaFichasClient({ linhas, escolas }: { linhas: LinhaFicha[]; e
         <select value={resp} onChange={e => setResp(e.target.value)} style={inp}>
           <option value="todos">Todos os responsáveis</option><option>Raissa</option><option>Jesse</option>
         </select>
-        <button onClick={() => setNovo(true)} style={{ ...inp, background: '#f59e0b', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer' }}>+ Nova ficha</button>
+        <button onClick={() => setNovo(true)} style={{ ...inp, background: '#f59e0b', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer' }}>+ Nova ficha (escolher escola)</button>
         <a href="/comercial/cadastro-eskolare/exportar" style={{ ...inp, textDecoration: 'none', color: '#0369a1', fontWeight: 700 }}>⬇ Exportar Excel</a>
         <label style={{ ...inp, color: '#0369a1', fontWeight: 700, cursor: 'pointer' }}>⬆ Importar planilha
           <input ref={arq} type="file" accept=".xlsx" hidden onChange={importar} />
@@ -142,6 +158,23 @@ export function ListaFichasClient({ linhas, escolas }: { linhas: LinhaFicha[]; e
                 </button>
               ))}
             </div>
+            {escolaId && (
+              <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 10, padding: '.7rem .8rem', marginBottom: '.8rem', fontSize: '.8rem' }}>
+                {carregandoPrevia ? 'Buscando dados da escola na plataforma…' : previa ? (
+                  <>
+                    <strong>{previa.itens.length} campo(s) já preenchidos</strong> com dados da plataforma
+                    {porFonte.length > 0 && <span style={{ color: '#475569' }}> — {porFonte.map(([f, n]) => `${f}: ${n}`).join(' · ')}</span>}
+                    <details style={{ marginTop: '.4rem' }}>
+                      <summary style={{ cursor: 'pointer', color: '#0369a1', fontWeight: 700 }}>Ver o que foi encontrado</summary>
+                      <div style={{ maxHeight: 160, overflow: 'auto', marginTop: '.4rem' }}>
+                        {previa.itens.map(i => <div key={i.chave} style={{ display: 'flex', justifyContent: 'space-between', gap: '.6rem', padding: '.15rem 0', borderBottom: '1px dashed #dbeafe' }}><span>{i.rotulo}: <strong>{i.valor}</strong></span><span style={{ color: '#64748b', whiteSpace: 'nowrap' }}>{i.fonte}</span></div>)}
+                      </div>
+                    </details>
+                    {previa.faltam.length > 0 && <div style={{ color: '#92400e', marginTop: '.5rem' }}><strong>A escola ainda vai informar:</strong> {previa.faltam.join(' · ')}</div>}
+                  </>
+                ) : 'Não foi possível buscar os dados.'}
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '.6rem', marginBottom: '.8rem' }}>
               <label style={{ flex: 1, fontSize: '.78rem', fontWeight: 700 }}>Responsável comercial
                 <select value={responsavel} onChange={e => setResponsavel(e.target.value)} style={{ ...inp, width: '100%', borderRadius: 10, marginTop: '.2rem' }}><option>Raissa</option><option>Jesse</option></select>
@@ -155,7 +188,7 @@ export function ListaFichasClient({ linhas, escolas }: { linhas: LinhaFicha[]; e
               <button onClick={() => { setNovo(false); setErro('') }} style={{ ...inp, cursor: 'pointer' }}>Cancelar</button>
               <button onClick={criar} disabled={!escolaId || pendente} style={{ ...inp, background: !escolaId ? '#94a3b8' : '#f59e0b', color: '#fff', border: 'none', fontWeight: 800, cursor: !escolaId ? 'not-allowed' : 'pointer' }}>{pendente ? 'Criando…' : 'Criar ficha'}</button>
             </div>
-            <p style={{ fontSize: '.72rem', color: '#64748b', marginTop: '.7rem' }}>Os dados que já existem no CRM (escola, contrato e previsão de pedidos) entram pré-preenchidos.</p>
+            <p style={{ fontSize: '.72rem', color: '#64748b', marginTop: '.7rem' }}>Entram pré-preenchidos os dados que já existem na plataforma: cadastro da escola, contatos, contrato, formulários e previsão de pedidos.</p>
           </div>
         </div>
       )}

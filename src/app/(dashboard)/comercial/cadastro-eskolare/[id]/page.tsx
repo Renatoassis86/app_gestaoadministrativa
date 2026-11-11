@@ -16,7 +16,7 @@ export default async function FichaEskolare({ params }: { params: Promise<{ id: 
 
   // Colunas explícitas: pin_hash e sessão nunca saem do servidor; o token só indica se há link.
   const { data: f } = await admin.from('eskolare_fichas')
-    .select('id, escola_id, ciclo, status, responsavel_comercial, obs_comercial, pre, dados, situacao, pct_preenchido, token, link_revogado, bloqueado_ate, ultimo_acesso_em, enviada_em, respondida_em, validada_em, cadastrada_em')
+    .select('id, escola_id, ciclo, status, responsavel_comercial, obs_comercial, pre, dados, situacao, fontes, pct_preenchido, token, link_revogado, bloqueado_ate, ultimo_acesso_em, enviada_em, respondida_em, validada_em, cadastrada_em')
     .eq('id', id).maybeSingle()
   if (!f) notFound()
 
@@ -29,7 +29,7 @@ export default async function FichaEskolare({ params }: { params: Promise<{ id: 
 
   const ficha: FichaInterna = {
     id: f.id, escolaNome: escola?.nome ?? '—', ciclo: f.ciclo, status: f.status, responsavel: f.responsavel_comercial, obs: f.obs_comercial ?? '',
-    pre: f.pre ?? {}, dados: f.dados ?? {}, situacao: f.situacao ?? {}, pct: f.pct_preenchido,
+    pre: f.pre ?? {}, dados: f.dados ?? {}, situacao: f.situacao ?? {}, fontes: f.fontes ?? {}, pct: f.pct_preenchido,
     temAcesso: !!f.token, revogado: f.link_revogado, bloqueadoAte: f.bloqueado_ate, ultimoAcesso: f.ultimo_acesso_em,
     enviadaEm: f.enviada_em, respondidaEm: f.respondida_em, validadaEm: f.validada_em, cadastradaEm: f.cadastrada_em,
     logoUrl, ehGerente: u.role === 'gerente', eventos: eventos ?? [],

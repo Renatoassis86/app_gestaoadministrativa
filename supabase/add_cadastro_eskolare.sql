@@ -21,6 +21,7 @@ create table if not exists eskolare_fichas (
   pre                 jsonb not null default '{}'::jsonb,
   dados               jsonb not null default '{}'::jsonb,
   situacao            jsonb not null default '{}'::jsonb,
+  fontes              jsonb not null default '{}'::jsonb,   -- de onde veio cada valor pré-preenchido
   pct_preenchido      int   not null default 0,
 
   -- Acesso da escola (link + PIN)

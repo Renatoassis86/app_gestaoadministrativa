@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { BLOCOS, CAMPOS, STATUS_FICHA, campoVisivel, camposDoBloco, totalAlunos, vazio, type Campo } from '@/lib/eskolare-campos'
 import { formatarCep, formatarCnpj, formatarCpf, formatarWhatsapp, mascararCpf } from '@/lib/eskolare-validacao'
-import { gerarAcesso, marcarCadastrada, reabrirFicha, revogarAcesso, salvarCamposInternos, validarFicha } from '@/lib/eskolare-actions'
+import { atualizarDaPlataforma, gerarAcesso, marcarCadastrada, reabrirFicha, revogarAcesso, salvarCamposInternos, validarFicha } from '@/lib/eskolare-actions'
 
 const MASC: Record<string, (v: string) => string> = { cnpj: formatarCnpj, cpf: formatarCpf, cep: formatarCep, whatsapp: formatarWhatsapp }
 const inp: React.CSSProperties = { width: '100%', padding: '.5rem .7rem', fontSize: '.88rem', border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff' }
@@ -12,7 +12,7 @@ const btn = (cor: string, vazado = false): React.CSSProperties => ({ padding: '.
 
 export interface FichaInterna {
   id: string; escolaNome: string; ciclo: number; status: string; responsavel: string | null; obs: string
-  pre: Record<string, string>; dados: Record<string, string>; situacao: Record<string, string>
+  pre: Record<string, string>; dados: Record<string, string>; situacao: Record<string, string>; fontes: Record<string, string>
   pct: number; temAcesso: boolean; revogado: boolean; bloqueadoAte: string | null; ultimoAcesso: string | null
   enviadaEm: string | null; respondidaEm: string | null; validadaEm: string | null; cadastradaEm: string | null
   logoUrl: string | null; ehGerente: boolean
@@ -134,6 +134,10 @@ export function FichaInternaClient({ f }: { f: FichaInterna }) {
         <p style={{ fontSize: '.78rem', color: '#64748b', margin: '0 0 .8rem' }}>
           O que você preencher aqui aparece para a escola com os botões "Está correto" e "Corrigir". Campos em branco ficam para a escola preencher.
         </p>
+        <button style={{ ...btn('#0ea5e9', true), marginBottom: '.8rem' }} disabled={pendente || finalizada}
+          onClick={() => start(async () => { const r = await atualizarDaPlataforma(f.id); setMsg(r.ok ? (r.preenchidos ? `${r.preenchidos} campo(s) preenchido(s) com dados da plataforma.` : 'Nada novo na plataforma: todos os campos disponíveis já estão preenchidos.') : (r.error ?? 'Erro.')); router.refresh() })}>
+          ↻ Buscar dados na plataforma (só preenche o que está em branco)
+        </button>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '.7rem', marginBottom: '.8rem' }}>
           <label style={{ fontSize: '.76rem', fontWeight: 700 }}>Responsável comercial
             <select value={responsavel} onChange={e => setResponsavel(e.target.value)} style={{ ...inp, marginTop: '.2rem' }}><option>Raissa</option><option>Jesse</option></select>
@@ -149,7 +153,7 @@ export function FichaInternaClient({ f }: { f: FichaInterna }) {
             <div style={{ padding: '.8rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '.7rem' }}>
               {camposDoBloco(b.id).filter(c => campoVisivel(c, valores) || c.bloco === 8).map(c => (
                 <div key={c.chave}>
-                  <label style={{ display: 'block', fontSize: '.74rem', fontWeight: 700, color: '#475569', marginBottom: '.2rem' }}>{c.rotulo}{c.obrigatorio && ' *'}</label>
+                  <label style={{ display: 'block', fontSize: '.74rem', fontWeight: 700, color: '#475569', marginBottom: '.2rem' }}>{c.rotulo}{c.obrigatorio && ' *'}{f.fontes[c.chave] && !f.situacao[c.chave]?.includes('escola') && f.pre[c.chave] ? <span style={{ marginLeft: '.4rem', fontSize: '.62rem', fontWeight: 700, color: '#0369a1', background: '#e0f2fe', borderRadius: 9999, padding: '.05rem .4rem' }}>{f.fontes[c.chave]}</span> : null}</label>
                   {c.tipo === 'calculado' ? <div style={{ ...inp, background: '#f1f5f9', fontWeight: 800 }}>{totalAlunos(valores)}</div>
                     : c.tipo === 'logo' ? (f.logoUrl ? <img src={f.logoUrl} alt="Logo da escola" style={{ maxHeight: 60, border: '1px solid #e2e8f0', borderRadius: 8, padding: 4, background: '#fff' }} /> : <span style={{ fontSize: '.8rem', color: '#94a3b8' }}>A escola envia pelo link.</span>)
                     : c.tipo === 'opcoes' ? (
