@@ -58,7 +58,13 @@ export function ListaFichasClient({ linhas, escolas }: { linhas: LinhaFicha[]; e
   const escolasFiltradas = useMemo(() => {
     const q = buscaEscola.trim().toLowerCase()
     const jaTem = new Set(linhas.map(l => l.escola))
-    return escolas.filter(e => !q || e.nome.toLowerCase().includes(q) || (e.cnpj ?? '').includes(q)).slice(0, 60).map(e => ({ ...e, jaTem: jaTem.has(e.nome) }))
+    const qd = q.replace(/\D/g, '')
+    const vistos = new Set<string>()
+    const lista = escolas
+      .filter(e => !q || e.nome.toLowerCase().includes(q) || (qd && (e.cnpj ?? '').replace(/\D/g, '').includes(qd)))
+      .sort((a, b) => Number(!!(b.cnpj ?? '').replace(/\D/g, '')) - Number(!!(a.cnpj ?? '').replace(/\D/g, '')))
+      .filter(e => { const c = (e.cnpj ?? '').replace(/\D/g, ''); if (!c) return true; if (vistos.has(c)) return false; vistos.add(c); return true })
+    return lista.slice(0, 60).map(e => ({ ...e, jaTem: jaTem.has(e.nome) }))
   }, [escolas, buscaEscola, linhas])
 
   function criar() {
@@ -176,7 +182,7 @@ export function ListaFichasClient({ linhas, escolas }: { linhas: LinhaFicha[]; e
               {escolasFiltradas.map(e => (
                 <button key={e.id} type="button" disabled={e.jaTem} onClick={() => setEscolaId(e.id)}
                   style={{ display: 'block', width: '100%', textAlign: 'left', padding: '.5rem .7rem', border: 'none', borderBottom: '1px solid #f1f5f9', background: escolaId === e.id ? '#e0f2fe' : '#fff', cursor: e.jaTem ? 'not-allowed' : 'pointer', opacity: e.jaTem ? .5 : 1, fontSize: '.82rem' }}>
-                  {e.nome} <span style={{ color: '#94a3b8' }}>{e.cnpj ?? ''}</span>{e.jaTem && ' · já tem ficha'}
+                  {e.nome} <span style={{ color: (e.cnpj ?? '').trim() ? '#94a3b8' : '#d97706' }}>{(e.cnpj ?? '').trim() || 'sem CNPJ'}</span>{e.jaTem && ' · já tem ficha'}
                 </button>
               ))}
             </div>
