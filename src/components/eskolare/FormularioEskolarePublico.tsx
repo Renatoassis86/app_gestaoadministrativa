@@ -19,7 +19,7 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
   const [erros, setErros] = useState<Record<string, string>>({})
   const [salvando, setSalvando] = useState(0)
   const [salvoEm, setSalvoEm] = useState<Date | null>(null)
-  const [etapa, setEtapa] = useState(0)                         // 0..BLOCOS.length-1 = blocos; BLOCOS.length = revisão
+  const [etapa, setEtapa] = useState(inicial.somenteLeitura ? BLOCOS.length : 0)                         // 0..BLOCOS.length-1 = blocos; BLOCOS.length = revisão
   const [enviando, setEnviando] = useState(false)
   const [erroEnvio, setErroEnvio] = useState('')
   const [erroLogo, setErroLogo] = useState('')

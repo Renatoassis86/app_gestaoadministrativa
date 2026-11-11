@@ -31,7 +31,7 @@ export const BLOCOS: Bloco[] = [
   { id: 5,  titulo: 'Financeiro da escola' },
   { id: 6,  titulo: 'Coordenação pedagógica' },
   { id: 7,  titulo: 'Alunos previstos por série', descricao: 'Kits Infantil II a V têm 5 livros (4 + Inglês). O kit do 1º ano tem 9 livros e o do 2º ao 5º ano tem 12 livros.' },
-  { id: 8,  titulo: 'Preço final ou comissão', descricao: 'Informe só um. Com ele, a Cidade Viva Education calcula o outro. A comissão é única para a escola toda: a Eskolare não permite comissão diferente por série. Preço de tabela: Infantil R$ 1.150 e Fundamental R$ 1.450.' },
+  { id: 8,  titulo: 'Preço final ou comissão', descricao: 'A comissão é única para a escola toda: a Eskolare não permite comissão diferente por série. Preço de tabela: Infantil R$ 1.150 e Fundamental R$ 1.450.' },
   { id: 9,  titulo: 'Entrega dos kits' },
   { id: 10, titulo: 'Contrato 2027' },
 ]
