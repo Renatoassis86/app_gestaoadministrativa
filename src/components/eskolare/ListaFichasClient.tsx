@@ -29,6 +29,7 @@ export function ListaFichasClient({ linhas, escolas }: { linhas: LinhaFicha[]; e
   const [ciclo, setCiclo] = useState(2027)
   const [erro, setErro] = useState('')
   const [aviso, setAviso] = useState('')
+  const [avisoErro, setAvisoErro] = useState(false)
   const [pendente, start] = useTransition()
   const arq = useRef<HTMLInputElement>(null)
   const [previa, setPrevia] = useState<{ itens: Array<{ chave: string; rotulo: string; valor: string; fonte: string }>; faltam: string[] } | null>(null)
@@ -71,9 +72,10 @@ export function ListaFichasClient({ linhas, escolas }: { linhas: LinhaFicha[]; e
   function excluir(l: LinhaFicha) {
     const aviso = ['respondida', 'validada', 'cadastrada'].includes(l.status) ? ' ATENÇÃO: esta ficha já foi respondida pela escola e as respostas serão perdidas.' : ''
     if (!confirm('Excluir a ficha de "' + l.escola + '"?' + aviso + ' O link e o PIN deixam de funcionar. Esta ação não pode ser desfeita.')) return
-    setAviso('')
+    setAviso(''); setAvisoErro(false)
     start(async () => {
       const r = await excluirFicha(l.id)
+      setAvisoErro(!r.ok)
       setAviso(r.ok ? `Ficha de "${l.escola}" excluída.` : (r.error ?? 'Não foi possível excluir.'))
       router.refresh()
     })
@@ -124,7 +126,7 @@ export function ListaFichasClient({ linhas, escolas }: { linhas: LinhaFicha[]; e
           <input ref={arq} type="file" accept=".xlsx" hidden onChange={importar} />
         </label>
       </div>
-      {aviso && <p style={{ fontSize: '.82rem', color: '#0369a1', marginBottom: '.8rem' }}>{aviso}</p>}
+      {aviso && <p role={avisoErro ? 'alert' : 'status'} style={{ fontSize: '.85rem', fontWeight: 700, color: avisoErro ? '#b91c1c' : '#0369a1', background: avisoErro ? '#fef2f2' : '#f0f9ff', border: `1px solid ${avisoErro ? '#fecaca' : '#bae6fd'}`, borderRadius: 10, padding: '.5rem .8rem', marginBottom: '.8rem' }}>{aviso}</p>}
 
       <div style={{ overflowX: 'auto', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14 }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.82rem', minWidth: 760 }}>

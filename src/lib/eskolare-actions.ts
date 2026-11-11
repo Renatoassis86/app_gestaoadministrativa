@@ -22,10 +22,12 @@ async function carregar(admin: ReturnType<typeof createAdminClient>, id: string)
 // Exclui a ficha (e seu histórico). A logo enviada pela escola também é removida do armazenamento.
 export async function excluirFicha(id: string): Promise<Resultado> {
   const u = await exigirComercial(); if (!u) return NEGADO
-  if (u.role !== 'gerente' && u.role !== 'supervisor') return { ok: false, error: 'Só gerente ou supervisor pode excluir fichas.' }
   const admin = createAdminClient()
   const f = await carregar(admin, id)
   if (!f) return { ok: false, error: 'Ficha não encontrada.' }
+  // rascunhos (ainda não respondidos pela escola) qualquer pessoa do comercial exclui; respostas já enviadas só gerente/supervisor
+  if (['respondida', 'validada', 'cadastrada'].includes(f.status) && u.role !== 'gerente' && u.role !== 'supervisor')
+    return { ok: false, error: 'Esta ficha já foi respondida pela escola. Só gerente ou supervisor pode excluí-la.' }
   const { data: e } = await admin.from('escolas').select('nome').eq('id', f.escola_id).maybeSingle()
   if (f.dados?.logo) await admin.storage.from('eskolare-logos').remove([f.dados.logo])
   const { error } = await admin.from('eskolare_fichas').delete().eq('id', id)
