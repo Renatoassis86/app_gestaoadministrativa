@@ -50,7 +50,6 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
   function limparLocal() { try { localStorage.removeItem(chaveLocal) } catch { /* ignora */ } }
 
   useEffect(() => { topo.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }, [etapa])
-  useEffect(() => { if (!leitura) gravarLocal({ etapa }) }, [etapa])           // eslint-disable-line react-hooks/exhaustive-deps
 
   // Ao abrir: volta para a etapa em que parou e reenvia o que ficou pendente na última visita.
   useEffect(() => {
@@ -73,6 +72,9 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
       }
     } catch { /* ignora */ }
   }, [])                                                                            // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Declarado DEPOIS da restauração acima: no primeiro render não pode sobrescrever a cópia local antes de ela ser lida.
+  useEffect(() => { if (!leitura) gravarLocal({ etapa }) }, [etapa])           // eslint-disable-line react-hooks/exhaustive-deps
 
   // Grava imediatamente tudo o que estiver aguardando o atraso do salvamento (aba em segundo plano / fechando).
   function descarregar() {
