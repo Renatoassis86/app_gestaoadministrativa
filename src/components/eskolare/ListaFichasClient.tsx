@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { STATUS_FICHA } from '@/lib/eskolare-campos'
-import { criarFicha, importarPlanilha, previaPrefill } from '@/lib/eskolare-actions'
+import { Pencil, Trash2 } from 'lucide-react'
+import { criarFicha, excluirFicha, importarPlanilha, previaPrefill } from '@/lib/eskolare-actions'
 
 export interface LinhaFicha {
   id: string; escola: string; cnpj: string; responsavel: string | null; status: string; pct: number
@@ -65,6 +66,16 @@ export function ListaFichasClient({ linhas, escolas }: { linhas: LinhaFicha[]; e
       const r = await criarFicha(escolaId, ciclo, responsavel)
       if (!r.ok) { setErro(r.error ?? 'Erro'); if (r.id) router.push(`/comercial/cadastro-eskolare/${r.id}`); return }
       router.push(`/comercial/cadastro-eskolare/${r.id}`)
+    })
+  }
+  function excluir(l: LinhaFicha) {
+    const aviso = ['respondida', 'validada', 'cadastrada'].includes(l.status) ? ' ATENÇÃO: esta ficha já foi respondida pela escola e as respostas serão perdidas.' : ''
+    if (!confirm('Excluir a ficha de "' + l.escola + '"?' + aviso + ' O link e o PIN deixam de funcionar. Esta ação não pode ser desfeita.')) return
+    setAviso('')
+    start(async () => {
+      const r = await excluirFicha(l.id)
+      setAviso(r.ok ? `Ficha de "${l.escola}" excluída.` : (r.error ?? 'Não foi possível excluir.'))
+      router.refresh()
     })
   }
   function importar(ev: React.ChangeEvent<HTMLInputElement>) {
@@ -136,7 +147,16 @@ export function ListaFichasClient({ linhas, escolas }: { linhas: LinhaFicha[]; e
                   </td>
                   <td style={{ padding: '.6rem .8rem' }}>{l.ultimaPor === 'escola' ? 'Escola' : l.ultimaPor === 'comercial' ? 'Comercial' : '—'}</td>
                   <td style={{ padding: '.6rem .8rem', whiteSpace: 'nowrap' }}>{dt(l.atualizado)}</td>
-                  <td style={{ padding: '.6rem .8rem' }}><Link href={`/comercial/cadastro-eskolare/${l.id}`} style={{ color: '#0ea5e9', fontWeight: 800, textDecoration: 'none' }}>Abrir →</Link></td>
+                  <td style={{ padding: '.6rem .8rem', whiteSpace: 'nowrap' }}>
+                    <Link href={`/comercial/cadastro-eskolare/${l.id}`} title="Editar / abrir ficha" aria-label={`Editar a ficha de ${l.escola}`}
+                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: 9999, color: '#0369a1', background: '#f0f9ff', border: '1px solid #bae6fd', marginRight: '.4rem' }}>
+                      <Pencil size={16} />
+                    </Link>
+                    <button type="button" onClick={() => excluir(l)} disabled={pendente} title="Excluir ficha" aria-label={`Excluir a ficha de ${l.escola}`}
+                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: 9999, color: '#b91c1c', background: '#fef2f2', border: '1px solid #fecaca', cursor: pendente ? 'wait' : 'pointer' }}>
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
                 </tr>
               )
             })}

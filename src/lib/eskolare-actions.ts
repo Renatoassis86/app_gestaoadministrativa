@@ -19,6 +19,23 @@ async function carregar(admin: ReturnType<typeof createAdminClient>, id: string)
   return data
 }
 
+// Exclui a ficha (e seu histórico). A logo enviada pela escola também é removida do armazenamento.
+export async function excluirFicha(id: string): Promise<Resultado> {
+  const u = await exigirComercial(); if (!u) return NEGADO
+  const admin = createAdminClient()
+  const f = await carregar(admin, id)
+  if (!f) return { ok: false, error: 'Ficha não encontrada.' }
+  const { data: e } = await admin.from('escolas').select('nome').eq('id', f.escola_id).maybeSingle()
+  if (f.dados?.logo) await admin.storage.from('eskolare-logos').remove([f.dados.logo])
+  const { error } = await admin.from('eskolare_fichas').delete().eq('id', id)
+  if (error) return { ok: false, error: `Não foi possível excluir: ${error.message}` }
+  // o histórico da própria ficha some junto; o CRM guarda o registro da exclusão
+  await admin.from('registros').insert({ escola_id: f.escola_id, meio_contato: 'outro', responsavel_id: u.user.id,
+    resumo: `[Cadastro Eskolare ${f.ciclo}] Ficha excluída por ${u.nome || 'usuário do comercial'} (status: ${f.status}, ${f.pct_preenchido}% preenchido).` })
+  revalidatePath('/comercial/cadastro-eskolare')
+  return { ok: true, id, error: e?.nome }
+}
+
 // Prévia: o que a plataforma já sabe da escola, e de onde veio cada dado, antes de criar a ficha.
 export async function previaPrefill(escolaId: string, ciclo: number): Promise<{ ok: boolean; error?: string; itens?: Array<{ chave: string; rotulo: string; valor: string; fonte: string }>; faltam?: string[] }> {
   const u = await exigirComercial(); if (!u) return NEGADO
