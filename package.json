@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:robo": "node test-robo-registros.js"
+    "test:robo": "node test-robo-registros.js",
+    "test:eskolare": "node --test tests/eskolare.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

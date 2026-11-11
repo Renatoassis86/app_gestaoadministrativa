@@ -27,6 +27,7 @@ const NAV_CRM = [
   { href: '/comercial/registros',                 label: 'Registros',             icon: FileText        },
   { href: '/comercial/proposta?tipo=paideia',     label: 'Proposta Paideia',      icon: ClipboardList   },
   { href: '/comercial/proposta?tipo=bilinguismo', label: 'Proposta Bilinguismo', icon: Globe           },
+  { href: '/comercial/cadastro-eskolare',            label: 'Cadastro Eskolare 2027', icon: ClipboardList, badge: 'Novo' },
 ]
 
 const NAV_PROCESS = [
