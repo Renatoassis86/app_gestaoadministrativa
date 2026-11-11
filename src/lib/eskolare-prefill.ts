@@ -41,10 +41,9 @@ export async function montarPrefill(admin: Admin, escolaId: string, ciclo: numbe
   const dig = soDigitos(e.cnpj)
   const mesma = (cnpj: unknown) => dig.length === 14 && soDigitos(cnpj) === dig
 
-  const [contrato, contatos, leadsContatos, bil, forms, pedidos, ciecc, leads] = await Promise.all([
+  const [contrato, contatos, bil, forms, pedidos, ciecc, leads] = await Promise.all([
     admin.from('contratos').select('*').eq('escola_id', escolaId).maybeSingle(),
     admin.from('contatos_escola').select('*').eq('escola_id', escolaId).eq('ativa', true).order('principal', { ascending: false }),
-    admin.from('leads_contato_escola').select('*').eq('escola_id', escolaId).order('ordem'),
     admin.from('formularios_bilinguismo').select('*').eq('escola_id', escolaId).order('data_envio', { ascending: false }).limit(1),
     admin.from('formularios').select('*').order('data_envio', { ascending: false }).limit(2000),
     admin.from('previsoes_pedidos').select('*').eq('ano_letivo', ciclo).order('created_at', { ascending: false }).limit(2000),
@@ -52,11 +51,13 @@ export async function montarPrefill(admin: Admin, escolaId: string, ciclo: numbe
     admin.from('leads_escola').select('*').eq('escola_crm_id', escolaId).limit(1),
   ])
   const c = contrato.data
-  const ct = contatos.data?.[0], lc = leadsContatos.data?.[0]
+  const ct = contatos.data?.[0]
   const b = bil.data?.[0]
   const p = (forms.data ?? []).find((x: any) => mesma(x.cnpj))                       // pré-cadastro Paideia (sem escola_id: casa por CNPJ)
   const pr = (pedidos.data ?? []).find((x: any) => x.escola_id === escolaId || mesma(x.cnpj))
   const ci = ciecc.data?.[0], ld = leads.data?.[0]
+  // leads_contato_escola aponta para leads_escola(id), não para escolas(id)
+  const lc = ld?.id ? (await admin.from('leads_contato_escola').select('*').eq('escola_id', ld.id).order('ordem').limit(1)).data?.[0] : undefined
 
   let series: any[] = []
   if (c?.id) series = (await admin.from('contratos_series').select('serie, quantidade, tipo_kit').eq('contrato_id', c.id).eq('ano_letivo', c.ano_letivo_inicial ?? ciclo)).data ?? []

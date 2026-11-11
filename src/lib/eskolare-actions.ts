@@ -50,6 +50,7 @@ export async function atualizarDaPlataforma(id: string): Promise<Resultado & { p
   const u = await exigirComercial(); if (!u) return NEGADO
   const admin = createAdminClient()
   const f = await carregar(admin, id); if (!f) return { ok: false, error: 'Ficha não encontrada.' }
+  if (['respondida', 'validada', 'cadastrada'].includes(f.status)) return { ok: false, error: 'Esta ficha já foi respondida. Reabra a ficha antes de buscar dados novos.' }
   const { valores, fontes } = await montarPrefill(admin, f.escola_id, f.ciclo)
   const pre = { ...(f.pre ?? {}) }, dados = { ...(f.dados ?? {}) }, sit = { ...(f.situacao ?? {}) }, fon = { ...(f.fontes ?? {}) }
   let preenchidos = 0
@@ -198,24 +199,31 @@ export async function importarPlanilha(formData: FormData): Promise<Resultado> {
   // Colunas: Nº, Status, %, Responsável, depois os campos na ordem de CAMPOS (logo e total são ignorados no import)
   const chaves = CAMPOS.filter(c => !c.interno).map(c => c.chave)
   const admin = createAdminClient()
-  const { data: escolas } = await admin.from('escolas').select('id, cnpj')
+  const escolas: { id: string; cnpj: string | null }[] = []
+  for (let de = 0; ; de += 1000) {                    // PostgREST limita a 1000 linhas por consulta
+    const { data: pg } = await admin.from('escolas').select('id, cnpj').order('id').range(de, de + 999)
+    escolas.push(...(pg ?? []))
+    if (!pg || pg.length < 1000) break
+  }
   let importadas = 0
   const avisos: string[] = []
 
   for (let i = 4; i < linhas.length; i++) {          // linhas 1-4 são título/grupos/cabeçalho
     const l = linhas[i]
     if (String(l[0]).trim().toLowerCase() === 'ex.') continue
-    const cnpj = soDigitos(l[4])
-    if (cnpj.length !== 14) continue
-    const escola = (escolas ?? []).find(e => soDigitos(e.cnpj) === cnpj)
+    let cnpj = soDigitos(l[4])
+    if (cnpj.length >= 11 && cnpj.length < 14) cnpj = cnpj.padStart(14, '0')   // Excel remove zeros à esquerda
+    if (cnpj.length !== 14) { if (String(l[4] ?? '').trim()) avisos.push(`Linha ${i + 1}: CNPJ "${l[4]}" inválido, linha ignorada`); continue }
+    const escola = escolas.find(e => soDigitos(e.cnpj) === cnpj)
     if (!escola) { avisos.push(`CNPJ ${l[4]}: escola não encontrada no CRM`); continue }
 
     const valores: Record<string, string> = {}
     chaves.forEach((k, idx) => {
       const c = campoPorChave(k)!
       if (c.tipo === 'calculado' || c.tipo === 'logo') return
-      const bruto = l[4 + idx]
+      let bruto = l[4 + idx]
       if (bruto === '' || bruto == null) return
+      if (c.tipo === 'cep' && typeof bruto === 'number') bruto = String(bruto).padStart(8, '0')
       const r = validarValor(c.tipo, bruto, c.opcoes)
       if (r.valor) valores[k] = r.valor
     })
@@ -230,6 +238,9 @@ export async function importarPlanilha(formData: FormData): Promise<Resultado> {
         pct_preenchido: calcularPreenchimento(pre).pct, created_by: u.user.id,
       }).select('*').single()
       f = nova
+    } else if (['respondida', 'validada', 'cadastrada'].includes(f.status)) {
+      avisos.push(`${escola.cnpj}: ficha já ${f.status}, não sobrescrita (reabra a ficha para importar)`)
+      continue
     } else {
       const pre = { ...f.pre, ...valores }, dados = { ...f.dados, ...valores }, sit = { ...f.situacao }
       for (const k of Object.keys(valores)) if (!['confirmado', 'corrigido', 'preenchido_escola'].includes(sit[k])) sit[k] = 'pre'

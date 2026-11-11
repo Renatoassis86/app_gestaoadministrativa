@@ -92,3 +92,16 @@ test('total de alunos é a soma das 9 séries', () => {
   assert.equal(totalAlunos({ al_inf2: '20', al_inf3: '22', al_inf4: '25', al_ano1: '3' }), 70)
   assert.equal(totalAlunos({}), 0)
 })
+
+test('dinheiro: aceita formato BR e decimal já normalizado sem multiplicar por 100/1000', () => {
+  const v = (x) => validarValor('dinheiro', x).valor
+  assert.equal(v('1.450,50'), '1450.50')
+  assert.equal(v('1450,5'), '1450.50')
+  assert.equal(v('1150.00'), '1150.00')   // valor que o próprio sistema grava e relê
+  assert.equal(v('12345.67'), '12345.67')
+  assert.equal(v('1150.5'), '1150.50')
+  assert.equal(v('1.450'), '1450.00')     // milhar BR
+  assert.equal(v('R$ 2.000,00'), '2000.00')
+  assert.equal(v(v('1.450,50')), '1450.50') // idempotente
+  assert.ok(validarValor('dinheiro', 'abc').erro)
+})

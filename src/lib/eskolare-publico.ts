@@ -28,15 +28,26 @@ export async function entrarComPin(token: string, pin: string): Promise<PublicoR
   }
 
   if (!verificarPin(String(pin).trim(), f.pin_hash)) {
-    const tentativas = (f.tentativas ?? 0) + 1
-    if (tentativas >= MAX_TENTATIVAS) {
-      await admin.from('eskolare_fichas').update({ tentativas: 0, bloqueado_ate: new Date(Date.now() + BLOQUEIO_MINUTOS * 60000).toISOString() }).eq('id', f.id)
-      await registrarEvento(admin, f, 'bloqueada', 'escola', { minutos: BLOQUEIO_MINUTOS })
-      return { ok: false, error: `PIN incorreto. Acesso bloqueado por ${BLOQUEIO_MINUTOS} minutos.` }
+    // Incremento com checagem otimista: requisições paralelas não conseguem contar uma tentativa só.
+    let atual = f.tentativas ?? 0
+    for (let i = 0; i < 8; i++) {
+      const tentativas = atual + 1
+      const bloquear = tentativas >= MAX_TENTATIVAS
+      const patch = bloquear ? { tentativas: 0, bloqueado_ate: new Date(Date.now() + BLOQUEIO_MINUTOS * 60000).toISOString() } : { tentativas }
+      const { data: ok } = await admin.from('eskolare_fichas').update(patch).eq('id', f.id).eq('tentativas', atual).select('id')
+      if (ok && ok.length) {
+        if (bloquear) {
+          await registrarEvento(admin, f, 'bloqueada', 'escola', { minutos: BLOQUEIO_MINUTOS })
+          return { ok: false, error: `PIN incorreto. Acesso bloqueado por ${BLOQUEIO_MINUTOS} minutos.` }
+        }
+        await registrarEvento(admin, f, 'pin_errado', 'escola', { tentativas })
+        return { ok: false, error: `PIN incorreto. Restam ${MAX_TENTATIVAS - tentativas} tentativa(s).` }
+      }
+      const { data: n } = await admin.from('eskolare_fichas').select('tentativas, bloqueado_ate').eq('id', f.id).maybeSingle()
+      if (n?.bloqueado_ate && new Date(n.bloqueado_ate).getTime() > Date.now()) return { ok: false, error: `Muitas tentativas. Tente novamente em ${BLOQUEIO_MINUTOS} minuto(s).` }
+      atual = n?.tentativas ?? 0
     }
-    await admin.from('eskolare_fichas').update({ tentativas }).eq('id', f.id)
-    await registrarEvento(admin, f, 'pin_errado', 'escola', { tentativas })
-    return { ok: false, error: `PIN incorreto. Restam ${MAX_TENTATIVAS - tentativas} tentativa(s).` }
+    return { ok: false, error: 'PIN incorreto.' }
   }
 
   const sessao = novaSessao()

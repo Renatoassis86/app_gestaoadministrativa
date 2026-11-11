@@ -74,7 +74,11 @@ export function validarValor(
       return { valor: String(parseInt(v, 10)) }
     }
     case 'dinheiro': {
-      const n = Number(v.replace(/\./g, '').replace(',', '.'))
+      // Aceita "1.450,50" (BR) e "1450.50" (já normalizado). Sem vírgula e com ponto + 1-2 casas, o ponto é decimal.
+      const limpo = v.replace(/[R$\s]/g, '')
+      const n = limpo.includes(',') ? Number(limpo.replace(/\./g, '').replace(',', '.'))
+        : /^\d+\.\d{1,2}$/.test(limpo) ? Number(limpo)
+        : Number(limpo.replace(/\./g, ''))
       if (!Number.isFinite(n) || n < 0) return { erro: 'Informe um valor em reais válido.' }
       return { valor: n.toFixed(2) }
     }
