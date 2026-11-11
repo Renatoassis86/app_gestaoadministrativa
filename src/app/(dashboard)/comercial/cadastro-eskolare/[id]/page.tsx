@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import PageHeader from '@/components/layout/PageHeader'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { exigirComercial } from '@/lib/eskolare-servidor'
+import { CAMPOS } from '@/lib/eskolare-campos'
+import { mascararCpf } from '@/lib/eskolare-validacao'
 import { FichaInternaClient, type FichaInterna } from '@/components/eskolare/FichaInternaClient'
 
 export const dynamic = 'force-dynamic'
@@ -27,9 +29,13 @@ export default async function FichaEskolare({ params }: { params: Promise<{ id: 
   let logoUrl: string | null = null
   if (f.dados?.logo) logoUrl = (await admin.storage.from('eskolare-logos').createSignedUrl(f.dados.logo, 3600)).data?.signedUrl ?? null
 
+  // CPF completo só para gerente: para os demais, o valor é mascarado aqui no servidor (não apenas escondido na tela).
+  const camposCpf = CAMPOS.filter(c => c.tipo === 'cpf').map(c => c.chave)
+  const mascarar = (o: Record<string, string>) => u.role === 'gerente' ? o : Object.fromEntries(Object.entries(o).map(([k, v]) => [k, camposCpf.includes(k) && v ? mascararCpf(v) : v]))
+
   const ficha: FichaInterna = {
     id: f.id, escolaNome: escola?.nome ?? '—', ciclo: f.ciclo, status: f.status, responsavel: f.responsavel_comercial, obs: f.obs_comercial ?? '',
-    pre: f.pre ?? {}, dados: f.dados ?? {}, situacao: f.situacao ?? {}, fontes: f.fontes ?? {}, pct: f.pct_preenchido,
+    pre: mascarar(f.pre ?? {}), dados: mascarar(f.dados ?? {}), situacao: f.situacao ?? {}, fontes: f.fontes ?? {}, pct: f.pct_preenchido,
     temAcesso: !!f.token, revogado: f.link_revogado, bloqueadoAte: f.bloqueado_ate, ultimoAcesso: f.ultimo_acesso_em,
     enviadaEm: f.enviada_em, respondidaEm: f.respondida_em, validadaEm: f.validada_em, cadastradaEm: f.cadastrada_em,
     logoUrl, ehGerente: u.role === 'gerente', eventos: eventos ?? [],

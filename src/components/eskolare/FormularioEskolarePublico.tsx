@@ -23,22 +23,95 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
   const [enviando, setEnviando] = useState(false)
   const [erroEnvio, setErroEnvio] = useState('')
   const [erroLogo, setErroLogo] = useState('')
+  const [offline, setOffline] = useState(false)
+  const [recuperado, setRecuperado] = useState(false)
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const pendentes = useRef<Set<string>>(new Set())          // campos digitados e ainda não confirmados pelo servidor
+  const valoresRef = useRef(valores)
+  const retry = useRef<ReturnType<typeof setTimeout> | null>(null)
   const topo = useRef<HTMLDivElement>(null)
 
   const leitura = ficha.somenteLeitura
   const dadosAtuais = useMemo(() => ({ ...valores, logo: ficha.logoUrl || valores.logo ? 'ok' : '' }), [valores, ficha.logoUrl])
   const calc = useMemo(() => calcularPreenchimento(dadosAtuais), [dadosAtuais])
   const ultimaEtapa = BLOCOS.length
+  const chaveLocal = `esk_rascunho_${token.slice(0, 16)}`
+  valoresRef.current = valores
+
+  // Cópia local do rascunho: protege contra aba fechada, queda de conexão e sessão expirada.
+  function gravarLocal(extra?: { etapa?: number }) {
+    try {
+      const antigo = JSON.parse(localStorage.getItem(chaveLocal) || '{}')
+      const vals: Record<string, string> = {}
+      for (const k of pendentes.current) vals[k] = valoresRef.current[k] ?? ''
+      localStorage.setItem(chaveLocal, JSON.stringify({ pendentes: vals, etapa: extra?.etapa ?? antigo.etapa ?? 0, em: Date.now() }))
+    } catch { /* navegação privada / sem espaço: o servidor continua sendo o rascunho principal */ }
+  }
+  function limparLocal() { try { localStorage.removeItem(chaveLocal) } catch { /* ignora */ } }
 
   useEffect(() => { topo.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }, [etapa])
+  useEffect(() => { if (!leitura) gravarLocal({ etapa }) }, [etapa])           // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Ao abrir: volta para a etapa em que parou e reenvia o que ficou pendente na última visita.
+  useEffect(() => {
+    if (leitura) { limparLocal(); return }
+    try {
+      const salvo = JSON.parse(localStorage.getItem(chaveLocal) || 'null')
+      if (!salvo) return
+      if (Number.isInteger(salvo.etapa) && salvo.etapa > 0 && salvo.etapa <= BLOCOS.length) setEtapa(salvo.etapa)
+      const pend = (salvo.pendentes ?? {}) as Record<string, string>
+      const diferentes = Object.entries(pend).filter(([k, v]) => CAMPOS.some(c => c.chave === k && !c.interno && c.tipo !== 'calculado' && c.tipo !== 'logo') && (valoresRef.current[k] ?? '') !== v)
+      if (!diferentes.length) return
+      setValores(vs => ({ ...vs, ...Object.fromEntries(diferentes) }))
+      setRecuperado(true)
+      for (const [k, v] of diferentes) {
+        const c = CAMPOS.find(x => x.chave === k)!
+        const check = validarValor(c.tipo, v, c.opcoes)
+        pendentes.current.add(k)
+        if (check.erro) setErros(e => ({ ...e, [k]: check.erro! }))
+        else void persistir(k, v)
+      }
+    } catch { /* ignora */ }
+  }, [])                                                                            // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Grava imediatamente tudo o que estiver aguardando o atraso do salvamento (aba em segundo plano / fechando).
+  function descarregar() {
+    for (const [k, t] of Object.entries(timers.current)) {
+      clearTimeout(t); delete timers.current[k]
+      void persistir(k, valoresRef.current[k] ?? '')
+    }
+  }
+  useEffect(() => {
+    if (leitura) return
+    const aoEsconder = () => { if (document.visibilityState === 'hidden') { gravarLocal(); descarregar() } }
+    const aoSair = (ev: BeforeUnloadEvent) => { gravarLocal(); descarregar(); if (pendentes.current.size > 0) { ev.preventDefault(); ev.returnValue = '' } }
+    const aoVoltarRede = () => { setOffline(false); for (const k of pendentes.current) void persistir(k, valoresRef.current[k] ?? '') }
+    document.addEventListener('visibilitychange', aoEsconder)
+    window.addEventListener('beforeunload', aoSair)
+    window.addEventListener('pagehide', aoEsconder as EventListener)
+    window.addEventListener('online', aoVoltarRede)
+    return () => {
+      document.removeEventListener('visibilitychange', aoEsconder); window.removeEventListener('beforeunload', aoSair)
+      window.removeEventListener('pagehide', aoEsconder as EventListener); window.removeEventListener('online', aoVoltarRede)
+    }
+  }, [leitura])                                                                     // eslint-disable-line react-hooks/exhaustive-deps
 
   async function persistir(chave: string, valor: string, acao: 'salvar' | 'confirmar' = 'salvar') {
     setSalvando(n => n + 1)
-    const r = await salvarCampoPublico(token, chave, valor, acao)
+    let r
+    try { r = await salvarCampoPublico(token, chave, valor, acao) }
+    catch {                                                   // sem conexão: mantém no rascunho local e tenta de novo
+      setSalvando(n => n - 1); setOffline(true); pendentes.current.add(chave); gravarLocal()
+      if (retry.current) clearTimeout(retry.current)
+      retry.current = setTimeout(() => { for (const k of pendentes.current) void persistir(k, valoresRef.current[k] ?? '') }, 5000)
+      return
+    }
     setSalvando(n => n - 1)
-    if (r.sessaoExpirada) { router.refresh(); return }
+    if (r.sessaoExpirada) { gravarLocal(); router.refresh(); return }     // o rascunho local volta depois do PIN
     if (!r.ok) { setErros(e => ({ ...e, [chave]: r.error ?? 'Erro ao salvar.' })); return }
+    setOffline(false)
+    if ((valoresRef.current[chave] ?? '') === valor) pendentes.current.delete(chave)   // só quita se não houve nova digitação
+    gravarLocal()
     setErros(e => { const { [chave]: _, ...resto } = e; return resto })
     if (r.situacao) setSituacoes(s => ({ ...s, [chave]: r.situacao! }))
     setSalvoEm(new Date())
@@ -47,12 +120,14 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
   function alterar(c: Campo, bruto: string, imediato = false) {
     const v = MASCARAS[c.tipo] ? MASCARAS[c.tipo](bruto) : bruto
     setValores(vs => ({ ...vs, [c.chave]: v }))
+    valoresRef.current = { ...valoresRef.current, [c.chave]: v }
+    pendentes.current.add(c.chave); gravarLocal()
     clearTimeout(timers.current[c.chave])
     const check = validarValor(c.tipo, v, c.opcoes)
     if (check.erro) { setErros(e => ({ ...e, [c.chave]: check.erro! })); return }      // não salva valor inválido
     setErros(e => { const { [c.chave]: _, ...resto } = e; return resto })
     if (imediato) void persistir(c.chave, v)
-    else timers.current[c.chave] = setTimeout(() => void persistir(c.chave, v), 900)
+    else timers.current[c.chave] = setTimeout(() => { delete timers.current[c.chave]; void persistir(c.chave, v) }, 600)
   }
 
   async function confirmar(c: Campo) {
@@ -83,6 +158,7 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
     setEnviando(false)
     if (r.sessaoExpirada) { router.refresh(); return }
     if (!r.ok) { setErroEnvio(r.error ?? 'Não foi possível enviar.'); return }
+    pendentes.current.clear(); limparLocal()
     setFicha(f => ({ ...f, somenteLeitura: true, status: 'respondida' })); setEtapa(ultimaEtapa)
   }
 
@@ -230,7 +306,7 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.7rem', color: '#64748b' }}>
           <span>Etapa {Math.min(etapa + 1, ultimaEtapa + 1)} de {ultimaEtapa + 1} · {titulos[etapa]}</span>
-          <span aria-live="polite">{leitura ? 'Somente leitura' : salvando > 0 ? 'Salvando…' : salvoEm ? `Salvo às ${salvoEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Salvamento automático'}</span>
+          <span aria-live="polite">{leitura ? 'Somente leitura' : offline ? '⚠ Sem conexão: guardado neste aparelho, será salvo ao reconectar' : salvando > 0 ? 'Salvando…' : salvoEm ? `Rascunho salvo às ${salvoEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Rascunho salvo automaticamente'}</span>
         </div>
       </div>
 
@@ -239,9 +315,14 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
           As respostas já foram enviadas e esta ficha está somente para leitura.
         </div>
       )}
+      {recuperado && !leitura && (
+        <p role="status" style={{ fontSize: '.8rem', color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '.6rem .8rem', margin: '0 0 1rem' }}>
+          Recuperamos o que você estava digitando quando a página foi fechada.
+        </p>
+      )}
       {etapa === 0 && !leitura && (
         <p style={{ fontSize: '.78rem', color: '#64748b', lineHeight: 1.5, margin: '0 0 1rem' }}>
-          🔒 Seus dados são usados apenas para criar a loja da escola na Eskolare e para o treinamento (LGPD). Campos com <strong>*</strong> são obrigatórios. Você pode sair e voltar depois: tudo é salvo automaticamente.
+          🔒 Seus dados são usados apenas para criar a loja da escola na Eskolare e para o treinamento (LGPD). Campos com <strong>*</strong> são obrigatórios. Pode fechar a página e voltar depois: o que você preencher fica salvo como rascunho e só é enviado à Cidade Viva quando você clicar em Enviar, no final.
         </p>
       )}
 

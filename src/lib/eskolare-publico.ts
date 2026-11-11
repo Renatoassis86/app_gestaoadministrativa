@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { campoPorChave, calcularPreenchimento } from '@/lib/eskolare-campos'
+import { CAMPOS, campoPorChave, campoVisivel, calcularPreenchimento } from '@/lib/eskolare-campos'
 import { validarValor } from '@/lib/eskolare-validacao'
 import { BLOQUEIO_MINUTOS, MAX_TENTATIVAS, SESSAO_HORAS, hashSessao, novaSessao, tokenPlausivel, verificarPin } from '@/lib/eskolare-seguranca'
 import { registrarEvento, statusEditavelPelaEscola } from '@/lib/eskolare-servidor'
@@ -65,6 +65,12 @@ export async function entrarComPin(token: string, pin: string): Promise<PublicoR
   return { ok: true }
 }
 
+async function renovarCookie(token: string) {
+  const jar = await cookies()
+  const atual = jar.get(nomeCookieSessao(token))?.value
+  if (atual) jar.set(nomeCookieSessao(token), atual, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/formulario-eskolare', maxAge: SESSAO_HORAS * 3600 })
+}
+
 export async function sairDaFicha(token: string) {
   const jar = await cookies()
   jar.delete({ name: nomeCookieSessao(token), path: '/formulario-eskolare' })
@@ -80,27 +86,42 @@ export async function salvarCampoPublico(token: string, chave: string, valor: st
   const c = campoPorChave(chave)
   if (!c || c.interno || c.tipo === 'calculado' || c.tipo === 'logo') return { ok: false, error: 'Campo inválido.' }
 
-  const dados = { ...(f.dados ?? {}) }, sit = { ...(f.situacao ?? {}) }
-  let novo: string = dados[chave] ?? ''
+  let novo: string = (f.dados ?? {})[chave] ?? ''
   if (acao === 'salvar') {
     const r = validarValor(c.tipo, valor, c.opcoes)
     if (r.erro) return { ok: false, error: r.erro }
     novo = r.valor ?? ''
   }
-  const pre: string = f.pre?.[chave] ?? ''
-  const situacao = acao === 'confirmar' ? 'confirmado'
-    : !pre ? (novo ? 'preenchido_escola' : 'branco')
-    : novo === pre ? 'confirmado' : 'corrigido'
-  dados[chave] = novo; sit[chave] = situacao
 
-  const primeiraResposta = f.status === 'enviada'
-  const pct = calcularPreenchimento(dados).pct
-  const upd: Record<string, any> = { dados, situacao: sit, pct_preenchido: pct, ultima_resposta_por: 'escola' }
-  if (primeiraResposta) upd.status = 'em_preenchimento'
-  await admin.from('eskolare_fichas').update(upd).eq('id', f.id)
+  // Leitura-modificação-gravação com checagem otimista (updated_at): dois salvamentos simultâneos
+  // (ex.: aba em segundo plano + digitação) não apagam o campo um do outro; quem perde reler e tenta de novo.
+  let cur = f, situacao = 'branco', pct = 0, anterior = '', primeiraResposta = false, gravou = false
+  for (let t = 0; t < 8 && !gravou; t++) {
+    if (t > 0) {
+      const { data: n } = await admin.from('eskolare_fichas').select('*').eq('id', f.id).maybeSingle()
+      if (!n) return { ok: false, error: 'Ficha não encontrada.' }
+      if (!statusEditavelPelaEscola(n.status)) return { ok: false, error: 'Esta ficha já foi enviada e está somente para leitura.' }
+      cur = n
+    }
+    const dados = { ...(cur.dados ?? {}) }, sit = { ...(cur.situacao ?? {}) }
+    anterior = dados[chave] ?? ''
+    const pre: string = cur.pre?.[chave] ?? ''
+    situacao = acao === 'confirmar' ? 'confirmado'
+      : !pre ? (novo ? 'preenchido_escola' : 'branco')
+      : novo === pre ? 'confirmado' : 'corrigido'
+    dados[chave] = novo; sit[chave] = situacao
+    primeiraResposta = cur.status === 'enviada'
+    pct = calcularPreenchimento(dados).pct
+    const upd: Record<string, any> = { dados, situacao: sit, pct_preenchido: pct, ultima_resposta_por: 'escola' }
+    if (primeiraResposta) upd.status = 'em_preenchimento'
+    const { data: ok } = await admin.from('eskolare_fichas').update(upd).eq('id', cur.id).eq('updated_at', cur.updated_at).select('id')
+    gravou = !!(ok && ok.length)
+  }
+  if (!gravou) return { ok: false, error: 'Não foi possível salvar agora. Tente novamente.' }
   await renovarSessao(admin, f.id)
-  if (acao === 'salvar' && (f.dados?.[chave] ?? '') !== novo) {
-    await registrarEvento(admin, f, 'campo', 'escola', { campo: chave, de: f.dados?.[chave] ?? '', para: novo, situacao })
+  await renovarCookie(token)
+  if (acao === 'salvar' && anterior !== novo) {
+    await registrarEvento(admin, f, 'campo', 'escola', { campo: chave, de: anterior, para: novo, situacao })
   }
   if (primeiraResposta) await registrarEvento(admin, f, 'campo', 'escola', {}, { resumo: 'A escola começou a preencher a ficha.' })
   return { ok: true, valor: novo, situacao, pct }
@@ -139,7 +160,13 @@ export async function enviarRespostas(token: string): Promise<PublicoResultado> 
   if (!statusEditavelPelaEscola(f.status)) return { ok: true }
   const calc = calcularPreenchimento(f.dados ?? {})
   if (calc.pct < 100) return { ok: false, error: `Ainda falta preencher: ${calc.faltando.join('; ')}.` }
-  await admin.from('eskolare_fichas').update({ status: 'respondida', respondida_em: new Date().toISOString(), ultima_resposta_por: 'escola', pct_preenchido: 100 }).eq('id', f.id)
+  // Descarta respostas de campos que ficaram ocultos (ex.: o modo de preço que a escola não escolheu).
+  const dados = { ...(f.dados ?? {}) }, sit = { ...(f.situacao ?? {}) }
+  for (const c of CAMPOS) if (!campoVisivel(c, dados) && dados[c.chave] != null && dados[c.chave] !== '') { delete dados[c.chave]; delete sit[c.chave] }
+  const { data: ok } = await admin.from('eskolare_fichas')
+    .update({ dados, situacao: sit, status: 'respondida', respondida_em: new Date().toISOString(), ultima_resposta_por: 'escola', pct_preenchido: 100 })
+    .eq('id', f.id).in('status', ['enviada', 'em_preenchimento']).select('id')
+  if (!ok?.length) return { ok: true }              // outro envio já concluiu
   await registrarEvento(admin, f, 'respondida', 'escola', {}, { resumo: 'A escola enviou as respostas. Aguardando validação do comercial.' })
   return { ok: true }
 }

@@ -22,6 +22,7 @@ async function carregar(admin: ReturnType<typeof createAdminClient>, id: string)
 // Exclui a ficha (e seu histórico). A logo enviada pela escola também é removida do armazenamento.
 export async function excluirFicha(id: string): Promise<Resultado> {
   const u = await exigirComercial(); if (!u) return NEGADO
+  if (u.role !== 'gerente' && u.role !== 'supervisor') return { ok: false, error: 'Só gerente ou supervisor pode excluir fichas.' }
   const admin = createAdminClient()
   const f = await carregar(admin, id)
   if (!f) return { ok: false, error: 'Ficha não encontrada.' }
@@ -103,6 +104,7 @@ export async function salvarCamposInternos(id: string, patch: Record<string, str
   for (const [chave, bruto] of Object.entries(patch)) {
     const c = campoPorChave(chave)
     if (!c || c.tipo === 'calculado' || c.tipo === 'logo') continue
+    if (c.tipo === 'cpf' && u.role !== 'gerente') continue            // CPF completo só é visto/editado por gerente
     const r = validarValor(c.tipo, bruto, c.opcoes)
     if (r.erro) { erros[chave] = r.erro; continue }
     const novo = r.valor ?? ''
