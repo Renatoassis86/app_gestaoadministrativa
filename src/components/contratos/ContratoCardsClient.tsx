@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
+import { ArquivosEscola, type ArquivoContrato } from '@/components/contratos/ArquivosEscola'
 import { MODALIDADES, STATUS_CONTRATO, SERIES_CONTRATO, brl, fmtCnpj, fmtCpf, fmtData, fmtTel, type Modalidade } from '@/lib/contratos'
 
 export interface CardData {
@@ -21,7 +22,7 @@ export interface CardData {
   pagamento: string
   series: Array<{ serie: string; tipo_kit: string; quantidade: number; valor_unitario: number | null }>
   aditivos: Array<{ id: string; titulo: string; assinado: boolean; data_assinatura: string | null }>
-  arquivos: number
+  arquivos: ArquivoContrato[]
   driveUrl: string | null
   pendencias: string[]
 }
@@ -65,7 +66,7 @@ function Card({ d }: { d: CardData }) {
             {L('Pagamento', d.pagamento)}
             {L('Vigência', d.vigenciaInicio || d.vigenciaFim ? `${fmtData(d.vigenciaInicio)} → ${fmtData(d.vigenciaFim)}` : 'a definir')}
             {L('Aditivos', d.aditivos.length ? `${d.aditivos.length}` : 'nenhum')}
-            {L('Arquivos anexados', String(d.arquivos))}
+            {L('Arquivos anexados', String(d.arquivos.length))}
           </div>
           {d.pendencias.length > 0 && (
             <div style={{ fontSize: '.7rem', color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '.4rem .55rem' }}>
@@ -91,7 +92,9 @@ function Card({ d }: { d: CardData }) {
         </div>
       )}
 
-      <div style={{ marginTop: 'auto', display: 'flex', gap: '.5rem' }}>
+      <div style={{ marginTop: 'auto' }}><ArquivosEscola escolaId={d.escolaId} inicial={d.arquivos} compacto /></div>
+
+      <div style={{ display: 'flex', gap: '.5rem' }}>
         <button onClick={() => setVerso(v => !v)}
           style={{ flex: 1, padding: '.45rem', borderRadius: 9999, border: '1px solid #bae6fd', background: '#f0f9ff', color: '#0369a1', fontWeight: 700, fontSize: '.75rem', cursor: 'pointer' }}>
           {verso ? '← Resumo' : 'Ver dados completos'}
