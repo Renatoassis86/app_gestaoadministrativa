@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { BLOCOS, CAMPOS, STATUS_FICHA, campoVisivel, camposDoBloco, totalAlunos, vazio, type Campo } from '@/lib/eskolare-campos'
+import { BLOCOS, CAMPOS, STATUS_FICHA, etapaEscola, campoVisivel, camposDoBloco, totalAlunos, vazio, type Campo } from '@/lib/eskolare-campos'
 import { formatarCep, formatarCnpj, formatarCpf, formatarWhatsapp, mascararCpf } from '@/lib/eskolare-validacao'
+import { PainelRespostaEscola } from './PainelRespostaEscola'
 import { atualizarDaPlataforma, gerarAcesso, marcarCadastrada, reabrirFicha, revogarAcesso, salvarCamposInternos, validarFicha } from '@/lib/eskolare-actions'
 
 const MASC: Record<string, (v: string) => string> = { cnpj: formatarCnpj, cpf: formatarCpf, cep: formatarCep, whatsapp: formatarWhatsapp }
@@ -15,7 +16,7 @@ export interface FichaInterna {
   pre: Record<string, string>; dados: Record<string, string>; situacao: Record<string, string>; fontes: Record<string, string>
   pct: number; temAcesso: boolean; revogado: boolean; bloqueadoAte: string | null; ultimoAcesso: string | null
   enviadaEm: string | null; respondidaEm: string | null; validadaEm: string | null; cadastradaEm: string | null
-  logoUrl: string | null; ehGerente: boolean
+  logoUrl: string | null; ehGerente: boolean; abertaEm: string | null; comecouEm: string | null
   eventos: Array<{ id: string; tipo: string; autor: string; detalhe: any; created_at: string }>
 }
 
@@ -36,7 +37,7 @@ export function FichaInternaClient({ f }: { f: FichaInterna }) {
   const [msg, setMsg] = useState('')
   const [acesso, setAcesso] = useState<{ link: string; pin: string } | null>(null)
   const [copiado, setCopiado] = useState('')
-  const st = STATUS_FICHA.find(s => s.id === f.status) ?? STATUS_FICHA[0]
+  const st = { ...(STATUS_FICHA.find(s => s.id === f.status) ?? STATUS_FICHA[0]), ...etapaEscola(f.status, !!f.ultimoAcesso) }
   const nomeEscola = valores.nome_loja || f.escolaNome
 
   const mensagem = `Olá! Para montar a loja da ${nomeEscola} na Eskolare, precisamos que você confirme alguns dados da escola e preencha o que ainda está em aberto.
@@ -102,6 +103,8 @@ Pode preencher aos poucos: tudo fica salvo como rascunho e só é enviado quando
         </div>
         {msg && <p role="status" style={{ fontSize: '.82rem', color: msg.includes('Erro') || msg.includes('Não') ? '#b91c1c' : '#047857', margin: '.6rem 0 0' }}>{msg}</p>}
       </section>
+
+      <PainelRespostaEscola d={{ status: f.status, pct: f.pct, dados: f.dados, pre: f.pre, situacao: f.situacao, enviadaEm: f.enviadaEm, abertaEm: f.abertaEm, comecouEm: f.comecouEm, respondidaEm: f.respondidaEm, validadaEm: f.validadaEm, cadastradaEm: f.cadastradaEm, ultimoAcesso: f.ultimoAcesso, logoUrl: f.logoUrl, ehGerente: f.ehGerente }} />
 
       {/* Acesso da escola */}
       <section style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: '1rem 1.2rem' }}>

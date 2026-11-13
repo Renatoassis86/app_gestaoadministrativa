@@ -22,9 +22,11 @@ export default async function FichaEskolare({ params }: { params: Promise<{ id: 
     .eq('id', id).maybeSingle()
   if (!f) notFound()
 
-  const [{ data: escola }, { data: eventos }] = await Promise.all([
+  const [{ data: escola }, { data: eventos }, { data: abertas }, { data: comecos }] = await Promise.all([
     admin.from('escolas').select('nome').eq('id', f.escola_id).maybeSingle(),
     admin.from('eskolare_eventos').select('id, tipo, autor, detalhe, created_at').eq('ficha_id', id).order('created_at', { ascending: false }).limit(60),
+    admin.from('eskolare_eventos').select('created_at').eq('ficha_id', id).eq('tipo', 'aberta').order('created_at').limit(1),
+    admin.from('eskolare_eventos').select('created_at').eq('ficha_id', id).eq('tipo', 'campo').eq('autor', 'escola').order('created_at').limit(1),
   ])
   let logoUrl: string | null = null
   if (f.dados?.logo) logoUrl = (await admin.storage.from('eskolare-logos').createSignedUrl(f.dados.logo, 3600)).data?.signedUrl ?? null
@@ -39,6 +41,7 @@ export default async function FichaEskolare({ params }: { params: Promise<{ id: 
     temAcesso: !!f.token, revogado: f.link_revogado, bloqueadoAte: f.bloqueado_ate, ultimoAcesso: f.ultimo_acesso_em,
     enviadaEm: f.enviada_em, respondidaEm: f.respondida_em, validadaEm: f.validada_em, cadastradaEm: f.cadastrada_em,
     logoUrl, ehGerente: u.role === 'gerente', eventos: eventos ?? [],
+    abertaEm: abertas?.[0]?.created_at ?? null, comecouEm: comecos?.[0]?.created_at ?? null,
   }
 
   return (

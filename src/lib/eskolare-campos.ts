@@ -109,12 +109,12 @@ export const CHAVES_PRECO = ['preco_infantil', 'preco_fundamental', 'comissao_ki
 export const CHAVES_ALUNOS = ['al_inf2', 'al_inf3', 'al_inf4', 'al_inf5', 'al_ano1', 'al_ano2', 'al_ano3', 'al_ano4', 'al_ano5']
 
 export const STATUS_FICHA = [
-  { id: 'rascunho', label: 'Rascunho interno', cor: '#475569', bg: '#f1f5f9' },
-  { id: 'enviada', label: 'Enviada à escola', cor: '#0369a1', bg: '#e0f2fe' },
-  { id: 'em_preenchimento', label: 'Em preenchimento', cor: '#b45309', bg: '#fef3c7' },
-  { id: 'respondida', label: 'Respondida', cor: '#7c3aed', bg: '#ede9fe' },
-  { id: 'validada', label: 'Validada pelo comercial', cor: '#047857', bg: '#d1fae5' },
-  { id: 'cadastrada', label: 'Cadastrada na Eskolare', cor: '#065f46', bg: '#a7f3d0' },
+  { id: 'rascunho', label: 'Não enviada à escola', cor: '#475569', bg: '#f1f5f9' },
+  { id: 'enviada', label: 'Link enviado, aguardando a escola', cor: '#0369a1', bg: '#e0f2fe' },
+  { id: 'em_preenchimento', label: 'Escola preenchendo (não enviou)', cor: '#b45309', bg: '#fef3c7' },
+  { id: 'respondida', label: '✔ Escola enviou as respostas', cor: '#047857', bg: '#d1fae5' },
+  { id: 'validada', label: '✔ Validada pelo comercial', cor: '#065f46', bg: '#a7f3d0' },
+  { id: 'cadastrada', label: '✔ Cadastrada na Eskolare', cor: '#14532d', bg: '#86efac' },
 ] as const
 export type StatusFicha = typeof STATUS_FICHA[number]['id']
 
@@ -147,4 +147,11 @@ export function calcularPreenchimento(dados: Record<string, any>) {
     ...(precoOk ? [] : ['Preço final ou comissão (bloco 8)']),
   ]
   return { preenchidos, total, pct: Math.round((preenchidos / total) * 100), faltando }
+}
+
+// Situação da escola em linguagem simples (o status "enviada" muda de texto se a escola já abriu o link).
+export function etapaEscola(status: string, acessou: boolean): { label: string; cor: string; bg: string } {
+  const st = STATUS_FICHA.find(x => x.id === status) ?? STATUS_FICHA[0]
+  if (status === 'enviada' && acessou) return { label: 'Escola abriu o link, ainda não preencheu', cor: '#0369a1', bg: '#e0f2fe' }
+  return { label: st.label, cor: st.cor, bg: st.bg }
 }

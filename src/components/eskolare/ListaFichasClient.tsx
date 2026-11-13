@@ -3,17 +3,16 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { STATUS_FICHA } from '@/lib/eskolare-campos'
+import { STATUS_FICHA, etapaEscola } from '@/lib/eskolare-campos'
 import { Pencil, Trash2 } from 'lucide-react'
 import { criarFicha, excluirFicha, importarPlanilha, previaPrefill } from '@/lib/eskolare-actions'
 
 export interface LinhaFicha {
   id: string; escola: string; cnpj: string; responsavel: string | null; status: string; pct: number
-  ultimaPor: string | null; atualizado: string
+  ultimaPor: string | null; atualizado: string; ultimoAcesso: string | null; respondidaEm: string | null
 }
 export interface OpcaoEscola { id: string; nome: string; cnpj: string | null }
 
-const stInfo = (id: string) => STATUS_FICHA.find(s => s.id === id) ?? STATUS_FICHA[0]
 const dt = (iso: string) => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 const inp: React.CSSProperties = { padding: '.5rem .75rem', border: '1px solid #cbd5e1', borderRadius: 9999, fontSize: '.85rem', background: '#fff' }
 
@@ -100,11 +99,17 @@ export function ListaFichasClient({ linhas, escolas }: { linhas: LinhaFicha[]; e
 
   const cards = [
     { r: 'Total de fichas', v: linhas.length, cor: '#0ea5e9' },
-    { r: 'Enviadas', v: cont('enviada') + cont('em_preenchimento'), cor: '#f59e0b' },
-    { r: 'Respondidas', v: cont('respondida'), cor: '#7c3aed' },
-    { r: 'Validadas', v: cont('validada'), cor: '#059669' },
-    { r: 'Cadastradas na Eskolare', v: cont('cadastrada'), cor: '#065f46' },
+    { r: 'Link enviado, aguardando', v: cont('enviada'), cor: '#0369a1' },
+    { r: 'Escola preenchendo', v: cont('em_preenchimento'), cor: '#f59e0b' },
+    { r: 'Escola enviou as respostas', v: cont('respondida'), cor: '#047857' },
+    { r: 'Validadas', v: cont('validada'), cor: '#065f46' },
+    { r: 'Cadastradas na Eskolare', v: cont('cadastrada'), cor: '#14532d' },
   ]
+  const ativ = (l: LinhaFicha) =>
+    l.respondidaEm ? `Enviou em ${dt(l.respondidaEm)}`
+    : l.status === 'em_preenchimento' ? `Preenchendo desde ${l.ultimoAcesso ? dt(l.ultimoAcesso) : '—'}`
+    : l.ultimoAcesso ? `Abriu o link em ${dt(l.ultimoAcesso)}`
+    : l.status === 'enviada' ? 'Ainda não abriu o link' : 'Link não enviado'
 
   return (
     <div>
@@ -138,22 +143,22 @@ export function ListaFichasClient({ linhas, escolas }: { linhas: LinhaFicha[]; e
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.82rem', minWidth: 760 }}>
           <thead>
             <tr style={{ background: '#f8fafc', textAlign: 'left', color: '#475569' }}>
-              {['Escola', 'Responsável', 'Status', '% preenchido', 'Última resposta', 'Atualizada', ''].map(h => <th key={h} style={{ padding: '.65rem .8rem', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.05em' }}>{h}</th>)}
+              {['Escola', 'Responsável', 'Situação', '% preenchido', 'Atividade da escola', 'Atualizada', ''].map(h => <th key={h} style={{ padding: '.65rem .8rem', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.05em' }}>{h}</th>)}
             </tr>
           </thead>
           <tbody>
             {filtradas.map(l => {
-              const s = stInfo(l.status)
+              const s = etapaEscola(l.status, !!l.ultimoAcesso)
               return (
                 <tr key={l.id} style={{ borderTop: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '.6rem .8rem' }}><strong>{l.escola}</strong><div style={{ color: '#94a3b8', fontSize: '.72rem' }}>{l.cnpj}</div></td>
+                  <td style={{ padding: '.6rem .8rem' }}><Link href={`/comercial/cadastro-eskolare/${l.id}`} style={{ color: '#0f172a', textDecoration: 'underline', textDecorationColor: '#bae6fd', textUnderlineOffset: 3 }}><strong>{l.escola}</strong></Link><div style={{ color: '#94a3b8', fontSize: '.72rem' }}>{l.cnpj}</div></td>
                   <td style={{ padding: '.6rem .8rem' }}>{l.responsavel ?? '—'}</td>
                   <td style={{ padding: '.6rem .8rem' }}><span style={{ background: s.bg, color: s.cor, borderRadius: 9999, padding: '.15rem .6rem', fontWeight: 700, fontSize: '.72rem', whiteSpace: 'nowrap' }}>{s.label}</span></td>
                   <td style={{ padding: '.6rem .8rem', minWidth: 120 }}>
                     <div style={{ height: 7, background: '#e2e8f0', borderRadius: 9999 }}><div style={{ width: `${l.pct}%`, height: '100%', background: l.pct === 100 ? '#059669' : '#0ea5e9', borderRadius: 9999 }} /></div>
                     <span style={{ fontSize: '.7rem', color: '#64748b' }}>{l.pct}%</span>
                   </td>
-                  <td style={{ padding: '.6rem .8rem' }}>{l.ultimaPor === 'escola' ? 'Escola' : l.ultimaPor === 'comercial' ? 'Comercial' : '—'}</td>
+                  <td style={{ padding: '.6rem .8rem' }}>{ativ(l)}</td>
                   <td style={{ padding: '.6rem .8rem', whiteSpace: 'nowrap' }}>{dt(l.atualizado)}</td>
                   <td style={{ padding: '.6rem .8rem', whiteSpace: 'nowrap' }}>
                     <Link href={`/comercial/cadastro-eskolare/${l.id}`} title="Editar / abrir ficha" aria-label={`Editar a ficha de ${l.escola}`}

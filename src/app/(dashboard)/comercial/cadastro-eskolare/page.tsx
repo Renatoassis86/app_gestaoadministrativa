@@ -13,13 +13,13 @@ export default async function CadastroEskolareLista() {
 
   // Nunca seleciona pin_hash, token nem sessão.
   const [{ data: fichas, error }, { data: escolas }] = await Promise.all([
-    admin.from('eskolare_fichas').select('id, escola_id, status, responsavel_comercial, pct_preenchido, ultima_resposta_por, updated_at').order('updated_at', { ascending: false }),
+    admin.from('eskolare_fichas').select('id, escola_id, status, responsavel_comercial, pct_preenchido, ultima_resposta_por, updated_at, ultimo_acesso_em, respondida_em').order('updated_at', { ascending: false }),
     admin.from('escolas').select('id, nome, cnpj').order('nome'),
   ])
   const porId = new Map((escolas ?? []).map(e => [e.id, e]))
   const linhas: LinhaFicha[] = (fichas ?? []).map(f => ({
     id: f.id, escola: porId.get(f.escola_id)?.nome ?? '—', cnpj: porId.get(f.escola_id)?.cnpj ?? '',
-    responsavel: f.responsavel_comercial, status: f.status, pct: f.pct_preenchido, ultimaPor: f.ultima_resposta_por, atualizado: f.updated_at,
+    responsavel: f.responsavel_comercial, status: f.status, pct: f.pct_preenchido, ultimaPor: f.ultima_resposta_por, atualizado: f.updated_at, ultimoAcesso: f.ultimo_acesso_em, respondidaEm: f.respondida_em,
   }))
 
   return (
