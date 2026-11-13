@@ -30,10 +30,10 @@ export const BLOCOS: Bloco[] = [
   { id: 4,  titulo: 'Contato para o treinamento' },
   { id: 5,  titulo: 'Financeiro da escola' },
   { id: 6,  titulo: 'Coordenação pedagógica' },
-  { id: 7,  titulo: 'Alunos previstos por série', descricao: 'Kits Infantil II a V têm 5 livros (4 + Inglês). O kit do 1º ano tem 9 livros e o do 2º ao 5º ano tem 12 livros.' },
+  { id: 7,  titulo: 'Alunos previstos por série', descricao: 'Informe a quantidade de cada série; digite 0 quando a escola não tem a série. Kits Infantil II a V têm 5 livros (4 + Inglês). O kit do 1º ano tem 9 livros e o do 2º ao 5º ano tem 12 livros.' },
   { id: 8,  titulo: 'Preço final ou comissão', descricao: 'A comissão é única para a escola toda: a Eskolare não permite comissão diferente por série. Preço de tabela: Infantil R$ 1.150 e Fundamental R$ 1.450.' },
   { id: 9,  titulo: 'Entrega dos kits' },
-  { id: 10, titulo: 'Contrato 2027' },
+  { id: 10, titulo: 'Contrato 2027', descricao: 'Preenchido pelo comercial a partir do contrato. A escola não vê este bloco.' },
 ]
 
 export const PRECO_MODOS = ['Preço final às famílias', 'Comissão desejada'] as const
@@ -76,15 +76,15 @@ export const CAMPOS: Campo[] = [
   { chave: 'coord_email', rotulo: 'E-mail', bloco: 6, tipo: 'email' },
   { chave: 'coord_whatsapp', rotulo: 'WhatsApp', bloco: 6, tipo: 'whatsapp' },
   // 7. Alunos por série
-  { chave: 'al_inf2', rotulo: 'Infantil 2 anos', bloco: 7, tipo: 'inteiro' },
-  { chave: 'al_inf3', rotulo: 'Infantil 3 anos', bloco: 7, tipo: 'inteiro' },
-  { chave: 'al_inf4', rotulo: 'Infantil 4 anos', bloco: 7, tipo: 'inteiro' },
-  { chave: 'al_inf5', rotulo: 'Infantil 5 anos', bloco: 7, tipo: 'inteiro' },
-  { chave: 'al_ano1', rotulo: '1º ano', bloco: 7, tipo: 'inteiro' },
-  { chave: 'al_ano2', rotulo: '2º ano', bloco: 7, tipo: 'inteiro' },
-  { chave: 'al_ano3', rotulo: '3º ano', bloco: 7, tipo: 'inteiro' },
-  { chave: 'al_ano4', rotulo: '4º ano', bloco: 7, tipo: 'inteiro' },
-  { chave: 'al_ano5', rotulo: '5º ano', bloco: 7, tipo: 'inteiro' },
+  { chave: 'al_inf2', rotulo: 'Infantil 2 anos', bloco: 7, tipo: 'inteiro', obrigatorio: true },
+  { chave: 'al_inf3', rotulo: 'Infantil 3 anos', bloco: 7, tipo: 'inteiro', obrigatorio: true },
+  { chave: 'al_inf4', rotulo: 'Infantil 4 anos', bloco: 7, tipo: 'inteiro', obrigatorio: true },
+  { chave: 'al_inf5', rotulo: 'Infantil 5 anos', bloco: 7, tipo: 'inteiro', obrigatorio: true },
+  { chave: 'al_ano1', rotulo: '1º ano', bloco: 7, tipo: 'inteiro', obrigatorio: true },
+  { chave: 'al_ano2', rotulo: '2º ano', bloco: 7, tipo: 'inteiro', obrigatorio: true },
+  { chave: 'al_ano3', rotulo: '3º ano', bloco: 7, tipo: 'inteiro', obrigatorio: true },
+  { chave: 'al_ano4', rotulo: '4º ano', bloco: 7, tipo: 'inteiro', obrigatorio: true },
+  { chave: 'al_ano5', rotulo: '5º ano', bloco: 7, tipo: 'inteiro', obrigatorio: true },
   { chave: 'al_total', rotulo: 'Total de alunos', bloco: 7, tipo: 'calculado' },
   { chave: 'inf_com_ingles', rotulo: 'Infantil com Inglês?', bloco: 7, tipo: 'opcoes', opcoes: SIM_NAO },
   { chave: 'venda_2sem', rotulo: 'Venda de 2º semestre?', bloco: 7, tipo: 'opcoes', opcoes: SIM_NAO },
@@ -99,10 +99,10 @@ export const CAMPOS: Campo[] = [
   { chave: 'ent_whatsapp', rotulo: 'WhatsApp de quem recebe', bloco: 9, tipo: 'whatsapp' },
   { chave: 'ent_endereco', rotulo: 'Endereço de entrega (se diferente)', bloco: 9, tipo: 'texto' },
   // 10. Contrato 2027
-  { chave: 'ctr_assinado', rotulo: 'Contrato assinado?', bloco: 10, tipo: 'opcoes', obrigatorio: true, opcoes: ['Sim', 'Em assinatura', 'Não'] },
-  { chave: 'ctr_kits', rotulo: 'Kits contratados', bloco: 10, tipo: 'inteiro', obrigatorio: true },
-  { chave: 'ctr_valor', rotulo: 'Valor total contratado (R$)', bloco: 10, tipo: 'dinheiro', obrigatorio: true },
-  { chave: 'ctr_vigencia', rotulo: 'Vigência', bloco: 10, tipo: 'texto' },
+  { chave: 'ctr_assinado', rotulo: 'Contrato assinado?', bloco: 10, tipo: 'opcoes', interno: true, obrigatorio: true, opcoes: ['Sim', 'Em assinatura', 'Não'] },
+  { chave: 'ctr_kits', rotulo: 'Kits contratados', bloco: 10, tipo: 'inteiro', interno: true, obrigatorio: true },
+  { chave: 'ctr_valor', rotulo: 'Valor total contratado (R$)', bloco: 10, tipo: 'dinheiro', interno: true, obrigatorio: true },
+  { chave: 'ctr_vigencia', rotulo: 'Vigência', bloco: 10, tipo: 'texto', interno: true },
 ]
 
 export const CHAVES_PRECO = ['preco_infantil', 'preco_fundamental', 'comissao_kit']
@@ -120,6 +120,8 @@ export type StatusFicha = typeof STATUS_FICHA[number]['id']
 
 export const campoPorChave = (chave: string) => CAMPOS.find(c => c.chave === chave)
 export const camposPublicos = () => CAMPOS.filter(c => !c.interno)
+export const camposDoBlocoTodos = (b: number) => CAMPOS.filter(c => c.bloco === b)
+export const blocosPublicos = () => BLOCOS.filter(b => camposDoBloco(b.id).length > 0)
 export const camposDoBloco = (b: number) => CAMPOS.filter(c => c.bloco === b && !c.interno)
 
 export const vazio = (v: unknown) => v == null || String(v).trim() === ''
@@ -136,15 +138,20 @@ export function totalAlunos(dados: Record<string, any>) {
 
 // % preenchido = obrigatórios preenchidos ÷ obrigatórios, com o bloco de preço contando como UM obrigatório
 // (completo quando qualquer um dos três valores existir). Mesma conta da planilha: 20 + 1 = 21.
-export function calcularPreenchimento(dados: Record<string, any>) {
+export function calcularPreenchimento(dados: Record<string, any>, situacao?: Record<string, string>) {
   const obrigatorios = CAMPOS.filter(c => c.obrigatorio && !c.interno)
-  let preenchidos = obrigatorios.filter(c => !vazio(dados[c.chave])).length
+  // Dado que veio da plataforma e a escola ainda não confirmou nem corrigiu não vale como resposta.
+  const naoConfirmado = (c: Campo) => !!situacao && situacao[c.chave] === 'pre' && !vazio(dados[c.chave]) && c.tipo !== 'opcoes' && c.tipo !== 'logo' && c.tipo !== 'calculado'
+  const feito = (c: Campo) => !vazio(dados[c.chave]) && !naoConfirmado(c)
+  let preenchidos = obrigatorios.filter(feito).length
   const precoOk = CHAVES_PRECO.some(k => !vazio(dados[k]) && Number(String(dados[k]).replace(',', '.')) > 0)
-  const total = obrigatorios.length + 1
+  const extras = CAMPOS.filter(c => !c.interno && !c.obrigatorio && campoVisivel(c, dados) && naoConfirmado(c))
+  const total = obrigatorios.length + 1 + extras.length
   if (precoOk) preenchidos += 1
   const faltando = [
-    ...obrigatorios.filter(c => vazio(dados[c.chave])).map(c => c.rotulo + ' (bloco ' + c.bloco + ')'),
+    ...obrigatorios.filter(c => !feito(c)).map(c => c.rotulo + ' (bloco ' + c.bloco + ')' + (naoConfirmado(c) ? ' — confirme ou corrija' : '')),
     ...(precoOk ? [] : ['Preço final ou comissão (bloco 8)']),
+    ...extras.map(c => c.rotulo + ' (bloco ' + c.bloco + ') — confirme ou corrija'),
   ]
   return { preenchidos, total, pct: Math.round((preenchidos / total) * 100), faltando }
 }

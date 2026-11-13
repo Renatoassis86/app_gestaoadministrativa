@@ -88,7 +88,7 @@ export async function salvarCampoPublico(token: string, chave: string, valor: st
 
   let novo: string = (f.dados ?? {})[chave] ?? ''
   if (acao === 'salvar') {
-    const r = validarValor(c.tipo, valor, c.opcoes)
+    const r = validarValor(c.tipo, valor, c.opcoes, c.chave)
     if (r.erro) return { ok: false, error: r.erro }
     novo = r.valor ?? ''
   }
@@ -112,7 +112,7 @@ export async function salvarCampoPublico(token: string, chave: string, valor: st
       : novo === pre ? 'confirmado' : 'corrigido'
     dados[chave] = novo; sit[chave] = situacao
     primeiraResposta = cur.status === 'enviada'
-    pct = calcularPreenchimento(dados).pct
+    pct = calcularPreenchimento(dados, sit).pct
     const upd: Record<string, any> = { dados, situacao: sit, pct_preenchido: pct, ultima_resposta_por: 'escola',
       sessao_expira: new Date(Date.now() + SESSAO_HORAS * 3600_000).toISOString(), ultimo_acesso_em: new Date().toISOString() }   // sessão deslizante na mesma gravação
     if (primeiraResposta) upd.status = 'em_preenchimento'
@@ -146,7 +146,7 @@ export async function enviarLogo(formData: FormData): Promise<PublicoResultado> 
   if (up.error) return { ok: false, error: 'Não foi possível enviar a logo. Tente novamente.' }
 
   const dados = { ...(f.dados ?? {}), logo: path }, sit = { ...(f.situacao ?? {}), logo: 'preenchido_escola' }
-  const upd: Record<string, any> = { dados, situacao: sit, pct_preenchido: calcularPreenchimento(dados).pct, ultima_resposta_por: 'escola' }
+  const upd: Record<string, any> = { dados, situacao: sit, pct_preenchido: calcularPreenchimento(dados, sit).pct, ultima_resposta_por: 'escola' }
   if (f.status === 'enviada') upd.status = 'em_preenchimento'
   await admin.from('eskolare_fichas').update(upd).eq('id', f.id)
   await renovarSessao(admin, f.id)
@@ -159,7 +159,7 @@ export async function enviarRespostas(token: string): Promise<PublicoResultado> 
   const f = await fichaDaSessao(admin, token)
   if (!f) return { ok: false, sessaoExpirada: true, error: SESSAO_EXPIRADA }
   if (!statusEditavelPelaEscola(f.status)) return { ok: true }
-  const calc = calcularPreenchimento(f.dados ?? {})
+  const calc = calcularPreenchimento(f.dados ?? {}, f.situacao ?? {})
   if (calc.pct < 100) return { ok: false, error: `Ainda falta preencher: ${calc.faltando.join('; ')}.` }
   // Descarta respostas de campos que ficaram ocultos (ex.: o modo de preço que a escola não escolheu).
   const dados = { ...(f.dados ?? {}) }, sit = { ...(f.situacao ?? {}) }

@@ -19,7 +19,7 @@ export async function GET(req: Request) {
   const { data: fichas, error } = await q
   if (error) return new Response(error.message, { status: 500 })
 
-  const campos = CAMPOS.filter(c => !c.interno)
+  const campos = CAMPOS
   const titulos = ['Nº', 'Status', '% preenchido', 'Responsável comercial',
     ...campos.map(c => c.colunaTitulo ?? `${c.rotulo}${c.obrigatorio ? ' *' : ''}`), 'Observações do comercial']
 
@@ -63,5 +63,5 @@ export async function GET(req: Request) {
 }
 
 function camposDoBlocoOrdem(blocoId: number) {
-  return CAMPOS.filter(c => !c.interno && c.bloco === blocoId)
+  return CAMPOS.filter(c => c.bloco === blocoId)
 }

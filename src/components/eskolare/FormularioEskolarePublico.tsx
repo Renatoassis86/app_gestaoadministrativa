@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { BLOCOS, CAMPOS, calcularPreenchimento, campoVisivel, camposDoBloco, totalAlunos, vazio, type Campo } from '@/lib/eskolare-campos'
+import { blocosPublicos, CAMPOS, calcularPreenchimento, campoVisivel, camposDoBloco, totalAlunos, vazio, type Campo } from '@/lib/eskolare-campos'
+
+// O bloco do contrato é interno: a escola não o vê.
+const BLOCOS = blocosPublicos()
 import { formatarCep, formatarCnpj, formatarCpf, formatarWhatsapp, validarValor } from '@/lib/eskolare-validacao'
 import { enviarLogo, enviarRespostas, salvarCampoPublico } from '@/lib/eskolare-publico'
 import type { FichaPublica } from '@/lib/eskolare-sessao'
@@ -32,7 +35,7 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
 
   const leitura = ficha.somenteLeitura
   const dadosAtuais = useMemo(() => ({ ...valores, logo: ficha.logoUrl || valores.logo ? 'ok' : '' }), [valores, ficha.logoUrl])
-  const calc = useMemo(() => calcularPreenchimento(dadosAtuais), [dadosAtuais])
+  const calc = useMemo(() => calcularPreenchimento(dadosAtuais, situacoes), [dadosAtuais, situacoes])
   const ultimaEtapa = BLOCOS.length
   const chaveLocal = `esk_rascunho_${token.slice(0, 16)}`
   valoresRef.current = valores
@@ -64,7 +67,7 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
       setRecuperado(true)
       for (const [k, v] of diferentes) {
         const c = CAMPOS.find(x => x.chave === k)!
-        const check = validarValor(c.tipo, v, c.opcoes)
+        const check = validarValor(c.tipo, v, c.opcoes, c.chave)
         pendentes.current.add(k)
         if (check.erro) setErros(e => ({ ...e, [k]: check.erro! }))
         else void persistir(k, v)
@@ -131,7 +134,7 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
     valoresRef.current = { ...valoresRef.current, [c.chave]: v }
     pendentes.current.add(c.chave); gravarLocal()
     clearTimeout(timers.current[c.chave])
-    const check = validarValor(c.tipo, v, c.opcoes)
+    const check = validarValor(c.tipo, v, c.opcoes, c.chave)
     if (check.erro) { setErros(e => ({ ...e, [c.chave]: check.erro! })); return }      // não salva valor inválido
     setErros(e => { const { [c.chave]: _, ...resto } = e; return resto })
     if (imediato) void persistir(c.chave, v)

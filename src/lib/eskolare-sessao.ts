@@ -48,7 +48,7 @@ export async function montarFichaPublica(admin: Admin, f: any): Promise<FichaPub
     const { data } = await admin.storage.from('eskolare-logos').createSignedUrl(f.dados.logo, 3600)
     logoUrl = data?.signedUrl ?? null
   }
-  const calc = calcularPreenchimento(f.dados ?? {})
+  const calc = calcularPreenchimento(f.dados ?? {}, f.situacao ?? {})
   return {
     escolaNome: f.dados?.nome_loja || e?.nome || 'sua escola',
     status: f.status, somenteLeitura: !statusEditavelPelaEscola(f.status),

@@ -53,20 +53,20 @@ test('token: 256 bits, único, não sequencial', () => {
   assert.equal(hashSessao(novaSessao()).length, 64)
 })
 
-const OBRIG = CAMPOS.filter(c => c.obrigatorio)
+const OBRIG = CAMPOS.filter(c => c.obrigatorio && !c.interno)
 const completo = () => {
   const d = {}
   for (const c of OBRIG) d[c.chave] = 'x'
   return d
 }
 
-test('% preenchido: 20 obrigatórios + preço = 21 (igual à planilha)', () => {
-  assert.equal(OBRIG.length, 20)
-  assert.equal(calcularPreenchimento({}).total, 21)
+test('% preenchido: 26 obrigatórios da escola + preço = 27', () => {
+  assert.equal(OBRIG.length, 26)
+  assert.equal(calcularPreenchimento({}).total, 27)
   assert.equal(calcularPreenchimento({}).pct, 0)
   const d = completo()
-  assert.equal(calcularPreenchimento(d).preenchidos, 20)
-  assert.equal(calcularPreenchimento(d).pct, 95)       // falta só o preço
+  assert.equal(calcularPreenchimento(d).preenchidos, 26)
+  assert.equal(calcularPreenchimento(d).pct, 96)       // falta só o preço
   assert.deepEqual(calcularPreenchimento(d).faltando, ['Preço final ou comissão (bloco 8)'])
 })
 
@@ -76,8 +76,8 @@ test('bloco de preço: preço final OU comissão completa o bloco (conta 1)', ()
   assert.equal(calcularPreenchimento({ ...completo(), comissao_kit: '200.00' }).pct, 100)
   // os três preenchidos continuam contando só 1
   const tres = { ...completo(), preco_infantil: '1', preco_fundamental: '1', comissao_kit: '1' }
-  assert.equal(calcularPreenchimento(tres).preenchidos, 21)
-  assert.equal(calcularPreenchimento({ ...completo(), comissao_kit: '0.00' }).pct, 95)
+  assert.equal(calcularPreenchimento(tres).preenchidos, 27)
+  assert.equal(calcularPreenchimento({ ...completo(), comissao_kit: '0.00' }).pct, 96)
 })
 
 test('bloco de preço mostra só os campos da opção escolhida', () => {
@@ -104,4 +104,30 @@ test('dinheiro: aceita formato BR e decimal já normalizado sem multiplicar por 
   assert.equal(v('R$ 2.000,00'), '2000.00')
   assert.equal(v(v('1.450,50')), '1450.50') // idempotente
   assert.ok(validarValor('dinheiro', 'abc').erro)
+})
+
+test('regras de negócio: comissão, preço de tabela e limites', () => {
+  assert.ok(validarValor('dinheiro', '1590,00', undefined, 'comissao_kit').erro)       // comissão acima do preço de tabela
+  assert.ok(validarValor('dinheiro', '0', undefined, 'comissao_kit').erro)
+  assert.equal(validarValor('dinheiro', '250,00', undefined, 'comissao_kit').valor, '250.00')
+  assert.ok(validarValor('dinheiro', '1000', undefined, 'preco_infantil').erro)         // abaixo da tabela (1.150)
+  assert.equal(validarValor('dinheiro', '1.150,00', undefined, 'preco_infantil').valor, '1150.00')
+  assert.ok(validarValor('dinheiro', '1400', undefined, 'preco_fundamental').erro)      // abaixo da tabela (1.450)
+  assert.ok(validarValor('inteiro', '99999', undefined, 'al_inf2').erro)
+  assert.equal(validarValor('inteiro', '0', undefined, 'al_ano3').valor, '0')
+})
+
+test('pré-preenchido não confirmado não conta como resposta da escola', () => {
+  const d = completo(); d.comissao_kit = '200.00'
+  assert.equal(calcularPreenchimento(d).pct, 100)
+  const sit = { parc_nome: 'pre', parc_cargo: 'pre' }
+  d.parc_cargo = 'Diretor'
+  const c = calcularPreenchimento(d, sit)
+  assert.ok(c.pct < 100)
+  assert.ok(c.faltando.some(x => x.includes('confirme ou corrija')))
+  assert.equal(calcularPreenchimento(d, { parc_nome: 'confirmado', parc_cargo: 'corrigido' }).pct, 100)
+})
+
+test('bloco do contrato é interno: a escola não responde', () => {
+  assert.ok(CAMPOS.filter(c => c.bloco === 10).every(c => c.interno))
 })

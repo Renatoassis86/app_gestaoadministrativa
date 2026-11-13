@@ -62,7 +62,7 @@ export async function atualizarDaPlataforma(id: string): Promise<Resultado & { p
     pre[k] = v; dados[k] = v; sit[k] = 'pre'; fon[k] = fontes[k]; preenchidos++
   }
   if (preenchidos) {
-    await admin.from('eskolare_fichas').update({ pre, dados, situacao: sit, fontes: fon, pct_preenchido: calcularPreenchimento(dados).pct }).eq('id', id)
+    await admin.from('eskolare_fichas').update({ pre, dados, situacao: sit, fontes: fon, pct_preenchido: calcularPreenchimento(dados, sit).pct }).eq('id', id)
     await registrarEvento(admin, f, 'campo', 'comercial', { atualizados_da_plataforma: preenchidos })
   }
   revalidatePath(`/comercial/cadastro-eskolare/${id}`)
@@ -82,7 +82,7 @@ export async function criarFicha(escolaId: string, ciclo: number, responsavel: s
   const dados = { ...pre }
   const { data: ficha, error } = await admin.from('eskolare_fichas').insert({
     escola_id: escolaId, ciclo, responsavel_comercial: responsavel, pre, dados, fontes, situacao: situacaoInicial(pre),
-    pct_preenchido: calcularPreenchimento(dados).pct, created_by: u.user.id,
+    pct_preenchido: calcularPreenchimento(dados, situacaoInicial(pre)).pct, created_by: u.user.id,
   }).select('id, escola_id, ciclo').single()
   if (error || !ficha) return { ok: false, error: `Não foi possível criar a ficha: ${error?.message}` }
 
@@ -107,7 +107,7 @@ export async function salvarCamposInternos(id: string, patch: Record<string, str
     const c = campoPorChave(chave)
     if (!c || c.tipo === 'calculado' || c.tipo === 'logo') continue
     if (c.tipo === 'cpf' && u.role !== 'gerente') continue            // CPF completo só é visto/editado por gerente
-    const r = validarValor(c.tipo, bruto, c.opcoes)
+    const r = validarValor(c.tipo, bruto, c.opcoes, c.chave)
     if (r.erro) { erros[chave] = r.erro; continue }
     const novo = r.valor ?? ''
     if ((dados[chave] ?? '') === novo) continue
@@ -118,7 +118,7 @@ export async function salvarCamposInternos(id: string, patch: Record<string, str
   }
   if (Object.keys(erros).length) return { ok: false, error: 'Corrija os campos destacados.', erros }
 
-  const upd: Record<string, any> = { pre, dados, situacao: sit, pct_preenchido: calcularPreenchimento(dados).pct, ultima_resposta_por: 'comercial' }
+  const upd: Record<string, any> = { pre, dados, situacao: sit, pct_preenchido: calcularPreenchimento(dados, sit).pct, ultima_resposta_por: 'comercial' }
   if (extras?.responsavel && RESPONSAVEIS.includes(extras.responsavel)) upd.responsavel_comercial = extras.responsavel
   if (extras?.obs !== undefined) upd.obs_comercial = extras.obs || null
   const { error } = await admin.from('eskolare_fichas').update(upd).eq('id', id)
@@ -228,7 +228,7 @@ export async function importarPlanilha(formData: FormData): Promise<Resultado> {
       let bruto = l[4 + idx]
       if (bruto === '' || bruto == null) return
       if (c.tipo === 'cep' && typeof bruto === 'number') bruto = String(bruto).padStart(8, '0')
-      const r = validarValor(c.tipo, bruto, c.opcoes)
+      const r = validarValor(c.tipo, bruto, c.opcoes, c.chave)
       if (r.valor) valores[k] = r.valor
     })
     const resp = RESPONSAVEIS.includes(String(l[3])) ? String(l[3]) : null
@@ -239,7 +239,7 @@ export async function importarPlanilha(formData: FormData): Promise<Resultado> {
       const pre = { ...auto.valores, ...valores }
       const { data: nova } = await admin.from('eskolare_fichas').insert({
         escola_id: escola.id, ciclo, responsavel_comercial: resp, pre, dados: pre, fontes: auto.fontes, situacao: situacaoInicial(pre),
-        pct_preenchido: calcularPreenchimento(pre).pct, created_by: u.user.id,
+        pct_preenchido: calcularPreenchimento(pre, situacaoInicial(pre)).pct, created_by: u.user.id,
       }).select('*').single()
       f = nova
     } else if (['respondida', 'validada', 'cadastrada'].includes(f.status)) {
@@ -248,7 +248,7 @@ export async function importarPlanilha(formData: FormData): Promise<Resultado> {
     } else {
       const pre = { ...f.pre, ...valores }, dados = { ...f.dados, ...valores }, sit = { ...f.situacao }
       for (const k of Object.keys(valores)) if (!['confirmado', 'corrigido', 'preenchido_escola'].includes(sit[k])) sit[k] = 'pre'
-      await admin.from('eskolare_fichas').update({ pre, dados, situacao: sit, pct_preenchido: calcularPreenchimento(dados).pct, ...(resp ? { responsavel_comercial: resp } : {}) }).eq('id', f.id)
+      await admin.from('eskolare_fichas').update({ pre, dados, situacao: sit, pct_preenchido: calcularPreenchimento(dados, sit).pct, ...(resp ? { responsavel_comercial: resp } : {}) }).eq('id', f.id)
     }
     if (f) { await registrarEvento(admin, f, 'importada', 'comercial', { campos: Object.keys(valores).length }); importadas++ }
   }
