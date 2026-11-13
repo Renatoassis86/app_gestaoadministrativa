@@ -5,6 +5,14 @@ export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
   const { pathname } = request.nextUrl
 
+  // Links de formulário digitados com acento ("formulário-pedidos") vão para o endereço real, sem acento.
+  const semAcento = pathname.normalize('NFD').replace(/[̀-ͯ]/g, '')
+  if (semAcento !== pathname && semAcento.startsWith('/formulario')) {
+    const url = request.nextUrl.clone()
+    url.pathname = semAcento
+    return NextResponse.redirect(url, 307)
+  }
+
   // 1. Rotas públicas — Isenta de checagem remota de Auth no middleware para resposta ultra-rápida (sem network delay)
   const isPublic =
     pathname === '/' ||
