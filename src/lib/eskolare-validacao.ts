@@ -1,9 +1,6 @@
 // Validação e máscaras do Cadastro Eskolare. Sem imports de projeto (testável com `node --test`).
 
-// Preço de tabela por kit (R$): o preço final às famílias não pode ficar abaixo, e a comissão não pode passar dele.
-export const PRECO_TABELA = { infantil: 1150, fundamental: 1450 }
 const LIMITE_INTEIRO: Record<string, number> = { trein_participantes: 200, ctr_kits: 100000 }
-const fmtBRL = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export const soDigitos = (v: unknown) => String(v ?? '').replace(/\D/g, '')
 
@@ -88,10 +85,7 @@ export function validarValor(
         : /^\d+\.\d{1,2}$/.test(limpo) ? Number(limpo)
         : Number(limpo.replace(/\./g, ''))
       if (!Number.isFinite(n) || n < 0) return { erro: 'Informe um valor em reais válido.' }
-      if (chave === 'preco_infantil' && n < PRECO_TABELA.infantil) return { erro: `O preço final do kit Infantil não pode ser menor que o preço de tabela (${fmtBRL(PRECO_TABELA.infantil)}).` }
-      if (chave === 'preco_fundamental' && n < PRECO_TABELA.fundamental) return { erro: `O preço final do kit Fundamental não pode ser menor que o preço de tabela (${fmtBRL(PRECO_TABELA.fundamental)}).` }
-      if ((chave === 'preco_infantil' || chave === 'preco_fundamental') && n > 5000) return { erro: 'Confira o valor: ele está muito acima do esperado.' }
-      if (chave === 'comissao_kit' && (n <= 0 || n >= PRECO_TABELA.infantil)) return { erro: `A comissão por kit deve ser maior que zero e menor que o preço de tabela do kit Infantil (${fmtBRL(PRECO_TABELA.infantil)}).` }
+      if ((chave === 'preco_infantil' || chave === 'preco_fundamental') && n !== 0 && (n < 300 || n > 5000)) return { erro: 'Confira o valor do kit: informe entre R$ 300,00 e R$ 5.000,00 (ou 0 se a escola não tem essa etapa).' }
       return { valor: n.toFixed(2) }
     }
     case 'opcoes': return opcoes?.includes(v) ? { valor: v } : { erro: 'Escolha uma das opções.' }

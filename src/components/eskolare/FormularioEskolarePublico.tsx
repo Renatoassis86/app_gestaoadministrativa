@@ -241,11 +241,6 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
       <div>
         <h2 style={{ fontFamily: 'var(--font-cormorant, Georgia, serif)', fontSize: '1.55rem', margin: '0 0 .3rem', color: '#0f172a' }}>{bloco.id}. {bloco.titulo}</h2>
         {bloco.descricao && <p style={{ fontSize: '.85rem', color: '#475569', lineHeight: 1.5, margin: '0 0 1rem' }}>{bloco.descricao}</p>}
-        {blocoId === 8 && (
-          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '.6rem .8rem', fontSize: '.82rem', color: '#92400e', marginBottom: '1rem' }}>
-            <strong>Informe só um.</strong> Com ele, a Cidade Viva Education calcula o outro.
-          </div>
-        )}
         {campos.map(renderCampo)}
         {blocoId === 7 && (
           <div style={{ background: '#f0f9ff', borderRadius: 10, padding: '.7rem .9rem', fontWeight: 800, color: '#0369a1', marginBottom: '1rem' }}>

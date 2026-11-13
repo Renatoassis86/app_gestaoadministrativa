@@ -115,7 +115,6 @@ export async function montarPrefill(admin: Admin, escolaId: string, ciclo: numbe
   // 10. Contrato
   if (c?.modalidade) {
     por('ctr_assinado', c.contrato_assinado ? 'Sim' : c.contrato_enviado ? 'Em assinatura' : null, F.contrato)
-    por('ctr_valor', c.valor_total, F.contrato)
     const kits = series.reduce((a, s) => a + (s.quantidade || 0), 0)
     if (kits > 0) por('ctr_kits', kits, F.contrato)
     if (c.vigencia_inicio && c.vigencia_fim) por('ctr_vigencia', `${String(c.vigencia_inicio).split('-').reverse().join('/')} a ${String(c.vigencia_fim).split('-').reverse().join('/')}`, F.contrato)

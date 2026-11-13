@@ -31,12 +31,10 @@ export const BLOCOS: Bloco[] = [
   { id: 5,  titulo: 'Financeiro da escola' },
   { id: 6,  titulo: 'Coordenação pedagógica' },
   { id: 7,  titulo: 'Alunos previstos por série', descricao: 'Informe a quantidade de cada série; digite 0 quando a escola não tem a série. Kits Infantil II a V têm 5 livros (4 + Inglês). O kit do 1º ano tem 9 livros e o do 2º ao 5º ano tem 12 livros.' },
-  { id: 8,  titulo: 'Preço final ou comissão', descricao: 'A comissão é única para a escola toda: a Eskolare não permite comissão diferente por série. Preço de tabela: Infantil R$ 1.150 e Fundamental R$ 1.450.' },
+  { id: 8,  titulo: 'Valor negociado dos kits', descricao: 'Informe o valor negociado de cada kit. O kit Infantil e o kit Fundamental têm valores diferentes. Digite 0 se a escola não tem aquela etapa.' },
   { id: 9,  titulo: 'Entrega dos kits' },
   { id: 10, titulo: 'Contrato 2027', descricao: 'Preenchido pelo comercial a partir do contrato. A escola não vê este bloco.' },
 ]
-
-export const PRECO_MODOS = ['Preço final às famílias', 'Comissão desejada'] as const
 
 export const CAMPOS: Campo[] = [
   // 1. Identificação
@@ -89,11 +87,9 @@ export const CAMPOS: Campo[] = [
   { chave: 'inf_com_ingles', rotulo: 'Infantil com Inglês?', bloco: 7, tipo: 'opcoes', opcoes: SIM_NAO },
   { chave: 'venda_2sem', rotulo: 'Venda de 2º semestre?', bloco: 7, tipo: 'opcoes', opcoes: SIM_NAO },
   { chave: 'venda_avulso', rotulo: 'Venda de livro avulso?', bloco: 7, tipo: 'opcoes', opcoes: SIM_NAO },
-  // 8. Preço final ou comissão
-  { chave: 'preco_modo', rotulo: 'A escola informou', bloco: 8, tipo: 'opcoes', opcoes: [...PRECO_MODOS] },
-  { chave: 'preco_infantil', rotulo: 'Preço final às famílias – kit Infantil (R$)', bloco: 8, tipo: 'dinheiro', apenasQuando: { chave: 'preco_modo', valor: PRECO_MODOS[0] } },
-  { chave: 'preco_fundamental', rotulo: 'Preço final às famílias – kit Fundamental (R$)', bloco: 8, tipo: 'dinheiro', apenasQuando: { chave: 'preco_modo', valor: PRECO_MODOS[0] } },
-  { chave: 'comissao_kit', rotulo: 'Comissão desejada por kit (R$)', bloco: 8, tipo: 'dinheiro', apenasQuando: { chave: 'preco_modo', valor: PRECO_MODOS[1] } },
+  // 8. Valor negociado dos kits (um valor para cada etapa)
+  { chave: 'preco_infantil', rotulo: 'Valor negociado do kit Infantil (R$)', bloco: 8, tipo: 'dinheiro', obrigatorio: true, ajuda: 'Valor de cada kit do Infantil. Digite 0 se a escola não tem Infantil.' },
+  { chave: 'preco_fundamental', rotulo: 'Valor negociado do kit Fundamental (R$)', bloco: 8, tipo: 'dinheiro', obrigatorio: true, ajuda: 'Valor de cada kit do Fundamental. Digite 0 se a escola não tem Fundamental.' },
   // 9. Entrega
   { chave: 'ent_nome', rotulo: 'Quem recebe (nome)', bloco: 9, tipo: 'texto' },
   { chave: 'ent_whatsapp', rotulo: 'WhatsApp de quem recebe', bloco: 9, tipo: 'whatsapp' },
@@ -101,11 +97,9 @@ export const CAMPOS: Campo[] = [
   // 10. Contrato 2027
   { chave: 'ctr_assinado', rotulo: 'Contrato assinado?', bloco: 10, tipo: 'opcoes', interno: true, obrigatorio: true, opcoes: ['Sim', 'Em assinatura', 'Não'] },
   { chave: 'ctr_kits', rotulo: 'Kits contratados', bloco: 10, tipo: 'inteiro', interno: true, obrigatorio: true },
-  { chave: 'ctr_valor', rotulo: 'Valor total contratado (R$)', bloco: 10, tipo: 'dinheiro', interno: true, obrigatorio: true },
   { chave: 'ctr_vigencia', rotulo: 'Vigência', bloco: 10, tipo: 'texto', interno: true },
 ]
 
-export const CHAVES_PRECO = ['preco_infantil', 'preco_fundamental', 'comissao_kit']
 export const CHAVES_ALUNOS = ['al_inf2', 'al_inf3', 'al_inf4', 'al_inf5', 'al_ano1', 'al_ano2', 'al_ano3', 'al_ano4', 'al_ano5']
 
 export const STATUS_FICHA = [
@@ -144,13 +138,10 @@ export function calcularPreenchimento(dados: Record<string, any>, situacao?: Rec
   const naoConfirmado = (c: Campo) => !!situacao && situacao[c.chave] === 'pre' && !vazio(dados[c.chave]) && c.tipo !== 'opcoes' && c.tipo !== 'logo' && c.tipo !== 'calculado'
   const feito = (c: Campo) => !vazio(dados[c.chave]) && !naoConfirmado(c)
   let preenchidos = obrigatorios.filter(feito).length
-  const precoOk = CHAVES_PRECO.some(k => !vazio(dados[k]) && Number(String(dados[k]).replace(',', '.')) > 0)
   const extras = CAMPOS.filter(c => !c.interno && !c.obrigatorio && campoVisivel(c, dados) && naoConfirmado(c))
-  const total = obrigatorios.length + 1 + extras.length
-  if (precoOk) preenchidos += 1
+  const total = obrigatorios.length + extras.length
   const faltando = [
     ...obrigatorios.filter(c => !feito(c)).map(c => c.rotulo + ' (bloco ' + c.bloco + ')' + (naoConfirmado(c) ? ' — confirme ou corrija' : '')),
-    ...(precoOk ? [] : ['Preço final ou comissão (bloco 8)']),
     ...extras.map(c => c.rotulo + ' (bloco ' + c.bloco + ') — confirme ou corrija'),
   ]
   return { preenchidos, total, pct: Math.round((preenchidos / total) * 100), faltando }
