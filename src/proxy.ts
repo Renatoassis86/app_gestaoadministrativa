@@ -6,8 +6,10 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Links de formulário digitados com acento ("formulário-pedidos") vão para o endereço real, sem acento.
-  const semAcento = pathname.normalize('NFD').replace(/[̀-ͯ]/g, '')
-  if (semAcento !== pathname && semAcento.startsWith('/formulario')) {
+  let decodificado = pathname
+  try { decodificado = decodeURIComponent(pathname) } catch { /* caminho inválido: segue o fluxo normal */ }
+  const semAcento = decodificado.normalize('NFD').replace(/[̀-ͯ]/g, '')
+  if (semAcento !== decodificado && semAcento.startsWith('/formulario')) {
     const url = request.nextUrl.clone()
     url.pathname = semAcento
     return NextResponse.redirect(url, 307)
