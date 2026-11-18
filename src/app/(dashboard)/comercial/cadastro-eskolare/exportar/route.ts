@@ -21,7 +21,7 @@ export async function GET(req: Request) {
 
   const campos = CAMPOS
   const titulos = ['Nº', 'Status', '% preenchido', 'Responsável comercial',
-    ...campos.map(c => c.colunaTitulo ?? `${c.rotulo}${c.obrigatorio ? ' *' : ''}`), 'Observações do comercial']
+    ...campos.map(c => c.colunaTitulo ?? c.rotulo), 'Observações do comercial']
 
   const grupos: string[] = ['CONTROLE', '', '', '']
   for (const b of BLOCOS) {

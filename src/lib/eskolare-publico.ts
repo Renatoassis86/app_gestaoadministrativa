@@ -135,15 +135,24 @@ export async function enviarLogo(formData: FormData): Promise<PublicoResultado> 
   const f = await fichaDaSessao(admin, token)
   if (!f) return { ok: false, sessaoExpirada: true, error: SESSAO_EXPIRADA }
   if (!statusEditavelPelaEscola(f.status)) return { ok: false, error: 'Esta ficha já foi enviada.' }
-  if (!arquivo || arquivo.size === 0) return { ok: false, error: 'Escolha o arquivo PNG.' }
+  if (!arquivo || arquivo.size === 0) return { ok: false, error: 'Escolha a imagem da logo.' }
   if (arquivo.size > 5 * 1024 * 1024) return { ok: false, error: 'A logo deve ter até 5 MB.' }
-  const bytes = Buffer.from(await arquivo.arrayBuffer())
+  let bytes: Buffer = Buffer.from(await arquivo.arrayBuffer())
+  // O tipo é reconhecido pelo conteúdo do arquivo; qualquer imagem é convertida para PNG (formato pedido pela Eskolare).
   const ehPng = bytes.length > 8 && bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
-  if (!ehPng) return { ok: false, error: 'Envie um arquivo PNG.' }
+  if (!ehPng) {
+    try {
+      const sharp = (await import('sharp')).default
+      bytes = await sharp(bytes, { animated: false }).rotate().png().toBuffer()
+    } catch { return { ok: false, error: 'Não consegui abrir essa imagem. Tente outro arquivo (PNG, JPG, WebP, GIF...) ou uma captura de tela da logo.' } }
+  }
+  const ext = 'png'
+  const tipos: Record<string, string> = { png: 'image/png' }
 
-  const path = `${f.id}/logo.png`
-  const up = await admin.storage.from('eskolare-logos').upload(path, bytes, { contentType: 'image/png', upsert: true })
+  const path = `${f.id}/logo.${ext}`
+  const up = await admin.storage.from('eskolare-logos').upload(path, bytes, { contentType: tipos[ext], upsert: true })
   if (up.error) return { ok: false, error: 'Não foi possível enviar a logo. Tente novamente.' }
+  if (f.dados?.logo && f.dados.logo !== path) await admin.storage.from('eskolare-logos').remove([f.dados.logo])
 
   const dados = { ...(f.dados ?? {}), logo: path }, sit = { ...(f.situacao ?? {}), logo: 'preenchido_escola' }
   const upd: Record<string, any> = { dados, situacao: sit, pct_preenchido: calcularPreenchimento(dados, sit).pct, ultima_resposta_por: 'escola' }
@@ -159,13 +168,12 @@ export async function enviarRespostas(token: string): Promise<PublicoResultado> 
   const f = await fichaDaSessao(admin, token)
   if (!f) return { ok: false, sessaoExpirada: true, error: SESSAO_EXPIRADA }
   if (!statusEditavelPelaEscola(f.status)) return { ok: true }
-  const calc = calcularPreenchimento(f.dados ?? {}, f.situacao ?? {})
-  if (calc.pct < 100) return { ok: false, error: `Ainda falta preencher: ${calc.faltando.join('; ')}.` }
+  await registrarEvento(admin, f, 'envio_clicado', 'escola', {})        // prova de que a escola apertou o botão Enviar
   // Descarta respostas de campos que ficaram ocultos (ex.: o modo de preço que a escola não escolheu).
   const dados = { ...(f.dados ?? {}) }, sit = { ...(f.situacao ?? {}) }
   for (const c of CAMPOS) if (!campoVisivel(c, dados) && dados[c.chave] != null && dados[c.chave] !== '') { delete dados[c.chave]; delete sit[c.chave] }
   const { data: ok } = await admin.from('eskolare_fichas')
-    .update({ dados, situacao: sit, status: 'respondida', respondida_em: new Date().toISOString(), ultima_resposta_por: 'escola', pct_preenchido: 100 })
+    .update({ dados, situacao: sit, status: 'respondida', respondida_em: new Date().toISOString(), ultima_resposta_por: 'escola', pct_preenchido: calcularPreenchimento(dados, sit).pct })
     .eq('id', f.id).in('status', ['enviada', 'em_preenchimento']).select('id')
   if (!ok?.length) return { ok: true }              // outro envio já concluiu
   await registrarEvento(admin, f, 'respondida', 'escola', {}, { resumo: 'A escola enviou as respostas. Aguardando validação do comercial.' })

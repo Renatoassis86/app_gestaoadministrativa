@@ -11,11 +11,11 @@ export interface Campo {
   rotulo: string
   bloco: number
   tipo: TipoCampo
-  obrigatorio?: boolean
   opcoes?: string[]
   interno?: boolean                       // nunca aparece para a escola
   ajuda?: string
   apenasQuando?: { chave: string; valor: string }
+  participante?: number                   // participante do treinamento (1 a 6); os extras só aparecem depois de "Adicionar participante"
   colunaTitulo?: string                   // título na planilha quando difere do rótulo
 }
 
@@ -24,79 +24,92 @@ export interface Bloco { id: number; titulo: string; descricao?: string }
 const SIM_NAO = ['Sim', 'Não']
 
 export const BLOCOS: Bloco[] = [
-  { id: 1,  titulo: 'Identificação da escola' },
-  { id: 2,  titulo: 'Responsável pela parceria' },
-  { id: 3,  titulo: 'Administrador da loja na Eskolare', descricao: 'Quem acessa o painel da escola: pedidos, alunos e saldo da comissão.' },
-  { id: 4,  titulo: 'Contato para o treinamento' },
-  { id: 5,  titulo: 'Financeiro da escola' },
-  { id: 6,  titulo: 'Coordenação pedagógica' },
-  { id: 7,  titulo: 'Alunos previstos por série', descricao: 'Informe a quantidade de cada série; digite 0 quando a escola não tem a série. Kits Infantil II a V têm 5 livros (4 + Inglês). O kit do 1º ano tem 9 livros e o do 2º ao 5º ano tem 12 livros.' },
-  { id: 8,  titulo: 'Valor negociado dos kits', descricao: 'Informe o valor negociado de cada kit. O kit Infantil e o kit Fundamental têm valores diferentes. Digite 0 se a escola não tem aquela etapa.' },
-  { id: 9,  titulo: 'Entrega dos kits' },
+  { id: 1,  titulo: 'Identificação da escola', descricao: 'Confira os dados já preenchidos e corrija se algo mudou. Pedimos de novo só para conferir e evitar erro.' },
+  { id: 2,  titulo: 'Responsável pela parceria', descricao: 'Quem responde pelo acordo com a Cidade Viva (direção ou mantenedora).' },
+  { id: 3,  titulo: 'Administrador da loja na Eskolare', descricao: 'Quem acessa o painel da loja na Eskolare: pedidos, alunos e comissão.' },
+  { id: 4,  titulo: 'Contato para o treinamento', descricao: 'Quem participa do treinamento de uso da plataforma. Adicione mais participantes se precisar.' },
+  { id: 5,  titulo: 'Financeiro da escola', descricao: 'Contato do financeiro e conta para receber a comissão.' },
+  { id: 6,  titulo: 'Coordenação pedagógica', descricao: 'Preenchido pelo comercial. A escola não vê esta etapa.' },
+  { id: 7,  titulo: 'Alunos previstos por série', descricao: 'Confira os números do seu pedido. Deixe em branco as séries que a escola não tem.' },
+  { id: 8,  titulo: 'Valor negociado dos kits', descricao: 'Valor combinado com a Cidade Viva, igual ao contrato. Se não souber, deixe em branco.' },
+  { id: 9,  titulo: 'Entrega dos kits', descricao: 'Quem recebe os kits na escola.' },
   { id: 10, titulo: 'Contrato 2027', descricao: 'Preenchido pelo comercial a partir do contrato. A escola não vê este bloco.' },
 ]
 
+export const MAX_PARTICIPANTES = 6
+
+// Nenhuma pergunta é obrigatória para a escola. Campos "interno" são preenchidos só pelo comercial (a escola não vê).
+// Venda de 2º semestre é padrão Sim para todas as escolas.
 export const CAMPOS: Campo[] = [
   // 1. Identificação
-  { chave: 'cnpj', rotulo: 'CNPJ', bloco: 1, tipo: 'cnpj', obrigatorio: true },
-  { chave: 'razao_social', rotulo: 'Razão social', bloco: 1, tipo: 'texto', obrigatorio: true },
-  { chave: 'nome_loja', rotulo: 'Nome que aparece na loja', bloco: 1, tipo: 'texto', obrigatorio: true },
-  { chave: 'cep', rotulo: 'CEP', bloco: 1, tipo: 'cep', obrigatorio: true },
-  { chave: 'rua_numero', rotulo: 'Rua e número', bloco: 1, tipo: 'texto', obrigatorio: true },
-  { chave: 'bairro', rotulo: 'Bairro', bloco: 1, tipo: 'texto', obrigatorio: true },
-  { chave: 'cidade_uf', rotulo: 'Cidade / UF', bloco: 1, tipo: 'texto', obrigatorio: true, ajuda: 'Ex.: João Pessoa / PB' },
-  { chave: 'complemento', rotulo: 'Complemento', bloco: 1, tipo: 'texto' },
-  { chave: 'logo', rotulo: 'Logo da escola (PNG)', bloco: 1, tipo: 'logo', obrigatorio: true, ajuda: 'Arquivo PNG de até 5 MB.', colunaTitulo: 'Logo enviada (PNG)?' },
+  { chave: 'cnpj', rotulo: 'CNPJ', bloco: 1, tipo: 'cnpj', ajuda: 'CNPJ que emite as notas e assina o contrato.' },
+  { chave: 'razao_social', rotulo: 'Razão social', bloco: 1, tipo: 'texto', ajuda: 'Nome oficial, como no cartão CNPJ.' },
+  { chave: 'nome_loja', rotulo: 'Nome que aparece na loja', bloco: 1, tipo: 'texto', ajuda: 'Nome que as famílias veem na loja.' },
+  { chave: 'cep', rotulo: 'CEP', bloco: 1, tipo: 'cep' },
+  { chave: 'rua_numero', rotulo: 'Rua e número', bloco: 1, tipo: 'texto', ajuda: 'Ex.: Rua das Flores, 100' },
+  { chave: 'bairro', rotulo: 'Bairro', bloco: 1, tipo: 'texto' },
+  { chave: 'cidade_uf', rotulo: 'Cidade / UF', bloco: 1, tipo: 'texto', ajuda: 'Ex.: João Pessoa / PB' },
+  { chave: 'complemento', rotulo: 'Complemento', bloco: 1, tipo: 'texto', ajuda: 'Sala, bloco ou referência.' },
+  { chave: 'logo', rotulo: 'Logo da escola', bloco: 1, tipo: 'logo', ajuda: 'Marca da escola (PNG, JPG ou WebP, até 5 MB). Se não tiver agora, envie depois.', colunaTitulo: 'Logo enviada (PNG)?' },
   // 2. Responsável pela parceria
-  { chave: 'parc_nome', rotulo: 'Nome', bloco: 2, tipo: 'texto', obrigatorio: true },
-  { chave: 'parc_cargo', rotulo: 'Cargo', bloco: 2, tipo: 'texto' },
-  { chave: 'parc_email', rotulo: 'E-mail', bloco: 2, tipo: 'email', obrigatorio: true },
-  { chave: 'parc_whatsapp', rotulo: 'WhatsApp', bloco: 2, tipo: 'whatsapp', obrigatorio: true },
+  { chave: 'parc_nome', rotulo: 'Nome', bloco: 2, tipo: 'texto' },
+  { chave: 'parc_cargo', rotulo: 'Cargo', bloco: 2, tipo: 'texto', ajuda: 'Ex.: Diretora' },
+  { chave: 'parc_email', rotulo: 'E-mail', bloco: 2, tipo: 'email' },
+  { chave: 'parc_whatsapp', rotulo: 'WhatsApp', bloco: 2, tipo: 'whatsapp' },
   // 3. Administrador da loja
-  { chave: 'adm_nome', rotulo: 'Nome', bloco: 3, tipo: 'texto', obrigatorio: true },
-  { chave: 'adm_email', rotulo: 'E-mail de acesso', bloco: 3, tipo: 'email', obrigatorio: true, ajuda: 'Se a escola já usa a Eskolare, informe o e-mail que já existe.' },
-  { chave: 'adm_cpf', rotulo: 'CPF', bloco: 3, tipo: 'cpf', obrigatorio: true },
-  { chave: 'adm_ja_usa', rotulo: 'Já usa a Eskolare?', bloco: 3, tipo: 'opcoes', opcoes: SIM_NAO },
-  // 4. Treinamento
-  { chave: 'trein_nome', rotulo: 'Nome', bloco: 4, tipo: 'texto', obrigatorio: true },
-  { chave: 'trein_cargo', rotulo: 'Cargo', bloco: 4, tipo: 'texto' },
-  { chave: 'trein_email', rotulo: 'E-mail', bloco: 4, tipo: 'email', obrigatorio: true },
-  { chave: 'trein_whatsapp', rotulo: 'WhatsApp', bloco: 4, tipo: 'whatsapp', obrigatorio: true },
-  { chave: 'trein_periodo', rotulo: 'Melhor período', bloco: 4, tipo: 'opcoes', opcoes: ['Manhã', 'Tarde', 'Noite', 'Qualquer horário'] },
-  { chave: 'trein_participantes', rotulo: 'Nº de participantes', bloco: 4, tipo: 'inteiro' },
-  // 5. Financeiro
+  { chave: 'adm_nome', rotulo: 'Nome', bloco: 3, tipo: 'texto', ajuda: 'Quem vai entrar no painel da loja.' },
+  { chave: 'adm_ja_usa', rotulo: 'A escola já usa a Eskolare?', bloco: 3, tipo: 'opcoes', opcoes: SIM_NAO, ajuda: 'Responda Sim se a escola já tem acesso à Eskolare.' },
+  { chave: 'adm_email', rotulo: 'E-mail de acesso', bloco: 3, tipo: 'email', ajuda: 'Se a escola ainda não usa a Eskolare, deixe em branco: usamos o e-mail do responsável.' },
+  { chave: 'adm_cpf', rotulo: 'CPF', bloco: 3, tipo: 'cpf', ajuda: 'Usado só para criar o acesso.' },
+  // 4. Treinamento: participante 1 e até 5 participantes extras (botão "Adicionar participante")
+  { chave: 'trein_nome', rotulo: 'Nome', bloco: 4, tipo: 'texto', participante: 1 },
+  { chave: 'trein_cargo', rotulo: 'Cargo', bloco: 4, tipo: 'texto', participante: 1 },
+  { chave: 'trein_email', rotulo: 'E-mail', bloco: 4, tipo: 'email', participante: 1 },
+  { chave: 'trein_whatsapp', rotulo: 'WhatsApp', bloco: 4, tipo: 'whatsapp', participante: 1 },
+  ...[2, 3, 4, 5, 6].flatMap(n => ([
+    { chave: `trein${n}_nome`, rotulo: 'Nome', bloco: 4, tipo: 'texto', participante: n },
+    { chave: `trein${n}_cargo`, rotulo: 'Cargo', bloco: 4, tipo: 'texto', participante: n },
+    { chave: `trein${n}_email`, rotulo: 'E-mail', bloco: 4, tipo: 'email', participante: n },
+    { chave: `trein${n}_whatsapp`, rotulo: 'WhatsApp', bloco: 4, tipo: 'whatsapp', participante: n },
+  ] as Campo[])),
+  { chave: 'trein_periodo', rotulo: 'Melhor período', bloco: 4, tipo: 'opcoes', opcoes: ['Manhã', 'Tarde', 'Noite', 'Qualquer horário'], ajuda: 'Para o treinamento.' },
+  // 5. Financeiro e conta para receber a comissão
   { chave: 'fin_nome', rotulo: 'Nome', bloco: 5, tipo: 'texto' },
   { chave: 'fin_email', rotulo: 'E-mail', bloco: 5, tipo: 'email' },
   { chave: 'fin_whatsapp', rotulo: 'WhatsApp', bloco: 5, tipo: 'whatsapp' },
-  { chave: 'fin_conta_resgate', rotulo: 'Tem conta para resgate na Eskolare?', bloco: 5, tipo: 'opcoes', opcoes: ['Sim', 'Não', 'Não sabe'] },
-  // 6. Coordenação pedagógica
-  { chave: 'coord_nome', rotulo: 'Nome', bloco: 6, tipo: 'texto' },
-  { chave: 'coord_email', rotulo: 'E-mail', bloco: 6, tipo: 'email' },
-  { chave: 'coord_whatsapp', rotulo: 'WhatsApp', bloco: 6, tipo: 'whatsapp' },
+  { chave: 'fin_banco', rotulo: 'Banco', bloco: 5, tipo: 'texto', ajuda: 'Conta em nome da escola, para receber a comissão.' },
+  { chave: 'fin_agencia', rotulo: 'Agência', bloco: 5, tipo: 'texto' },
+  { chave: 'fin_conta', rotulo: 'Conta (com dígito)', bloco: 5, tipo: 'texto' },
+  { chave: 'fin_tipo_conta', rotulo: 'Tipo de conta', bloco: 5, tipo: 'opcoes', opcoes: ['Corrente', 'Poupança'] },
+  { chave: 'fin_titular', rotulo: 'Titular da conta', bloco: 5, tipo: 'texto' },
+  { chave: 'fin_titular_doc', rotulo: 'CNPJ ou CPF do titular', bloco: 5, tipo: 'texto' },
+  { chave: 'fin_pix', rotulo: 'Chave Pix', bloco: 5, tipo: 'texto', ajuda: 'Opcional.' },
+  // 6. Coordenação pedagógica (só o comercial)
+  { chave: 'coord_nome', rotulo: 'Nome', bloco: 6, tipo: 'texto', interno: true },
+  { chave: 'coord_email', rotulo: 'E-mail', bloco: 6, tipo: 'email', interno: true },
+  { chave: 'coord_whatsapp', rotulo: 'WhatsApp', bloco: 6, tipo: 'whatsapp', interno: true },
   // 7. Alunos por série
-  { chave: 'al_inf2', rotulo: 'Infantil 2 anos', bloco: 7, tipo: 'inteiro', obrigatorio: true },
-  { chave: 'al_inf3', rotulo: 'Infantil 3 anos', bloco: 7, tipo: 'inteiro', obrigatorio: true },
-  { chave: 'al_inf4', rotulo: 'Infantil 4 anos', bloco: 7, tipo: 'inteiro', obrigatorio: true },
-  { chave: 'al_inf5', rotulo: 'Infantil 5 anos', bloco: 7, tipo: 'inteiro', obrigatorio: true },
-  { chave: 'al_ano1', rotulo: '1º ano', bloco: 7, tipo: 'inteiro', obrigatorio: true },
-  { chave: 'al_ano2', rotulo: '2º ano', bloco: 7, tipo: 'inteiro', obrigatorio: true },
-  { chave: 'al_ano3', rotulo: '3º ano', bloco: 7, tipo: 'inteiro', obrigatorio: true },
-  { chave: 'al_ano4', rotulo: '4º ano', bloco: 7, tipo: 'inteiro', obrigatorio: true },
-  { chave: 'al_ano5', rotulo: '5º ano', bloco: 7, tipo: 'inteiro', obrigatorio: true },
-  { chave: 'al_total', rotulo: 'Total de alunos', bloco: 7, tipo: 'calculado' },
-  { chave: 'inf_com_ingles', rotulo: 'Infantil com Inglês?', bloco: 7, tipo: 'opcoes', opcoes: SIM_NAO },
-  { chave: 'venda_2sem', rotulo: 'Venda de 2º semestre?', bloco: 7, tipo: 'opcoes', opcoes: SIM_NAO },
-  { chave: 'venda_avulso', rotulo: 'Venda de livro avulso?', bloco: 7, tipo: 'opcoes', opcoes: SIM_NAO },
-  // 8. Valor negociado dos kits (um valor para cada etapa)
-  { chave: 'preco_infantil', rotulo: 'Valor negociado do kit Infantil (R$)', bloco: 8, tipo: 'dinheiro', obrigatorio: true, ajuda: 'Valor de cada kit do Infantil. Digite 0 se a escola não tem Infantil.' },
-  { chave: 'preco_fundamental', rotulo: 'Valor negociado do kit Fundamental (R$)', bloco: 8, tipo: 'dinheiro', obrigatorio: true, ajuda: 'Valor de cada kit do Fundamental. Digite 0 se a escola não tem Fundamental.' },
+  { chave: 'al_inf2', rotulo: 'Infantil 2 (2 anos)', bloco: 7, tipo: 'inteiro' },
+  { chave: 'al_inf3', rotulo: 'Infantil 3 (3 anos)', bloco: 7, tipo: 'inteiro' },
+  { chave: 'al_inf4', rotulo: 'Infantil 4 (4 anos)', bloco: 7, tipo: 'inteiro' },
+  { chave: 'al_inf5', rotulo: 'Infantil 5 (5 anos)', bloco: 7, tipo: 'inteiro' },
+  { chave: 'al_ano1', rotulo: '1º ano', bloco: 7, tipo: 'inteiro' },
+  { chave: 'al_ano2', rotulo: '2º ano', bloco: 7, tipo: 'inteiro' },
+  { chave: 'al_ano3', rotulo: '3º ano', bloco: 7, tipo: 'inteiro' },
+  { chave: 'al_ano4', rotulo: '4º ano', bloco: 7, tipo: 'inteiro' },
+  { chave: 'al_ano5', rotulo: '5º ano', bloco: 7, tipo: 'inteiro' },
+  { chave: 'al_total', rotulo: 'Total de alunos', bloco: 7, tipo: 'calculado', ajuda: 'Soma automática.' },
+  { chave: 'venda_2sem', rotulo: 'Venda de 2º semestre?', bloco: 7, tipo: 'opcoes', opcoes: SIM_NAO, interno: true },
+  // 8. Valor negociado dos kits
+  { chave: 'preco_infantil', rotulo: 'Valor negociado do kit Infantil (R$)', bloco: 8, tipo: 'dinheiro', ajuda: 'Valor de cada kit.' },
+  { chave: 'preco_fundamental', rotulo: 'Valor negociado do kit Fundamental (R$)', bloco: 8, tipo: 'dinheiro', ajuda: 'Valor de cada kit.' },
   // 9. Entrega
   { chave: 'ent_nome', rotulo: 'Quem recebe (nome)', bloco: 9, tipo: 'texto' },
   { chave: 'ent_whatsapp', rotulo: 'WhatsApp de quem recebe', bloco: 9, tipo: 'whatsapp' },
-  { chave: 'ent_endereco', rotulo: 'Endereço de entrega (se diferente)', bloco: 9, tipo: 'texto' },
+  { chave: 'ent_endereco', rotulo: 'Endereço de entrega (se diferente)', bloco: 9, tipo: 'texto', ajuda: 'Só se for diferente do endereço da escola.' },
   // 10. Contrato 2027
-  { chave: 'ctr_assinado', rotulo: 'Contrato assinado?', bloco: 10, tipo: 'opcoes', interno: true, obrigatorio: true, opcoes: ['Sim', 'Em assinatura', 'Não'] },
-  { chave: 'ctr_kits', rotulo: 'Kits contratados', bloco: 10, tipo: 'inteiro', interno: true, obrigatorio: true },
+  { chave: 'ctr_assinado', rotulo: 'Contrato assinado?', bloco: 10, tipo: 'opcoes', interno: true, opcoes: ['Sim', 'Em assinatura', 'Não'] },
+  { chave: 'ctr_kits', rotulo: 'Kits contratados', bloco: 10, tipo: 'inteiro', interno: true },
   { chave: 'ctr_vigencia', rotulo: 'Vigência', bloco: 10, tipo: 'texto', interno: true },
 ]
 
@@ -120,31 +133,37 @@ export const camposDoBloco = (b: number) => CAMPOS.filter(c => c.bloco === b && 
 
 export const vazio = (v: unknown) => v == null || String(v).trim() === ''
 
-// Campo visível dado o preenchimento atual (bloco 8 só mostra os campos da opção escolhida).
 export function campoVisivel(c: Campo, dados: Record<string, any>) {
   if (!c.apenasQuando) return true
   return dados[c.apenasQuando.chave] === c.apenasQuando.valor
 }
 
+// Visível E em uso: participantes extras só contam quando têm algum dado.
+export function campoAtivo(c: Campo, dados: Record<string, any>) {
+  if (!campoVisivel(c, dados)) return false
+  if (c.participante && c.participante > 1) return CAMPOS.some(x => x.participante === c.participante && !vazio(dados[x.chave]))
+  return true
+}
+
+const soma = (d: Record<string, any>, ks: string[]) => ks.reduce((a, k) => a + (parseInt(d[k], 10) || 0), 0)
+export function alunosInfantil(d: Record<string, any>) { return soma(d, ['al_inf2', 'al_inf3', 'al_inf4', 'al_inf5']) }
+export function alunosFundamental(d: Record<string, any>) { return soma(d, ['al_ano1', 'al_ano2', 'al_ano3', 'al_ano4', 'al_ano5']) }
+
 export function totalAlunos(dados: Record<string, any>) {
   return CHAVES_ALUNOS.reduce((a, k) => a + (parseInt(dados[k], 10) || 0), 0)
 }
 
-// % preenchido = obrigatórios preenchidos ÷ obrigatórios, com o bloco de preço contando como UM obrigatório
-// (completo quando qualquer um dos três valores existir). Mesma conta da planilha: 20 + 1 = 21.
+// % preenchido = perguntas respondidas / perguntas que a escola vê. Nada é obrigatório: serve só de termômetro.
+// Dado que veio da plataforma e a escola ainda não confirmou nem corrigiu não conta como resposta da escola.
 export function calcularPreenchimento(dados: Record<string, any>, situacao?: Record<string, string>) {
-  const obrigatorios = CAMPOS.filter(c => c.obrigatorio && !c.interno)
-  // Dado que veio da plataforma e a escola ainda não confirmou nem corrigiu não vale como resposta.
-  const naoConfirmado = (c: Campo) => !!situacao && situacao[c.chave] === 'pre' && !vazio(dados[c.chave]) && c.tipo !== 'opcoes' && c.tipo !== 'logo' && c.tipo !== 'calculado'
+  const campos = CAMPOS.filter(c => !c.interno && c.tipo !== 'calculado' && campoAtivo(c, dados))
+  const naoConfirmado = (c: Campo) => !!situacao && situacao[c.chave] === 'pre' && !vazio(dados[c.chave]) && c.tipo !== 'opcoes' && c.tipo !== 'logo'
   const feito = (c: Campo) => !vazio(dados[c.chave]) && !naoConfirmado(c)
-  let preenchidos = obrigatorios.filter(feito).length
-  const extras = CAMPOS.filter(c => !c.interno && !c.obrigatorio && campoVisivel(c, dados) && naoConfirmado(c))
-  const total = obrigatorios.length + extras.length
-  const faltando = [
-    ...obrigatorios.filter(c => !feito(c)).map(c => c.rotulo + ' (bloco ' + c.bloco + ')' + (naoConfirmado(c) ? ' — confirme ou corrija' : '')),
-    ...extras.map(c => c.rotulo + ' (bloco ' + c.bloco + ') — confirme ou corrija'),
-  ]
-  return { preenchidos, total, pct: Math.round((preenchidos / total) * 100), faltando }
+  const preenchidos = campos.filter(feito).length
+  const titulo = (b: number) => BLOCOS.find(x => x.id === b)?.titulo ?? String(b)
+  const faltando = campos.filter(c => !feito(c)).map(c => `${c.rotulo} (${titulo(c.bloco)})` + (naoConfirmado(c) ? ': confirmar' : ''))
+  const total = campos.length
+  return { preenchidos, total, pct: total ? Math.round((preenchidos / total) * 100) : 0, faltando }
 }
 
 // Situação da escola em linguagem simples (o status "enviada" muda de texto se a escola já abriu o link).

@@ -1,4 +1,4 @@
-// Sessão pública da escola (cookie httpOnly + hash no banco, expira em 2h sem uso) e dados que a escola pode ver.
+// Sessão pública da escola (cookie httpOnly + hash no banco, expira em 1 ano sem uso) e dados que a escola pode ver.
 import { cookies } from 'next/headers'
 import { CAMPOS, calcularPreenchimento, type StatusFicha } from '@/lib/eskolare-campos'
 import { hashSessao, SESSAO_HORAS, tokenPlausivel } from '@/lib/eskolare-seguranca'

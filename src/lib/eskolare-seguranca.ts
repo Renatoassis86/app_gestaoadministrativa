@@ -3,7 +3,7 @@ import { createHash, randomBytes, randomInt, scryptSync, timingSafeEqual } from 
 
 export const MAX_TENTATIVAS = 5
 export const BLOQUEIO_MINUTOS = 15
-export const SESSAO_HORAS = 2
+export const SESSAO_HORAS = 24 * 365   // o PIN nunca expira; a escola fica conectada neste aparelho por até 1 ano sem uso. Só 5 erros seguidos bloqueiam por 15 min
 
 // 32 bytes aleatórios = 256 bits, não sequencial.
 export const gerarToken = () => randomBytes(32).toString('base64url')

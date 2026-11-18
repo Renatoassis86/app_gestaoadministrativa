@@ -201,7 +201,7 @@ export async function importarPlanilha(formData: FormData): Promise<Resultado> {
   } catch { return { ok: false, error: 'Não foi possível ler a planilha.' } }
 
   // Colunas: Nº, Status, %, Responsável, depois os campos na ordem de CAMPOS (logo e total são ignorados no import)
-  const chaves = CAMPOS.filter(c => !c.interno).map(c => c.chave)
+  const chaves = CAMPOS.map(c => c.chave)
   const admin = createAdminClient()
   const escolas: { id: string; cnpj: string | null }[] = []
   for (let de = 0; ; de += 1000) {                    // PostgREST limita a 1000 linhas por consulta

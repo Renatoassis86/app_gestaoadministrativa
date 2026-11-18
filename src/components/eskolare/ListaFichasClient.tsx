@@ -97,7 +97,9 @@ export function ListaFichasClient({ linhas, escolas }: { linhas: LinhaFicha[]; e
     })
   }
 
-  const cards = [
+  const enviaram = linhas.filter(l => l.respondidaEm).length
+  const cards: { r: string; v: number; cor: string; sub?: string }[] = [
+    { r: 'Clicaram em Enviar', v: enviaram, cor: '#16a34a', sub: `de ${linhas.length} fichas` },
     { r: 'Total de fichas', v: linhas.length, cor: '#0ea5e9' },
     { r: 'Link enviado, aguardando', v: cont('enviada'), cor: '#0369a1' },
     { r: 'Escola preenchendo', v: cont('em_preenchimento'), cor: '#f59e0b' },
@@ -117,7 +119,7 @@ export function ListaFichasClient({ linhas, escolas }: { linhas: LinhaFicha[]; e
         {cards.map(c => (
           <div key={c.r} style={{ background: '#fff', border: '1px solid #e2e8f0', borderTop: `4px solid ${c.cor}`, borderRadius: 12, padding: '.8rem 1rem' }}>
             <div style={{ fontSize: '.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.05em', color: '#64748b' }}>{c.r}</div>
-            <div style={{ fontSize: '1.7rem', fontWeight: 800 }}>{c.v}</div>
+            <div style={{ fontSize: '1.7rem', fontWeight: 800 }}>{c.v}{c.sub && <span style={{ fontSize: '.72rem', fontWeight: 600, color: '#64748b', marginLeft: '.4rem' }}>{c.sub}</span>}</div>
           </div>
         ))}
       </div>
@@ -132,6 +134,7 @@ export function ListaFichasClient({ linhas, escolas }: { linhas: LinhaFicha[]; e
           <option value="todos">Todos os responsáveis</option><option>Raissa</option><option>Jesse</option>
         </select>
         <button onClick={() => setNovo(true)} style={{ ...inp, background: '#f59e0b', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer' }}>+ Nova ficha (escolher escola)</button>
+        <a href="/comercial/cadastro-eskolare/formulario" style={{ ...inp, textDecoration: 'none', color: '#0369a1', fontWeight: 700 }}>👁 Ver o formulário da escola</a>
         <a href="/comercial/cadastro-eskolare/exportar" style={{ ...inp, textDecoration: 'none', color: '#0369a1', fontWeight: 700 }}>⬇ Exportar Excel</a>
         <label style={{ ...inp, color: '#0369a1', fontWeight: 700, cursor: 'pointer' }}>⬆ Importar planilha
           <input ref={arq} type="file" accept=".xlsx" hidden onChange={importar} />

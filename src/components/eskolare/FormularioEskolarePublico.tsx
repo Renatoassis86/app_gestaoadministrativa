@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { blocosPublicos, CAMPOS, calcularPreenchimento, campoVisivel, camposDoBloco, totalAlunos, vazio, type Campo } from '@/lib/eskolare-campos'
+import { blocosPublicos, CAMPOS, calcularPreenchimento, campoAtivo, campoVisivel, MAX_PARTICIPANTES, camposDoBloco, totalAlunos, vazio, type Campo } from '@/lib/eskolare-campos'
 
 // O bloco do contrato é interno: a escola não o vê.
 const BLOCOS = blocosPublicos()
@@ -13,12 +13,30 @@ import type { FichaPublica } from '@/lib/eskolare-sessao'
 const MASCARAS: Record<string, (v: string) => string> = { cnpj: formatarCnpj, cpf: formatarCpf, cep: formatarCep, whatsapp: formatarWhatsapp }
 const inputStyle: React.CSSProperties = { width: '100%', padding: '.7rem .8rem', fontSize: '1rem', border: '1.5px solid #cbd5e1', borderRadius: 10, background: '#fff', outline: 'none' }
 
+// Converte qualquer imagem que o navegador consiga abrir (JPG, WebP, GIF, HEIC no Safari...) para PNG, no máximo 1600 px.
+// Se o navegador não conseguir, envia o arquivo original e o servidor tenta converter.
+async function converterParaPng(arq: File): Promise<File> {
+  try {
+    const bmp = await createImageBitmap(arq)
+    const esc = Math.min(1, 1600 / Math.max(bmp.width, bmp.height))
+    const cv = document.createElement('canvas')
+    cv.width = Math.max(1, Math.round(bmp.width * esc)); cv.height = Math.max(1, Math.round(bmp.height * esc))
+    cv.getContext('2d')!.drawImage(bmp, 0, 0, cv.width, cv.height)
+    const blob: Blob | null = await new Promise(r => cv.toBlob(r, 'image/png'))
+    if (blob && blob.size > 0) return new File([blob], 'logo.png', { type: 'image/png' })
+  } catch { /* segue com o original */ }
+  return arq
+}
+
 export function FormularioEskolarePublico({ token, inicial }: { token: string; inicial: FichaPublica }) {
   const router = useRouter()
   const [ficha, setFicha] = useState(inicial)
   const [valores, setValores] = useState<Record<string, string>>(() => Object.fromEntries(Object.entries(inicial.campos).map(([k, v]) => [k, v.valor])))
   const [situacoes, setSituacoes] = useState<Record<string, string>>(() => Object.fromEntries(Object.entries(inicial.campos).map(([k, v]) => [k, v.situacao])))
   const [erros, setErros] = useState<Record<string, string>>({})
+  const [partsMostrados, setPartsMostrados] = useState(() => {
+    let m = 1; for (const c of CAMPOS) if (c.participante && inicial.campos[c.chave]?.valor?.trim()) m = Math.max(m, c.participante); return m
+  })
   const [salvando, setSalvando] = useState(0)
   const [salvoEm, setSalvoEm] = useState<Date | null>(null)
   const [etapa, setEtapa] = useState(inicial.somenteLeitura ? BLOCOS.length : 0)                         // 0..BLOCOS.length-1 = blocos; BLOCOS.length = revisão
@@ -51,7 +69,7 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
   }
   function limparLocal() { try { localStorage.removeItem(chaveLocal) } catch { /* ignora */ } }
 
-  useEffect(() => { topo.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }, [etapa])
+  useEffect(() => { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }) }, [etapa])   // Continuar/Voltar sempre abre a etapa pelo topo
 
   // Ao abrir: volta para a etapa em que parou e reenvia o que ficou pendente na última visita.
   useEffect(() => {
@@ -149,10 +167,11 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
   async function subirLogo(ev: React.ChangeEvent<HTMLInputElement>) {
     const arq = ev.target.files?.[0]; if (!arq) return
     setErroLogo('')
-    if (arq.size > 5 * 1024 * 1024) { setErroLogo('A logo deve ter até 5 MB.'); return }
-    if (arq.type !== 'image/png') { setErroLogo('Envie um arquivo PNG.'); return }
+    if (arq.type && !arq.type.startsWith('image/')) { setErroLogo('Escolha um arquivo de imagem.'); return }
     setSalvando(n => n + 1)
-    const fd = new FormData(); fd.set('token', token); fd.set('arquivo', arq)
+    const pronto = await converterParaPng(arq)
+    if (pronto.size > 5 * 1024 * 1024) { setSalvando(n => n - 1); setErroLogo('A logo deve ter até 5 MB.'); return }
+    const fd = new FormData(); fd.set('token', token); fd.set('arquivo', pronto)
     const r = await enviarLogo(fd)
     setSalvando(n => n - 1)
     if (r.sessaoExpirada) { router.refresh(); return }
@@ -183,7 +202,7 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
     return (
       <div key={c.chave} style={{ marginBottom: '1.1rem' }}>
         <label htmlFor={c.chave} style={{ display: 'block', fontSize: '.88rem', fontWeight: 700, color: '#1e293b', marginBottom: '.3rem' }}>
-          {c.rotulo}{c.obrigatorio && <span style={{ color: '#dc2626' }}> *</span>}
+          {c.rotulo}
           {preMode && <span style={{ marginLeft: '.5rem', fontSize: '.68rem', color: '#0369a1', fontWeight: 800 }}>PRÉ-PREENCHIDO</span>}
           {sit === 'confirmado' && <span style={{ marginLeft: '.5rem', fontSize: '.68rem', color: '#047857', fontWeight: 800 }}>✓ CONFIRMADO</span>}
           {sit === 'corrigido' && <span style={{ marginLeft: '.5rem', fontSize: '.68rem', color: '#b45309', fontWeight: 800 }}>✎ CORRIGIDO</span>}
@@ -195,8 +214,8 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
             {ficha.logoUrl && <img src={ficha.logoUrl} alt="Logo enviada" style={{ maxHeight: 90, maxWidth: '100%', objectFit: 'contain', border: '1px solid #e2e8f0', borderRadius: 10, padding: 6, background: '#fff', marginBottom: '.5rem', display: 'block' }} />}
             {!leitura && (
               <label style={{ display: 'inline-block', padding: '.65rem 1.1rem', borderRadius: 9999, background: '#0ea5e9', color: '#fff', fontWeight: 700, fontSize: '.9rem', cursor: 'pointer' }}>
-                {ficha.logoUrl ? 'Trocar logo' : '⬆ Enviar logo (PNG)'}
-                <input type="file" accept="image/png" hidden onChange={subirLogo} />
+                {ficha.logoUrl ? 'Trocar logo' : '⬆ Enviar logo'}
+                <input type="file" accept="image/*" hidden onChange={subirLogo} />
               </label>
             )}
             {erroLogo && <p role="alert" style={{ color: '#b91c1c', fontSize: '.8rem', margin: '.4rem 0 0' }}>{erroLogo}</p>}
@@ -235,13 +254,28 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
   }
 
   function renderBloco(blocoId: number) {
-    const campos = camposDoBloco(blocoId).filter(c => campoVisivel(c, valores) && c.tipo !== 'calculado')
+    const campos = camposDoBloco(blocoId).filter(c => campoVisivel(c, valores) && c.tipo !== 'calculado' && (!c.participante || c.participante <= partsMostrados))
     const bloco = BLOCOS.find(b => b.id === blocoId)!
+    const posicao = BLOCOS.findIndex(b => b.id === blocoId) + 1
     return (
       <div>
-        <h2 style={{ fontFamily: 'var(--font-cormorant, Georgia, serif)', fontSize: '1.55rem', margin: '0 0 .3rem', color: '#0f172a' }}>{bloco.id}. {bloco.titulo}</h2>
+        <h2 style={{ fontFamily: 'var(--font-cormorant, Georgia, serif)', fontSize: '1.55rem', margin: '0 0 .3rem', color: '#0f172a' }}>{posicao}. {bloco.titulo}</h2>
         {bloco.descricao && <p style={{ fontSize: '.85rem', color: '#475569', lineHeight: 1.5, margin: '0 0 1rem' }}>{bloco.descricao}</p>}
-        {campos.map(renderCampo)}
+        {campos.map((c, i) => {
+          const ant = campos[i - 1]; const prox = campos[i + 1]
+          const cabecalho = c.participante && c.participante !== ant?.participante && partsMostrados > 1
+          const fimParticipantes = !!c.participante && prox?.participante !== c.participante && !prox?.participante
+          return (
+            <div key={c.chave}>
+              {cabecalho && <div style={{ fontSize: '.8rem', fontWeight: 800, color: '#0369a1', margin: '.4rem 0 .6rem', paddingTop: '.5rem', borderTop: c.participante! > 1 ? '1px dashed #cbd5e1' : 'none' }}>Participante {c.participante}</div>}
+              {renderCampo(c)}
+              {fimParticipantes && !leitura && partsMostrados < MAX_PARTICIPANTES && (
+                <button type="button" onClick={() => setPartsMostrados(n => Math.min(MAX_PARTICIPANTES, n + 1))}
+                  style={{ padding: '.6rem 1rem', borderRadius: 9999, border: '2px dashed #0ea5e9', background: '#f0f9ff', color: '#0369a1', fontWeight: 800, fontSize: '.9rem', cursor: 'pointer', marginBottom: '1.1rem' }}>+ Adicionar participante</button>
+              )}
+            </div>
+          )
+        })}
         {blocoId === 7 && (
           <div style={{ background: '#f0f9ff', borderRadius: 10, padding: '.7rem .9rem', fontWeight: 800, color: '#0369a1', marginBottom: '1rem' }}>
             Total de alunos: {totalAlunos(valores)}
@@ -265,23 +299,23 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
           <p style={{ fontSize: '.88rem', color: '#475569', margin: '0 0 1rem' }}>Confira os dados antes de enviar. Depois do envio, a ficha fica somente para leitura.</p>
         )}
         {calc.faltando.length > 0 && !leitura && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '.7rem .9rem', fontSize: '.84rem', color: '#991b1b', marginBottom: '1rem' }}>
-            <strong>Ainda falta:</strong> {calc.faltando.join(' · ')}
+          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '.7rem .9rem', fontSize: '.84rem', color: '#92400e', marginBottom: '1rem' }}>
+            <strong>Ainda sem resposta ({calc.faltando.length}):</strong> {calc.faltando.join(' · ')}. Se quiser completar, use o botão Editar de cada etapa.
           </div>
         )}
         {BLOCOS.map((b, i) => (
           <div key={b.id} style={{ marginBottom: '.9rem', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '.5rem .8rem' }}>
-              <strong style={{ fontSize: '.85rem' }}>{b.id}. {b.titulo}</strong>
+              <strong style={{ fontSize: '.85rem' }}>{i + 1}. {b.titulo}</strong>
               {!leitura && <button type="button" onClick={() => setEtapa(i)} style={{ border: 'none', background: 'none', color: '#0ea5e9', fontWeight: 800, fontSize: '.8rem', cursor: 'pointer' }}>Editar</button>}
             </div>
             <div style={{ padding: '.5rem .8rem' }}>
-              {camposDoBloco(b.id).filter(c => campoVisivel(c, valores)).map(c => {
+              {camposDoBloco(b.id).filter(c => campoAtivo(c, valores)).map(c => {
                 const v = c.tipo === 'calculado' ? String(totalAlunos(valores)) : c.tipo === 'logo' ? (ficha.logoUrl ? 'Logo enviada ✓' : '') : valores[c.chave]
                 return (
                   <div key={c.chave} style={{ display: 'flex', justifyContent: 'space-between', gap: '.8rem', fontSize: '.82rem', padding: '.2rem 0', borderBottom: '1px dashed #f1f5f9' }}>
                     <span style={{ color: '#64748b' }}>{c.rotulo}</span>
-                    <span style={{ fontWeight: 600, textAlign: 'right', color: !vazio(v) ? '#0f172a' : c.obrigatorio ? '#dc2626' : '#94a3b8' }}>{!vazio(v) ? v : c.obrigatorio ? 'falta' : '—'}</span>
+                    <span style={{ fontWeight: 600, textAlign: 'right', color: !vazio(v) ? '#0f172a' : '#94a3b8' }}>{!vazio(v) ? v : '—'}</span>
                   </div>
                 )
               })}
@@ -291,8 +325,8 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
         {!leitura && (
           <>
             {erroEnvio && <p role="alert" style={{ color: '#b91c1c', fontSize: '.85rem' }}>{erroEnvio}</p>}
-            <button type="button" onClick={enviar} disabled={calc.pct < 100 || enviando}
-              style={{ width: '100%', padding: '1rem', border: 'none', borderRadius: 9999, background: calc.pct < 100 ? '#94a3b8' : '#f59e0b', color: '#fff', fontWeight: 900, fontSize: '1.05rem', cursor: calc.pct < 100 || enviando ? 'not-allowed' : 'pointer', boxShadow: calc.pct === 100 ? '0 6px 18px rgba(245,158,11,.4)' : 'none' }}>
+            <button type="button" onClick={enviar} disabled={enviando}
+              style={{ width: '100%', padding: '1rem', border: 'none', borderRadius: 9999, background: '#f59e0b', color: '#fff', fontWeight: 900, fontSize: '1.05rem', cursor: enviando ? 'not-allowed' : 'pointer', boxShadow: '0 6px 18px rgba(245,158,11,.4)' }}>
               {enviando ? 'Enviando…' : 'Enviar respostas'}
             </button>
           </>
@@ -329,9 +363,15 @@ export function FormularioEskolarePublico({ token, inicial }: { token: string; i
         </p>
       )}
       {etapa === 0 && !leitura && (
-        <p style={{ fontSize: '.78rem', color: '#64748b', lineHeight: 1.5, margin: '0 0 1rem' }}>
-          🔒 Seus dados são usados apenas para criar a loja da escola na Eskolare e para o treinamento (LGPD). Campos com <strong>*</strong> são obrigatórios. Pode fechar a página e voltar depois: o que você preencher fica salvo como rascunho e só é enviado à Cidade Viva quando você clicar em Enviar, no final.
-        </p>
+        <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 12, padding: '.8rem 1rem', margin: '0 0 1rem', fontSize: '.84rem', color: '#0c4a6e', lineHeight: 1.55 }}>
+          <strong>Antes de começar</strong>
+          <ul style={{ margin: '.35rem 0 .5rem 1.1rem', padding: 0, listStyle: 'disc' }}>
+            <li>Esta ficha leva cerca de 10 minutos. Serve para a Cidade Viva criar a loja online da escola, onde as famílias compram os kits.</li>
+            <li>Deixe à mão: CNPJ, a logo da escola e os contatos das pessoas responsáveis.</li>
+            <li>O que você preencher fica salvo sozinho. Pode fechar a página e voltar depois. No final, clique em Enviar respostas.</li>
+          </ul>
+          <span style={{ fontSize: '.76rem', color: '#475569' }}>🔒 Seus dados são usados apenas para criar a loja da escola na Eskolare e para o treinamento (LGPD).</span>
+        </div>
       )}
 
       {etapa < ultimaEtapa ? renderBloco(BLOCOS[etapa].id) : renderRevisao()}

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { BLOCOS, CAMPOS, STATUS_FICHA, etapaEscola, campoVisivel, camposDoBlocoTodos, totalAlunos, vazio, type Campo } from '@/lib/eskolare-campos'
+import { BLOCOS, CAMPOS, STATUS_FICHA, etapaEscola, campoAtivo, camposDoBlocoTodos, totalAlunos, vazio, type Campo } from '@/lib/eskolare-campos'
 import { formatarCep, formatarCnpj, formatarCpf, formatarWhatsapp, mascararCpf } from '@/lib/eskolare-validacao'
 import { PainelRespostaEscola } from './PainelRespostaEscola'
 import { atualizarDaPlataforma, gerarAcesso, marcarCadastrada, reabrirFicha, revogarAcesso, salvarCamposInternos, validarFicha } from '@/lib/eskolare-actions'
@@ -159,9 +159,9 @@ Pode preencher aos poucos: tudo fica salvo como rascunho e só é enviado quando
           <details key={b.id} style={{ border: '1px solid #e2e8f0', borderRadius: 10, marginBottom: '.5rem' }} open={b.id === 1}>
             <summary style={{ padding: '.6rem .8rem', cursor: 'pointer', fontWeight: 800, fontSize: '.85rem', background: '#f8fafc', borderRadius: 10 }}>{b.id}. {b.titulo}</summary>
             <div style={{ padding: '.8rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '.7rem' }}>
-              {camposDoBlocoTodos(b.id).filter(c => campoVisivel(c, valores) || c.bloco === 8).map(c => (
+              {camposDoBlocoTodos(b.id).filter(c => campoAtivo(c, valores)).map(c => (
                 <div key={c.chave}>
-                  <label style={{ display: 'block', fontSize: '.74rem', fontWeight: 700, color: '#475569', marginBottom: '.2rem' }}>{c.rotulo}{c.obrigatorio && ' *'}{f.fontes[c.chave] && !f.situacao[c.chave]?.includes('escola') && f.pre[c.chave] ? <span style={{ marginLeft: '.4rem', fontSize: '.62rem', fontWeight: 700, color: '#0369a1', background: '#e0f2fe', borderRadius: 9999, padding: '.05rem .4rem' }}>{f.fontes[c.chave]}</span> : null}</label>
+                  <label style={{ display: 'block', fontSize: '.74rem', fontWeight: 700, color: '#475569', marginBottom: '.2rem' }}>{c.rotulo}{f.fontes[c.chave] && !f.situacao[c.chave]?.includes('escola') && f.pre[c.chave] ? <span style={{ marginLeft: '.4rem', fontSize: '.62rem', fontWeight: 700, color: '#0369a1', background: '#e0f2fe', borderRadius: 9999, padding: '.05rem .4rem' }}>{f.fontes[c.chave]}</span> : null}</label>
                   {c.tipo === 'calculado' ? <div style={{ ...inp, background: '#f1f5f9', fontWeight: 800 }}>{totalAlunos(valores)}</div>
                     : c.tipo === 'logo' ? (f.logoUrl ? <img src={f.logoUrl} alt="Logo da escola" style={{ maxHeight: 60, border: '1px solid #e2e8f0', borderRadius: 8, padding: 4, background: '#fff' }} /> : <span style={{ fontSize: '.8rem', color: '#94a3b8' }}>A escola envia pelo link.</span>)
                     : c.tipo === 'opcoes' ? (

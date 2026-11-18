@@ -11,6 +11,7 @@ const F = {
   paideia: 'Formulário Paideia',
   bilingue: 'Formulário Bilinguismo',
   pedidos: 'Previsão de pedidos',
+  padrao: 'Padrão para todas as escolas',
   ciecc: 'Base CIECC',
   leads: 'Banco de leads',
 }
@@ -108,6 +109,17 @@ export async function montarPrefill(admin: Admin, escolaId: string, ciclo: numbe
     if (p && Number(p[`${serie}_qtd`]) > 0) por(chave, p[`${serie}_qtd`], F.paideia)
     if (Number(e[COL_ESCOLA[serie]]) > 0) por(chave, e[COL_ESCOLA[serie]], F.escola)
   }
+
+  // 5. Conta para receber a comissão (dados de repasse do contrato)
+  if (c) {
+    por('fin_banco', c.banco, F.contrato); por('fin_agencia', c.agencia, F.contrato); por('fin_conta', c.conta, F.contrato)
+    const tc = String(c.tipo_conta ?? '')
+    por('fin_tipo_conta', /poup/i.test(tc) ? 'Poupança' : /corr/i.test(tc) ? 'Corrente' : null, F.contrato)
+    por('fin_titular', c.titular, F.contrato); por('fin_titular_doc', c.titular_documento, F.contrato); por('fin_pix', c.chave_pix, F.contrato)
+  }
+
+  // Venda de 2º semestre: todas as escolas terão a loja no 2º semestre (a escola não é perguntada)
+  por('venda_2sem', 'Sim', F.padrao)
 
   // 9. Entrega
   if (pr && pr.mesmo_endereco_entrega === false) por('ent_endereco', pr.endereco_entrega_material, F.pedidos)

@@ -1,4 +1,4 @@
-import { BLOCOS, CAMPOS, campoVisivel, etapaEscola, totalAlunos, vazio, type Campo } from '@/lib/eskolare-campos'
+import { BLOCOS, CAMPOS, campoAtivo, etapaEscola, totalAlunos, vazio, type Campo } from '@/lib/eskolare-campos'
 import { mascararCpf } from '@/lib/eskolare-validacao'
 
 export interface DadosPainel {
@@ -19,7 +19,7 @@ export function PainelRespostaEscola({ d }: { d: DadosPainel }) {
   const enviou = ['respondida', 'validada', 'cadastrada'].includes(d.status)
   const preenchendo = d.status === 'em_preenchimento'
 
-  const visiveis = CAMPOS.filter(c => !c.interno && c.tipo !== 'calculado' && campoVisivel(c, d.dados))
+  const visiveis = CAMPOS.filter(c => !c.interno && c.tipo !== 'calculado' && campoAtivo(c, d.dados))
   const cont = { escola: 0, confirmado: 0, corrigido: 0, pre: 0, branco: 0 }
   for (const c of visiveis) {
     if (c.tipo === 'logo') { if (!d.logoUrl) cont.branco++; else cont.escola++; continue }
@@ -33,7 +33,7 @@ export function PainelRespostaEscola({ d }: { d: DadosPainel }) {
   const respostasEscola = cont.escola + cont.confirmado + cont.corrigido
 
   const manchete = enviou
-    ? { ic: '✔', txt: `A escola ENVIOU as respostas${d.respondidaEm ? ' em ' + fd(d.respondidaEm) : ''}.`, sub: d.status === 'respondida' ? 'Falta o comercial conferir e validar a ficha.' : d.status === 'validada' ? 'Validada pelo comercial. Falta cadastrar na Eskolare.' : 'Já cadastrada na Eskolare.', cor: '#047857', bg: '#ecfdf5' }
+    ? { ic: '✔', txt: `A escola ENVIOU as respostas${d.respondidaEm ? ' em ' + fd(d.respondidaEm) : ''}.`, sub: (cont.branco > 0 ? `Ela chegou ao final e enviou, mesmo com ${cont.branco} pergunta${cont.branco > 1 ? 's' : ''} em branco. ` : 'Ela respondeu tudo o que o formulário pergunta. ') + (d.status === 'respondida' ? 'Falta o comercial conferir e validar a ficha.' : d.status === 'validada' ? 'Validada pelo comercial. Falta cadastrar na Eskolare.' : 'Já cadastrada na Eskolare.'), cor: '#047857', bg: '#ecfdf5' }
     : preenchendo
     ? { ic: '✎', txt: `A escola começou a preencher, mas AINDA NÃO enviou (${d.pct}% preenchido).`, sub: 'O que aparece abaixo é rascunho salvo automaticamente. Só vale como resposta final depois que a escola clicar em "Enviar respostas".', cor: '#b45309', bg: '#fffbeb' }
     : d.status === 'enviada' && d.ultimoAcesso

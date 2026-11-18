@@ -20,7 +20,7 @@ export async function exigirComercial() {
 
 export type EventoTipo =
   | 'criada' | 'enviada' | 'aberta' | 'pin_errado' | 'bloqueada' | 'campo' | 'enviada_pela_escola'
-  | 'respondida' | 'validada' | 'cadastrada' | 'reaberta' | 'revogada' | 'importada' | 'pin_regenerado'
+  | 'respondida' | 'validada' | 'cadastrada' | 'reaberta' | 'revogada' | 'importada' | 'pin_regenerado' | 'envio_clicado'
 
 // Grava o evento na ficha e, quando `crm` é informado, também no histórico de interações da escola (Registros).
 export async function registrarEvento(

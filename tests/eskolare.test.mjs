@@ -3,7 +3,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { validarCnpj, validarCpf, validarValor, formatarWhatsapp, mascararCpf } from '../src/lib/eskolare-validacao.ts'
 import { gerarToken, gerarPin, hashPin, verificarPin, tokenPlausivel, hashSessao, novaSessao } from '../src/lib/eskolare-seguranca.ts'
-import { calcularPreenchimento, totalAlunos, CAMPOS, campoVisivel, campoPorChave } from '../src/lib/eskolare-campos.ts'
+import { calcularPreenchimento, totalAlunos, CAMPOS, BLOCOS, MAX_PARTICIPANTES, campoAtivo, campoVisivel, campoPorChave } from '../src/lib/eskolare-campos.ts'
 
 test('CNPJ e CPF: dígito verificador', () => {
   assert.equal(validarCnpj('11.222.333/0001-81'), true)
@@ -53,29 +53,74 @@ test('token: 256 bits, único, não sequencial', () => {
   assert.equal(hashSessao(novaSessao()).length, 64)
 })
 
-const OBRIG = CAMPOS.filter(c => c.obrigatorio && !c.interno)
-const completo = () => {
-  const d = {}
-  for (const c of OBRIG) d[c.chave] = 'x'
-  return d
-}
+const PUBLICOS = CAMPOS.filter(c => !c.interno && c.tipo !== 'calculado')
+const BASE = PUBLICOS.filter(c => !c.participante || c.participante === 1)      // sem os participantes extras
 
-test('% preenchido: 28 obrigatórios da escola (inclui os dois valores de kit)', () => {
-  assert.equal(OBRIG.length, 28)
-  assert.equal(calcularPreenchimento({}).total, 28)
+test('nada é obrigatório para a escola', () => {
+  assert.ok(CAMPOS.every(c => c.obrigatorio === undefined && c.obrigatorioQuando === undefined && c.obrigatorioSe === undefined))
   assert.equal(calcularPreenchimento({}).pct, 0)
-  assert.equal(calcularPreenchimento(completo()).pct, 100)
-  const d = completo(); delete d.preco_fundamental
-  assert.equal(calcularPreenchimento(d).pct, 96)
-  assert.ok(calcularPreenchimento(d).faltando[0].includes('kit Fundamental'))
+  assert.equal(calcularPreenchimento({}).total, BASE.length)
 })
 
-test('valor negociado: Infantil e Fundamental são campos separados, ambos obrigatórios e sempre visíveis', () => {
-  const inf = campoPorChave('preco_infantil'), fun = campoPorChave('preco_fundamental')
-  assert.ok(inf.obrigatorio && fun.obrigatorio)
-  assert.equal(campoVisivel(inf, {}), true)
-  assert.equal(campoVisivel(fun, {}), true)
-  assert.equal(campoPorChave('ctr_valor'), undefined)       // valor total do contrato não é perguntado
+test('dados que cabem ao Education ou que não existem não são perguntados à escola', () => {
+  assert.equal(campoPorChave('venda_2sem').interno, true)       // padrão Sim para todas as escolas
+  assert.equal(campoPorChave('inf_com_ingles'), undefined)       // só Lamad e Luz têm kit sem Inglês e nenhuma é Eskolare
+  assert.equal(campoPorChave('venda_avulso'), undefined)         // a Cidade Viva não vende livro avulso
+  assert.equal(campoPorChave('ctr_valor'), undefined)
+  assert.ok(!campoPorChave('preco_infantil').interno && !campoPorChave('preco_fundamental').interno)   // o valor negociado fica, com explicação
+  assert.ok(PUBLICOS.some(c => c.bloco === 8))
+})
+
+test('termômetro: respondidas ÷ perguntas que a escola vê', () => {
+  const d = {}
+  for (const c of PUBLICOS) d[c.chave] = 'x'
+  assert.equal(calcularPreenchimento(d).pct, 100)
+  assert.equal(calcularPreenchimento(d).faltando.length, 0)
+  const m = { cnpj: '11.222.333/0001-81', razao_social: 'Escola Teste' }
+  const r = calcularPreenchimento(m)
+  assert.equal(r.preenchidos, 2)
+  assert.equal(r.pct, Math.round((2 / BASE.length) * 100))
+})
+
+test('pré-preenchido não confirmado não conta como resposta da escola (mas não trava nada)', () => {
+  const d = { parc_nome: 'Maria', parc_cargo: 'Diretora' }
+  const sem = calcularPreenchimento(d, { parc_nome: 'pre', parc_cargo: 'pre' })
+  assert.equal(sem.preenchidos, 0)
+  assert.ok(sem.faltando.some(x => x.includes('confirmar')))
+  const com = calcularPreenchimento(d, { parc_nome: 'confirmado', parc_cargo: 'corrigido' })
+  assert.equal(com.preenchidos, 2)
+})
+
+test('explicação objetiva em cada pergunta que precisa e em cada etapa', () => {
+  for (const k of ['cnpj', 'razao_social', 'nome_loja', 'logo', 'adm_ja_usa', 'adm_email', 'adm_cpf', 'fin_banco', 'preco_infantil', 'preco_fundamental', 'ent_endereco'])
+    assert.ok(campoPorChave(k).ajuda && campoPorChave(k).ajuda.length > 10, k)
+  for (const id of [1, 2, 3, 4, 5, 7, 8, 9]) assert.ok(BLOCOS.find(b => b.id === id).descricao, `bloco ${id}`)
+  // objetivo: nenhuma explicação passa de 120 caracteres e a etapa 8 não repete que os kits têm valores diferentes
+  for (const c of CAMPOS) assert.ok((c.ajuda ?? '').length <= 120, c.chave)
+  for (const b of BLOCOS) assert.ok((b.descricao ?? '').length <= 130, `bloco ${b.id}`)
+  assert.ok(!/diferentes/.test(BLOCOS.find(b => b.id === 8).descricao))
+})
+
+test('coordenação pedagógica não é perguntada à escola', () => {
+  assert.ok(CAMPOS.filter(c => c.bloco === 6).every(c => c.interno))
+})
+
+test('conta para receber a comissão é perguntada à escola (não "tem conta na Eskolare")', () => {
+  assert.equal(campoPorChave('fin_conta_resgate'), undefined)
+  for (const k of ['fin_banco', 'fin_agencia', 'fin_conta', 'fin_tipo_conta', 'fin_titular', 'fin_titular_doc', 'fin_pix']) assert.ok(campoPorChave(k) && !campoPorChave(k).interno, k)
+})
+
+test('participantes do treinamento: até 6, os extras só contam quando têm dado', () => {
+  assert.equal(MAX_PARTICIPANTES, 6)
+  for (let n = 1; n <= 6; n++) assert.equal(CAMPOS.filter(c => c.participante === n).length, 4)
+  assert.equal(campoPorChave('trein_participantes'), undefined)
+  const extra = campoPorChave('trein2_nome')
+  assert.equal(campoAtivo(extra, {}), false)
+  assert.equal(campoAtivo(extra, { trein2_email: 'a@b.com' }), true)
+  assert.equal(campoAtivo(campoPorChave('trein_nome'), {}), true)
+  const d = { trein2_nome: 'Ana', trein2_email: 'ana@escola.com' }
+  assert.equal(calcularPreenchimento(d).total, BASE.length + 4)        // o participante 2 entra no termômetro
+  assert.equal(calcularPreenchimento(d).preenchidos, 2)
 })
 
 test('total de alunos é a soma das 9 séries', () => {
@@ -104,17 +149,6 @@ test('regras de negócio: valor do kit e limites', () => {
   assert.ok(validarValor('dinheiro', '99999', undefined, 'preco_infantil').erro)
   assert.ok(validarValor('inteiro', '99999', undefined, 'al_inf2').erro)
   assert.equal(validarValor('inteiro', '0', undefined, 'al_ano3').valor, '0')
-})
-
-test('pré-preenchido não confirmado não conta como resposta da escola', () => {
-  const d = completo(); 
-  assert.equal(calcularPreenchimento(d).pct, 100)
-  const sit = { parc_nome: 'pre', parc_cargo: 'pre' }
-  d.parc_cargo = 'Diretor'
-  const c = calcularPreenchimento(d, sit)
-  assert.ok(c.pct < 100)
-  assert.ok(c.faltando.some(x => x.includes('confirme ou corrija')))
-  assert.equal(calcularPreenchimento(d, { parc_nome: 'confirmado', parc_cargo: 'corrigido' }).pct, 100)
 })
 
 test('bloco do contrato é interno: a escola não responde', () => {
