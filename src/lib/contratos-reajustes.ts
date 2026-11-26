@@ -39,3 +39,12 @@ export async function removerReajuste(id: string): Promise<{ ok: boolean; error?
   revalidatePath('/contratos/reajustes')
   return { ok: true }
 }
+
+export async function vincularEscolaReajuste(id: string, escolaId: string | null): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('contratos_reajustes').update({ escola_id: escolaId || null }).eq('id', id).select('id')
+  if (error) return { ok: false, error: error.message }
+  if (!data?.length) return { ok: false, error: 'Sem permissão para vincular.' }
+  revalidatePath('/contratos/escolas')
+  return { ok: true }
+}

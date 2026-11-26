@@ -1,5 +1,7 @@
 import { carregarContratos } from '@/lib/contratos-data'
 import { ContratoCardsClient, type CardData } from '@/components/contratos/ContratoCardsClient'
+import { createClient } from '@/lib/supabase/server'
+import { ParceirasCards, type Parceira } from '@/components/contratos/ParceirasCards'
 import { pendencias, totalKits, totalValor, type Modalidade } from '@/lib/contratos'
 
 export const dynamic = 'force-dynamic'
@@ -29,5 +31,31 @@ export default async function EscolasContratos() {
       arquivos, driveUrl: c.drive_contrato_url, pendencias: pendencias(c),
     }
   })
-  return <ContratoCardsClient dados={dados} />
+
+  // Cartão de cada escola parceira (tabela de reajustes): permite anexar o contrato mesmo antes do cadastro completo.
+  const supabase = await createClient()
+  const { data: rj } = await supabase.from('contratos_reajustes').select('id, escola, categoria, modelo, inf2, inf3, inf4, inf5, escola_id').order('ordem')
+  const ids = (rj ?? []).map(r => r.escola_id).filter(Boolean) as string[]
+  const [{ data: arqs }, { data: todas }] = await Promise.all([
+    ids.length
+      ? supabase.from('contratos_arquivos').select('id, escola_id, nome, path, tamanho, categoria, created_at').in('escola_id', ids).order('created_at', { ascending: false })
+      : Promise.resolve({ data: [] as any[] }),
+    supabase.from('escolas').select('id, nome, cidade').order('nome'),
+  ])
+  const parceiras: Parceira[] = (rj ?? []).map(r => ({
+    id: r.id, nome: r.escola, categoria: r.categoria, modelo: r.modelo,
+    kits: (r.inf2 ?? 0) + (r.inf3 ?? 0) + (r.inf4 ?? 0) + (r.inf5 ?? 0), escolaId: r.escola_id,
+    arquivos: (arqs ?? []).filter(a => a.escola_id === r.escola_id).map(a => ({ ...a, categoria: a.categoria ?? 'contrato' })),
+  }))
+  return (
+    <>
+      <ParceirasCards parceiras={parceiras} opcoes={(todas ?? []) as any} />
+      {dados.length > 0 && (
+        <div style={{ marginTop: '2.5rem' }}>
+          <h2 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', marginBottom: '.8rem' }}>Contratos cadastrados</h2>
+          <ContratoCardsClient dados={dados} />
+        </div>
+      )}
+    </>
+  )
 }

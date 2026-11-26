@@ -111,7 +111,7 @@ export default function ContratoLoginPage() {
               fontFamily: 'var(--font-montserrat, sans-serif)',
               boxShadow: '0 4px 16px rgba(0,0,0,.3)',
             }}>
-              ✦ Plataforma Acadêmica e Contratual
+              ✦ Plataforma Contratual
             </div>
 
             <h1 style={{
@@ -122,8 +122,7 @@ export default function ContratoLoginPage() {
               textShadow: '0 2px 20px rgba(0,0,0,.5)',
               textWrap: 'balance' as any,
             }}>
-              Gestão de Contratos<br />
-              <span style={{ color: '#22c55e' }}>e Jornada Acadêmica</span>
+              Gestão de <span style={{ color: '#22c55e' }}>Contratos</span>
             </h1>
 
             <p style={{
@@ -131,7 +130,7 @@ export default function ContratoLoginPage() {
               lineHeight: 1.7, marginBottom: '1.5rem', maxWidth: 480,
               fontFamily: 'var(--font-inter, sans-serif)',
             }}>
-              Plataforma integrada para gerenciar contratos de parcerias, acompanhar programas acadêmicos, registros de alunos e indicadores de desempenho em tempo real.
+              Plataforma para gerenciar os contratos das escolas parceiras: cadastro, anexo dos documentos assinados e acompanhamento dos reajustes.
             </p>
 
             <div style={{
@@ -168,7 +167,7 @@ export default function ContratoLoginPage() {
                     fontSize: '1.1rem', fontWeight: 700, color: '#fff',
                     lineHeight: 1.2, marginBottom: '.5rem',
                   }}>
-                    Gestão Acadêmica Completa
+                    Contratos das escolas parceiras
                   </div>
 
                   <p style={{
@@ -176,7 +175,7 @@ export default function ContratoLoginPage() {
                     lineHeight: 1.6, marginBottom: '.9rem',
                     fontFamily: 'var(--font-inter, sans-serif)',
                   }}>
-                    Acesse todos os dados de contratos, programas acadêmicos, alunos e indicadores de desempenho integrados em um único lugar.
+                    Acesse o cartão de cada escola parceira, anexe os contratos assinados e consulte os dados contratuais em um único lugar.
                   </p>
 
                   <a href="/" style={{
@@ -399,14 +398,10 @@ export default function ContratoLoginPage() {
                 Módulos da Plataforma
               </div>
               {[
-                'Dashboard Acadêmico',
-                'Gestão de Contratos',
-                'Cadastro de Alunos',
-                'Registros de Desempenho',
-                'Jornada Acadêmica',
-                'Cronograma de Cursos',
-                'Relatórios e Análises',
-                'Integração com CVE',
+                'Cartão de cada escola parceira',
+                'Upload de contratos e aditivos',
+                'Repositório de documentos',
+                'Reajustes 2027',
               ].map(item => (
                 <div key={item} style={{
                   color: 'rgba(255,255,255,.35)', fontSize: '.75rem',
@@ -449,7 +444,7 @@ export default function ContratoLoginPage() {
             display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '.5rem',
           }}>
             <p style={{ fontSize: '.7rem', color: 'rgba(255,255,255,.2)', fontFamily: 'var(--font-montserrat, sans-serif)', letterSpacing: '.03em' }}>
-              © {new Date().getFullYear()} Cidade Viva Education · Plataforma Acadêmica
+              © {new Date().getFullYear()} Cidade Viva Education · Gestão de Contratos
             </p>
             <p style={{ fontSize: '.7rem', color: 'rgba(255,255,255,.15)', fontFamily: 'var(--font-inter, sans-serif)' }}>
               Plataforma de uso exclusivo da equipe interna
