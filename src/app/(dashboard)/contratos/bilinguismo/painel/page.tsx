@@ -31,7 +31,7 @@ export default async function PainelBilinguismo() {
         <Kpi rotulo="Sem contrato" valor={String(parceiras.length - com)} />
         <Kpi rotulo="Termos aditivos" valor={String(adit)} />
       </div>
-      <Link href="/contratos/bilinguismo/escolas" style={{ display: 'inline-block', padding: '.5rem 1.1rem', borderRadius: 9999, background: '#0ea5e9', color: '#fff', fontWeight: 700, fontSize: '.82rem', textDecoration: 'none' }}>Abrir cartões das escolas</Link>
+      <Link href="/contratos/bilinguismo/escolas" style={{ display: 'inline-block', padding: '.5rem 1.1rem', borderRadius: 9999, background: '#16a34a', color: '#fff', fontWeight: 700, fontSize: '.82rem', textDecoration: 'none' }}>Abrir cartões das escolas</Link>
     </section>
   )
 }

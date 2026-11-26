@@ -46,7 +46,7 @@ export default async function ContratosVisaoGeral() {
     return (
       <div style={{ background: '#fff', border: '1px dashed #cbd5e1', borderRadius: 14, padding: '2.5rem', textAlign: 'center', color: '#475569' }}>
         Nenhum contrato Education cadastrado ainda.<br />
-        <Link href="/contratos/novo" style={{ color: '#0ea5e9', fontWeight: 700 }}>Cadastrar o primeiro contrato →</Link>
+        <Link href="/contratos/novo" style={{ color: '#16a34a', fontWeight: 700 }}>Cadastrar o primeiro contrato →</Link>
       </div>
     )
   }
@@ -104,7 +104,7 @@ export default async function ContratosVisaoGeral() {
                   </div>
                   {p != null ? (
                     <div style={{ marginTop: '.3rem' }}>
-                      <div style={{ height: 6, background: '#f1f5f9', borderRadius: 9999 }}><div style={{ width: `${p}%`, height: '100%', background: '#0ea5e9', borderRadius: 9999 }} /></div>
+                      <div style={{ height: 6, background: '#f1f5f9', borderRadius: 9999 }}><div style={{ width: `${p}%`, height: '100%', background: '#16a34a', borderRadius: 9999 }} /></div>
                       <div style={{ fontSize: '.68rem', color: '#64748b', marginTop: '.15rem' }}>{fmtData(l.c.vigencia_inicio)} → {fmtData(l.c.vigencia_fim)} ({p}%)</div>
                     </div>
                   ) : (
@@ -123,7 +123,7 @@ export default async function ContratosVisaoGeral() {
           <div style={{ display: 'grid', gap: '.5rem' }}>
             {comPendencia.map(l => (
               <div key={l.c.id} style={{ fontSize: '.82rem' }}>
-                <Link href={`/contratos/${l.escola.id}/editar`} style={{ fontWeight: 700, color: '#0369a1' }}>{l.escola.nome}</Link>
+                <Link href={`/contratos/${l.escola.id}/editar`} style={{ fontWeight: 700, color: '#15803d' }}>{l.escola.nome}</Link>
                 <span style={{ color: '#64748b' }}> — {pendencias(l.c).join(', ')}</span>
               </div>
             ))}

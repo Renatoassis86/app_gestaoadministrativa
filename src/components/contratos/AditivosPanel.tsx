@@ -31,7 +31,7 @@ export function AditivosPanel({ escolaId, aditivos }: { escolaId: string; aditiv
 
   return (
     <section style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: '1.1rem 1.2rem', maxWidth: 980, marginTop: '1.5rem' }}>
-      <h2 style={{ fontSize: '.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.06em', color: '#0ea5e9', borderBottom: '2px solid #0ea5e9', paddingBottom: '.35rem', marginBottom: '.9rem' }}>Termos aditivos</h2>
+      <h2 style={{ fontSize: '.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.06em', color: '#16a34a', borderBottom: '2px solid #16a34a', paddingBottom: '.35rem', marginBottom: '.9rem' }}>Termos aditivos</h2>
       {erro && <p style={{ color: '#991b1b', fontSize: '.82rem' }}>{erro}</p>}
       {aditivos.length === 0 && <p style={{ fontSize: '.82rem', color: '#64748b' }}>Nenhum aditivo registrado. Alterações de valor ou serviço exigem aditivo por escrito (cláusulas 10.4 e 13.9).</p>}
       <div style={{ display: 'grid', gap: '.5rem', marginBottom: '1rem' }}>
@@ -40,7 +40,7 @@ export function AditivosPanel({ escolaId, aditivos }: { escolaId: string; aditiv
             <div>
               <strong>{a.titulo}</strong> <span style={{ color: a.assinado ? '#047857' : '#b45309', fontWeight: 700 }}>· {a.assinado ? `assinado ${fmtData(a.data_assinatura)}` : 'pendente'}</span>
               {a.resumo && <div style={{ color: '#475569' }}>{a.resumo}</div>}
-              {a.drive_url && <a href={a.drive_url} target="_blank" rel="noreferrer" style={{ color: '#0ea5e9', fontWeight: 700 }}>Abrir documento</a>}
+              {a.drive_url && <a href={a.drive_url} target="_blank" rel="noreferrer" style={{ color: '#16a34a', fontWeight: 700 }}>Abrir documento</a>}
             </div>
             <button onClick={() => remover(a.id)} disabled={pendente} style={{ border: 'none', background: 'transparent', color: '#b91c1c', cursor: 'pointer', fontWeight: 700 }}>Remover</button>
           </div>
@@ -53,7 +53,7 @@ export function AditivosPanel({ escolaId, aditivos }: { escolaId: string; aditiv
         <div><label style={{ fontSize: '.74rem', fontWeight: 600 }}>Link (Drive)</label><input name="drive_url" style={inp} placeholder="https://" /></div>
         <div style={{ gridColumn: '1 / -1' }}><label style={{ fontSize: '.74rem', fontWeight: 600 }}>Resumo</label><input name="resumo" style={inp} /></div>
         <label style={{ fontSize: '.8rem', display: 'flex', gap: '.4rem', alignItems: 'center' }}><input type="checkbox" name="assinado" /> Já assinado</label>
-        <button type="submit" disabled={pendente} style={{ padding: '.5rem 1rem', borderRadius: 9999, border: 'none', background: '#0ea5e9', color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Adicionar aditivo</button>
+        <button type="submit" disabled={pendente} style={{ padding: '.5rem 1rem', borderRadius: 9999, border: 'none', background: '#16a34a', color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Adicionar aditivo</button>
       </form>
     </section>
   )

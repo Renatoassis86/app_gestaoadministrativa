@@ -76,19 +76,19 @@ function Card({ d }: { d: CardData }) {
         </>
       ) : (
         <div>
-          <div style={{ fontSize: '.68rem', fontWeight: 800, color: '#0369a1', textTransform: 'uppercase', margin: '.2rem 0' }}>Representante legal</div>
+          <div style={{ fontSize: '.68rem', fontWeight: 800, color: '#15803d', textTransform: 'uppercase', margin: '.2rem 0' }}>Representante legal</div>
           {L('Nome', d.legal.nome)}{L('CPF', fmtCpf(d.legal.cpf))}{L('RG', d.legal.rg)}{L('E-mail', d.legal.email)}{L('Telefone', fmtTel(d.legal.tel))}
-          <div style={{ fontSize: '.68rem', fontWeight: 800, color: '#0369a1', textTransform: 'uppercase', margin: '.5rem 0 .2rem' }}>Financeiro</div>
+          <div style={{ fontSize: '.68rem', fontWeight: 800, color: '#15803d', textTransform: 'uppercase', margin: '.5rem 0 .2rem' }}>Financeiro</div>
           {L('Nome', d.financeiro.nome)}{L('E-mail', d.financeiro.email)}{L('Telefone', fmtTel(d.financeiro.tel))}
-          <div style={{ fontSize: '.68rem', fontWeight: 800, color: '#0369a1', textTransform: 'uppercase', margin: '.5rem 0 .2rem' }}>Kits por série</div>
+          <div style={{ fontSize: '.68rem', fontWeight: 800, color: '#15803d', textTransform: 'uppercase', margin: '.5rem 0 .2rem' }}>Kits por série</div>
           {d.series.length === 0 ? <div style={{ fontSize: '.75rem', color: '#94a3b8' }}>Sem quantidades cadastradas.</div> :
             d.series.map(s => L(`${nomeSerie(s.serie)}${s.tipo_kit !== 'completo' ? ` (${s.tipo_kit === 'sem_ingles' ? 'sem Inglês' : 'só Inglês'})` : ''}`,
               `${s.quantidade} × ${brl(s.valor_unitario)}`))}
           {d.aditivos.length > 0 && (<>
-            <div style={{ fontSize: '.68rem', fontWeight: 800, color: '#0369a1', textTransform: 'uppercase', margin: '.5rem 0 .2rem' }}>Aditivos</div>
+            <div style={{ fontSize: '.68rem', fontWeight: 800, color: '#15803d', textTransform: 'uppercase', margin: '.5rem 0 .2rem' }}>Aditivos</div>
             {d.aditivos.map(a => L(a.titulo, a.assinado ? `assinado ${fmtData(a.data_assinatura)}` : 'pendente'))}
           </>)}
-          {d.driveUrl && <a href={d.driveUrl} target="_blank" rel="noreferrer" style={{ fontSize: '.75rem', color: '#0ea5e9', fontWeight: 700 }}>Abrir documento →</a>}
+          {d.driveUrl && <a href={d.driveUrl} target="_blank" rel="noreferrer" style={{ fontSize: '.75rem', color: '#16a34a', fontWeight: 700 }}>Abrir documento →</a>}
         </div>
       )}
 
@@ -96,11 +96,11 @@ function Card({ d }: { d: CardData }) {
 
       <div style={{ display: 'flex', gap: '.5rem' }}>
         <button onClick={() => setVerso(v => !v)}
-          style={{ flex: 1, padding: '.45rem', borderRadius: 9999, border: '1px solid #bae6fd', background: '#f0f9ff', color: '#0369a1', fontWeight: 700, fontSize: '.75rem', cursor: 'pointer' }}>
+          style={{ flex: 1, padding: '.45rem', borderRadius: 9999, border: '1px solid #bbf7d0', background: '#f0fdf4', color: '#15803d', fontWeight: 700, fontSize: '.75rem', cursor: 'pointer' }}>
           {verso ? '← Resumo' : 'Ver dados completos'}
         </button>
         <Link href={`/contratos/${d.escolaId}/editar`}
-          style={{ padding: '.45rem .9rem', borderRadius: 9999, background: '#0ea5e9', color: '#fff', fontWeight: 700, fontSize: '.75rem', textDecoration: 'none' }}>Editar</Link>
+          style={{ padding: '.45rem .9rem', borderRadius: 9999, background: '#16a34a', color: '#fff', fontWeight: 700, fontSize: '.75rem', textDecoration: 'none' }}>Editar</Link>
       </div>
     </div>
   )
@@ -123,7 +123,7 @@ export function ContratoCardsClient({ dados }: { dados: CardData[] }) {
         {(['todos', 'boleto', 'eskolare'] as const).map(m => (
           <button key={m} onClick={() => setModelo(m)}
             style={{ padding: '.45rem .9rem', borderRadius: 9999, fontSize: '.8rem', fontWeight: 700, cursor: 'pointer',
-                     border: '1px solid #bae6fd', background: modelo === m ? '#0ea5e9' : '#f0f9ff', color: modelo === m ? '#fff' : '#0369a1' }}>
+                     border: '1px solid #bbf7d0', background: modelo === m ? '#16a34a' : '#f0fdf4', color: modelo === m ? '#fff' : '#15803d' }}>
             {m === 'todos' ? 'Todos' : MODALIDADES[m].label}
           </button>
         ))}

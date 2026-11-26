@@ -42,7 +42,7 @@ function colDeExtra(x: ColunaExtra): Col {
 interface Grupo { titulo: string; cor: string; cols: Col[] }
 
 const GRUPOS: Grupo[] = [
-  { titulo: 'Escola', cor: '#0369a1', cols: [
+  { titulo: 'Escola', cor: '#15803d', cols: [
     { campo: 'escola', rotulo: 'Escola', w: 250 },
     { campo: 'categoria', rotulo: 'Categoria', w: 112, tipo: 'sel', opcoes: CATEGORIAS },
     { campo: 'modelo', rotulo: 'Modelo contratual', w: 124, tipo: 'sel', opcoes: MODELOS.map(m => [m, m]) },
@@ -51,27 +51,27 @@ const GRUPOS: Grupo[] = [
     { campo: 'inf2', rotulo: 'Inf. 2', w: 70, tipo: 'num' }, { campo: 'inf3', rotulo: 'Inf. 3', w: 70, tipo: 'num' },
     { campo: 'inf4', rotulo: 'Inf. 4', w: 70, tipo: 'num' }, { campo: 'inf5', rotulo: 'Inf. 5', w: 70, tipo: 'num' },
   ] },
-  { titulo: 'Valores do kit', cor: '#7c3aed', cols: [
+  { titulo: 'Valores do kit', cor: '#0f172a', cols: [
     { campo: 'valor_kit', rotulo: 'Valor do kit completo', w: 130, tipo: 'lista', lista: ['R$ 700,00', 'R$ 799,00', 'R$ 800,00', 'R$ 900,00', 'R$ 1.000,00'] },
     { campo: 'reaj_infantil', rotulo: 'Reajuste Infantil', w: 130, tipo: 'lista', lista: ['R$ 1.044,40'] },
     { campo: 'reaj_1ano', rotulo: 'Reajuste 1º ano', w: 130, tipo: 'lista', lista: ['R$ 1.044,40'] },
     { campo: 'reaj_incompleto', rotulo: 'Reajuste kit incompleto', w: 130 },
   ] },
-  { titulo: 'Adesão ao Fundamental (valor do kit)', cor: '#b45309', cols: [
+  { titulo: 'Adesão ao Fundamental (valor do kit)', cor: '#166534', cols: [
     { campo: 'adesao_1ano', rotulo: '1º ano', w: 112, tipo: 'lista', lista: VALORES_ADESAO },
     { campo: 'adesao_2ano', rotulo: '2º ano', w: 112, tipo: 'lista', lista: VALORES_ADESAO },
     { campo: 'adesao_3ano', rotulo: '3º ano', w: 112, tipo: 'lista', lista: VALORES_ADESAO },
     { campo: 'adesao_4ano', rotulo: '4º ano', w: 112, tipo: 'lista', lista: VALORES_ADESAO },
     { campo: 'adesao_5ano', rotulo: '5º ano', w: 112, tipo: 'lista', lista: VALORES_ADESAO },
   ] },
-  { titulo: 'Pagamento', cor: '#be185d', cols: [
+  { titulo: 'Pagamento', cor: '#0f172a', cols: [
     { campo: 'valor_contrato', rotulo: 'Valor do contrato', w: 130 },
     { campo: 'valor_parcela', rotulo: 'Valor da parcela', w: 120 },
     { campo: 'parcelamentos', rotulo: 'Parcelamento', w: 112, tipo: 'lista', lista: PARCELAS },
     { campo: 'vencimento', rotulo: 'Vencimento', w: 112 },
     { campo: 'data_primeira_parcela', rotulo: '1ª parcela', w: 112 },
   ] },
-  { titulo: 'Aditivo', cor: '#334155', cols: [
+  { titulo: 'Aditivo', cor: '#0f172a', cols: [
     { campo: 'email_aditivo', rotulo: 'E-mail para envio do aditivo', w: 290 },
     { campo: 'aditivo_enviado', rotulo: 'Aditivo enviado?', w: 112, tipo: 'sel', opcoes: ADITIVO.map(a => [a, a]) },
     { campo: 'observacoes', rotulo: 'Observações', w: 260, tipo: 'texto' },
@@ -85,7 +85,7 @@ function Celula({ linha, col, onSalvar }: { linha: LinhaReajuste; col: Col; onSa
   const atual = valorDe(linha, col)
   const [v, setV] = useState(atual)
   const sair = () => { if (v !== atual) onSalvar(col, v) }
-  const foco = (e: React.FocusEvent<HTMLElement>) => { e.currentTarget.style.border = '1px solid #38bdf8'; e.currentTarget.style.background = '#fff' }
+  const foco = (e: React.FocusEvent<HTMLElement>) => { e.currentTarget.style.border = '1px solid #22c55e'; e.currentTarget.style.background = '#fff' }
   const desfoco = (e: React.FocusEvent<HTMLElement>) => { e.currentTarget.style.border = '1px solid transparent'; e.currentTarget.style.background = 'transparent' }
 
   if (col.tipo === 'sel') {
@@ -114,8 +114,8 @@ function Celula({ linha, col, onSalvar }: { linha: LinhaReajuste; col: Col; onSa
 }
 
 const TIPOS_COLUNA: [ColunaExtra['tipo'], string][] = [['texto', 'Texto'], ['numero', 'Número'], ['data', 'Data'], ['lista', 'Lista suspensa']]
-const btn: React.CSSProperties = { padding: '.45rem 1rem', borderRadius: 9999, border: 'none', background: '#0ea5e9', color: '#fff', fontWeight: 700, fontSize: '.8rem', cursor: 'pointer' }
-const btnSec: React.CSSProperties = { ...btn, background: '#fff', color: '#0369a1', border: '1px solid #bae6fd' }
+const btn: React.CSSProperties = { padding: '.45rem 1rem', borderRadius: 9999, border: 'none', background: '#16a34a', color: '#fff', fontWeight: 700, fontSize: '.8rem', cursor: 'pointer' }
+const btnSec: React.CSSProperties = { ...btn, background: '#fff', color: '#15803d', border: '1px solid #bbf7d0' }
 
 export function ReajustesClient({ linhas, colunasExtras = [] }: { linhas: LinhaReajuste[]; colunasExtras?: ColunaExtra[] }) {
   const router = useRouter()
@@ -126,7 +126,7 @@ export function ReajustesClient({ linhas, colunasExtras = [] }: { linhas: LinhaR
   const [novaCol, setNovaCol] = useState<{ rotulo: string; tipo: ColunaExtra['tipo']; opcoes: string } | null>(null)
 
   const grupos = useMemo<Grupo[]>(() => colunasExtras.length
-    ? [...GRUPOS, { titulo: 'Campos adicionais', cor: '#475569', cols: colunasExtras.map(colDeExtra) }]
+    ? [...GRUPOS, { titulo: 'Campos adicionais', cor: '#166534', cols: colunasExtras.map(colDeExtra) }]
     : GRUPOS, [colunasExtras])
   const colunas = useMemo(() => grupos.flatMap(g => g.cols), [grupos])
 
@@ -200,8 +200,8 @@ export function ReajustesClient({ linhas, colunasExtras = [] }: { linhas: LinhaR
       {estado?.tipo === 'erro' && <p style={{ color: '#991b1b', fontSize: '.82rem' }}>{estado.msg}</p>}
 
       {novaCol && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.5rem', alignItems: 'center', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 12, padding: '.7rem .9rem', marginBottom: '.9rem' }}>
-          <strong style={{ fontSize: '.8rem', color: '#0369a1' }}>Nova coluna</strong>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.5rem', alignItems: 'center', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '.7rem .9rem', marginBottom: '.9rem' }}>
+          <strong style={{ fontSize: '.8rem', color: '#15803d' }}>Nova coluna</strong>
           <input autoFocus value={novaCol.rotulo} onChange={e => setNovaCol({ ...novaCol, rotulo: e.target.value })} placeholder="Nome da coluna" style={{ ...inp, width: 220 }} />
           <select value={novaCol.tipo} onChange={e => setNovaCol({ ...novaCol, tipo: e.target.value as ColunaExtra['tipo'] })} style={{ ...inp, width: 150 }}>
             {TIPOS_COLUNA.map(t => <option key={t[0]} value={t[0]}>{t[1]}</option>)}
@@ -228,7 +228,7 @@ export function ReajustesClient({ linhas, colunasExtras = [] }: { linhas: LinhaR
                   {c.rotulo}
                   {c.extra && (
                     <span style={{ whiteSpace: 'nowrap' }}>
-                      <button title="Renomear / editar lista" onClick={() => editarColuna(c.extra!)} style={{ ...mini, color: '#0369a1' }}>✎</button>
+                      <button title="Renomear / editar lista" onClick={() => editarColuna(c.extra!)} style={{ ...mini, color: '#15803d' }}>✎</button>
                       <button title="Remover coluna" onClick={() => removerColuna(c.extra!)} style={{ ...mini, color: '#b91c1c' }}>×</button>
                     </span>
                   )}

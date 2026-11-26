@@ -19,7 +19,7 @@ const lab: React.CSSProperties = { display: 'block', fontSize: '.76rem', fontWei
 function Sec({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <section style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: '1.1rem 1.2rem', marginBottom: '1rem' }}>
-      <h2 style={{ fontSize: '.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.06em', color: '#0ea5e9', borderBottom: '2px solid #0ea5e9', paddingBottom: '.35rem', marginBottom: '.9rem' }}>{titulo}</h2>
+      <h2 style={{ fontSize: '.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.06em', color: '#16a34a', borderBottom: '2px solid #16a34a', paddingBottom: '.35rem', marginBottom: '.9rem' }}>{titulo}</h2>
       {children}
     </section>
   )
@@ -202,7 +202,7 @@ export function ContratoForm({ modo, escolas, inicial }: { modo: 'novo' | 'edita
         </div>
         <div style={{ display: 'flex', gap: '.5rem', margin: '.7rem 0', flexWrap: 'wrap' }}>
           <button type="button" onClick={() => setLinhas(ls => [...ls, { serie: 'infantil2', tipo_kit: 'completo', quantidade: 0, valor_unitario: null, curriculo: '' }])}
-            style={{ padding: '.4rem .8rem', borderRadius: 9999, border: '1px solid #bae6fd', background: '#f0f9ff', color: '#0369a1', fontWeight: 700, fontSize: '.78rem', cursor: 'pointer' }}>+ Adicionar linha</button>
+            style={{ padding: '.4rem .8rem', borderRadius: 9999, border: '1px solid #bbf7d0', background: '#f0fdf4', color: '#15803d', fontWeight: 700, fontSize: '.78rem', cursor: 'pointer' }}>+ Adicionar linha</button>
           <button type="button" onClick={todasSeries}
             style={{ padding: '.4rem .8rem', borderRadius: 9999, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontWeight: 700, fontSize: '.78rem', cursor: 'pointer' }}>Incluir as 9 séries</button>
         </div>
@@ -281,7 +281,7 @@ export function ContratoForm({ modo, escolas, inicial }: { modo: 'novo' | 'edita
       </Sec>
 
       <button type="submit" disabled={pendente || !modalidade}
-        style={{ padding: '.8rem 2rem', borderRadius: 9999, border: 'none', background: !modalidade ? '#94a3b8' : '#0ea5e9', color: '#fff', fontWeight: 800, fontSize: '.95rem', cursor: pendente || !modalidade ? 'not-allowed' : 'pointer' }}>
+        style={{ padding: '.8rem 2rem', borderRadius: 9999, border: 'none', background: !modalidade ? '#94a3b8' : '#16a34a', color: '#fff', fontWeight: 800, fontSize: '.95rem', cursor: pendente || !modalidade ? 'not-allowed' : 'pointer' }}>
         {pendente ? 'Salvando…' : modo === 'novo' ? 'Cadastrar contrato' : 'Salvar alterações'}
       </button>
       {!modalidade && <span style={{ marginLeft: '.8rem', fontSize: '.8rem', color: '#64748b' }}>Escolha o modelo (Boleto ou Eskolare) para salvar.</span>}

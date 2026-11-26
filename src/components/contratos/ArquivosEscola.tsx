@@ -62,7 +62,7 @@ export function ArquivosEscola({ escolaId, inicial, compacto = false, linha = 'p
         </select>
         <input ref={ref} type="file" accept=".pdf,.docx,.png,.jpg,.jpeg" onChange={enviar} hidden id={idInput} />
         <label htmlFor={idInput}
-          style={{ padding: '.4rem .85rem', borderRadius: 9999, background: enviando ? '#94a3b8' : '#0ea5e9', color: '#fff', fontWeight: 700, fontSize: '.74rem', cursor: enviando ? 'wait' : 'pointer', whiteSpace: 'nowrap' }}>
+          style={{ padding: '.4rem .85rem', borderRadius: 9999, background: enviando ? '#94a3b8' : '#16a34a', color: '#fff', fontWeight: 700, fontSize: '.74rem', cursor: enviando ? 'wait' : 'pointer', whiteSpace: 'nowrap' }}>
           {enviando ? 'Enviando…' : '⬆ Enviar contrato'}
         </label>
       </div>
@@ -75,7 +75,7 @@ export function ArquivosEscola({ escolaId, inicial, compacto = false, linha = 'p
             <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '.5rem', fontSize: '.74rem' }}>
               <span style={{ minWidth: 0 }}>
                 <button onClick={() => abrir(a)} title={a.nome}
-                  style={{ border: 'none', background: 'none', color: '#0369a1', fontWeight: 700, cursor: 'pointer', padding: 0, textAlign: 'left', maxWidth: compacto ? 190 : 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block', verticalAlign: 'bottom' }}>
+                  style={{ border: 'none', background: 'none', color: '#15803d', fontWeight: 700, cursor: 'pointer', padding: 0, textAlign: 'left', maxWidth: compacto ? 190 : 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block', verticalAlign: 'bottom' }}>
                   {a.nome}
                 </button>
                 <span style={{ color: '#64748b', display: 'block' }}>

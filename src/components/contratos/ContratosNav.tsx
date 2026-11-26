@@ -14,8 +14,8 @@ export function ContratosNav() {
         return (
           <Link key={p.href} href={p.href} aria-current={ativa ? 'page' : undefined}
             style={{ padding: '.4rem .9rem', borderRadius: 9999, fontSize: '.82rem', fontWeight: 600, textDecoration: 'none',
-              color: ativa ? '#fff' : off ? '#64748b' : '#0369a1', background: ativa ? '#0ea5e9' : off ? '#f8fafc' : '#f0f9ff',
-              border: `1px solid ${ativa ? '#0ea5e9' : off ? '#e2e8f0' : '#bae6fd'}` }}>
+              color: ativa ? '#fff' : off ? '#64748b' : '#15803d', background: ativa ? '#16a34a' : off ? '#f8fafc' : '#f0fdf4',
+              border: `1px solid ${ativa ? '#16a34a' : off ? '#e2e8f0' : '#bbf7d0'}` }}>
             {p.nome}
           </Link>
         )

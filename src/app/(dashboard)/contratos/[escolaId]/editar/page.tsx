@@ -21,7 +21,7 @@ export default async function EditarContrato({ params }: { params: Promise<{ esc
 
   return (
     <>
-      <Link href="/contratos/escolas" style={{ fontSize: '.8rem', color: '#0ea5e9', fontWeight: 700 }}>← Voltar para as escolas</Link>
+      <Link href="/contratos/escolas" style={{ fontSize: '.8rem', color: '#16a34a', fontWeight: 700 }}>← Voltar para as escolas</Link>
       <p style={{ fontSize: '.9rem', margin: '.6rem 0 1rem' }}>Editando o contrato de <strong>{escola.nome}</strong>.</p>
       <ContratoForm
         modo="editar"

@@ -89,7 +89,7 @@ interface NavItemProps {
   wip?: boolean
 }
 
-function NavItem({ href, label, icon: Icon, active, badge, external, wip }: NavItemProps) {
+function NavItem({ href, label, icon: Icon, active, badge, external, wip, verde }: NavItemProps & { verde?: boolean }) {
   const baseStyle: React.CSSProperties = {
     display: 'flex', alignItems: 'center', gap: '.6rem',
     padding: '.5rem .9rem', margin: '1px 6px',
@@ -100,9 +100,9 @@ function NavItem({ href, label, icon: Icon, active, badge, external, wip }: NavI
     letterSpacing: '.005em',
     position: 'relative',
     background: active
-      ? 'linear-gradient(135deg, rgba(217,119,6,.9), rgba(180,83,9,.85))'
+      ? (verde ? 'linear-gradient(135deg, rgba(22,163,74,.95), rgba(21,128,61,.9))' : 'linear-gradient(135deg, rgba(217,119,6,.9), rgba(180,83,9,.85))')
       : 'transparent',
-    boxShadow: active ? '0 2px 10px rgba(217,119,6,.3)' : 'none',
+    boxShadow: active ? (verde ? '0 2px 10px rgba(22,163,74,.35)' : '0 2px 10px rgba(217,119,6,.3)') : 'none',
     opacity: wip ? .4 : 1,
     pointerEvents: wip ? 'none' : 'auto',
   }
@@ -125,7 +125,7 @@ function NavItem({ href, label, icon: Icon, active, badge, external, wip }: NavI
 
       {badge !== undefined && (
         <span style={{
-          marginLeft: 'auto', background: active ? 'rgba(255,255,255,.25)' : '#d97706',
+          marginLeft: 'auto', background: active ? 'rgba(255,255,255,.25)' : (verde ? '#16a34a' : '#d97706'),
           color: '#fff', fontSize: '.58rem', fontWeight: 800, padding: '.1rem .4rem',
           borderRadius: 99, minWidth: 18, textAlign: 'center',
         }}>
@@ -300,13 +300,13 @@ export default function Sidebar({ profile }: SidebarProps) {
                 {i > 0 && <NavDivider />}
                 <SectionLabel>{sec === 'Geral' ? 'Gestão de Contratos' : sec}</SectionLabel>
                 {MODULO_CONTRATOS.paginas.filter(pg => pg.secao === sec).map(pg => (
-                  <NavItem key={pg.href} href={pg.href} label={pg.nome} icon={ICONES_CONTRATOS[pg.href] ?? FileText} active={isActive(pg.href)} />
+                  <NavItem key={pg.href} href={pg.href} label={pg.nome} icon={ICONES_CONTRATOS[pg.href] ?? FileText} active={isActive(pg.href)} verde />
                 ))}
               </div>
             ))}
             <NavDivider />
-            <NavItem href="/" label="Voltar ao Hub" icon={Globe} active={false} />
-            {isAdmin && <NavItem href="/adminpanel" label="Gestão de Usuários" icon={Settings} active={isActive('/adminpanel')} />}
+            <NavItem href="/" label="Voltar ao Hub" icon={Globe} active={false} verde />
+            {isAdmin && <NavItem href="/adminpanel" label="Gestão de Usuários" icon={Settings} active={isActive('/adminpanel')} verde />}
           </>
         ) : (
           <>
@@ -403,10 +403,10 @@ export default function Sidebar({ profile }: SidebarProps) {
             {/* Avatar */}
             <div style={{
               width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
-              background: 'linear-gradient(135deg, #d97706, #b45309)',
+              background: noContratos ? 'linear-gradient(135deg, #16a34a, #15803d)' : 'linear-gradient(135deg, #d97706, #b45309)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#fff', fontSize: '.72rem', fontWeight: 700,
-              overflow: 'hidden', boxShadow: '0 0 0 2px rgba(217,119,6,.25)',
+              overflow: 'hidden', boxShadow: noContratos ? '0 0 0 2px rgba(22,163,74,.25)' : '0 0 0 2px rgba(217,119,6,.25)',
               fontFamily: 'var(--font-montserrat, sans-serif)',
             }}>
               {profile.avatar_url

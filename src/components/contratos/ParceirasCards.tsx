@@ -58,7 +58,7 @@ export function ParceirasCards({ parceiras, opcoes, linha = 'paideia' }: { parce
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '.5rem', alignItems: 'center' }}>
           <input value={filtro} onChange={e => setFiltro(e.target.value)} placeholder="Buscar escola…" style={{ boxSizing: 'border-box', padding: '.45rem .7rem', border: '1px solid #cbd5e1', borderRadius: 8, fontSize: '.82rem', width: 200 }} />
-          <button onClick={novo} disabled={pend} style={{ padding: '.45rem 1rem', borderRadius: 9999, border: 'none', background: '#0ea5e9', color: '#fff', fontWeight: 700, fontSize: '.8rem', cursor: 'pointer' }}>+ Novo cartão</button>
+          <button onClick={novo} disabled={pend} style={{ padding: '.45rem 1rem', borderRadius: 9999, border: 'none', background: '#16a34a', color: '#fff', fontWeight: 700, fontSize: '.8rem', cursor: 'pointer' }}>+ Novo cartão</button>
         </div>
       </div>
       {erro && <p style={{ color: '#991b1b', fontSize: '.82rem' }}>{erro}</p>}
@@ -90,7 +90,7 @@ export function ParceirasCards({ parceiras, opcoes, linha = 'paideia' }: { parce
               </div>
 
               <div style={{ display: 'flex', gap: '1rem', fontSize: '.72rem', fontWeight: 700 }}>
-                <button onClick={() => renomear(p)} disabled={pend} style={{ border: 'none', background: 'transparent', color: '#0369a1', cursor: 'pointer', padding: 0 }}>Renomear</button>
+                <button onClick={() => renomear(p)} disabled={pend} style={{ border: 'none', background: 'transparent', color: '#15803d', cursor: 'pointer', padding: 0 }}>Renomear</button>
                 <button onClick={() => remover(p)} disabled={pend} style={{ border: 'none', background: 'transparent', color: '#b91c1c', cursor: 'pointer', padding: 0 }}>Remover cartão</button>
               </div>
             </article>
