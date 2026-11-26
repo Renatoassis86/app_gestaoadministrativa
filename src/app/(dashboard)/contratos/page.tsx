@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 
-// Por ora o módulo é só os cartões das escolas com os contratos anexados.
-// A visão geral (indicadores) fica em /contratos/visao-geral para a etapa de dashboards.
+// Página inicial do módulo = Visão geral (como no módulo de contratos da We Make).
 export default function ContratosIndex() {
-  redirect('/contratos/escolas')
+  redirect('/contratos/visao-geral')
 }
