@@ -39,7 +39,6 @@ export const BLOCOS: Bloco[] = [
 export const MAX_PARTICIPANTES = 6
 
 // Nenhuma pergunta é obrigatória para a escola. Campos "interno" são preenchidos só pelo comercial (a escola não vê).
-// Venda de 2º semestre é padrão Sim para todas as escolas.
 export const CAMPOS: Campo[] = [
   // 1. Identificação
   { chave: 'cnpj', rotulo: 'CNPJ', bloco: 1, tipo: 'cnpj', ajuda: 'CNPJ que emite as notas e assina o contrato.' },
@@ -99,7 +98,6 @@ export const CAMPOS: Campo[] = [
   { chave: 'al_ano4', rotulo: '4º ano', bloco: 7, tipo: 'inteiro' },
   { chave: 'al_ano5', rotulo: '5º ano', bloco: 7, tipo: 'inteiro' },
   { chave: 'al_total', rotulo: 'Total de alunos', bloco: 7, tipo: 'calculado', ajuda: 'Soma automática.' },
-  { chave: 'venda_2sem', rotulo: 'Venda de 2º semestre?', bloco: 7, tipo: 'opcoes', opcoes: SIM_NAO, interno: true },
   // 8. Valor negociado dos kits
   { chave: 'preco_infantil', rotulo: 'Valor negociado do kit Infantil (R$)', bloco: 8, tipo: 'dinheiro', ajuda: 'Valor de cada kit.' },
   { chave: 'preco_fundamental', rotulo: 'Valor negociado do kit Fundamental (R$)', bloco: 8, tipo: 'dinheiro', ajuda: 'Valor de cada kit.' },

@@ -118,9 +118,6 @@ export async function montarPrefill(admin: Admin, escolaId: string, ciclo: numbe
     por('fin_titular', c.titular, F.contrato); por('fin_titular_doc', c.titular_documento, F.contrato); por('fin_pix', c.chave_pix, F.contrato)
   }
 
-  // Venda de 2º semestre: todas as escolas terão a loja no 2º semestre (a escola não é perguntada)
-  por('venda_2sem', 'Sim', F.padrao)
-
   // 9. Entrega
   if (pr && pr.mesmo_endereco_entrega === false) por('ent_endereco', pr.endereco_entrega_material, F.pedidos)
 
