@@ -9,10 +9,9 @@ export interface PaginaContratos {
 export const MODULO_CONTRATOS = {
   nome: 'Gestão de Contratos',
   deck: 'Da minuta à assinatura, todos os contratos num só lugar.',
-  descricao: 'Acompanha a documentação contratual de cada escola: minutas, assinaturas, arquivos e prazos. A jornada contratual usada pela equipe comercial continua disponível para ela; aqui fica a visão de gestão.',
+  descricao: 'Acompanha a documentação contratual de cada escola: minutas, assinaturas, arquivos e prazos.',
   paginas: [
     { nome: 'Visão geral', descricao: 'Indicadores: receita contratada, modelo de contratação, renovações e pendências.', href: '/contratos/visao-geral', status: 'disponível' },
-    { nome: 'Jornada contratual', descricao: 'Minuta, retorno, envio e assinatura de cada contrato, com os arquivos da escola.', href: '/comercial/contratos', status: 'disponível' },
     { nome: 'Dados dos contratos', descricao: 'Cartão de cada escola com os dados do contrato e o documento original.', href: '/contratos/escolas', status: 'disponível' },
     { nome: 'Novo contrato', descricao: 'Cadastro dos dados de um novo contrato.', href: '/contratos/novo', status: 'disponível' },
     { nome: 'Repositório', descricao: 'Contratos assinados, minutas, aditivos e fichas de cada escola.', href: '/contratos/repositorio', status: 'disponível' },

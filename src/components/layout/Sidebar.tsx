@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types/database'
 import { getInitials } from '@/lib/utils'
 import Image from 'next/image'
+import { MODULO_CONTRATOS } from '@/lib/contratos-modulo'
 import {
   LayoutDashboard, School, Users, FileText, Activity,
   Kanban, Calculator, LogOut, Settings,
@@ -206,6 +207,13 @@ export default function Sidebar({ profile }: SidebarProps) {
     router.refresh()
   }
 
+  // Módulo de Gestão de Contratos tem menu próprio (é separado do módulo Comercial)
+  const noContratos = pathname.startsWith('/contratos')
+  const ICONES_CONTRATOS: Record<string, any> = {
+    '/contratos/visao-geral': LayoutDashboard, '/contratos/escolas': School, '/contratos/novo': FileSignature,
+    '/contratos/repositorio': Database, '/contratos/reajustes': TrendingUp, '/contratos/modelos': ClipboardList,
+    '/contratos/assinatura': FileSignature, '/contratos/certidoes': FileText,
+  }
   const isGerente = profile?.role === 'gerente'
   // Gestão de Usuários visível apenas para o administrador principal
   const isAdmin = profile?.email === 'renato.consultoria@cidadeviva.org'
@@ -258,7 +266,7 @@ export default function Sidebar({ profile }: SidebarProps) {
         padding: '1.1rem 1.1rem .9rem',
         borderBottom: '1px solid rgba(255,255,255,.05)',
       }}>
-        <Link href="/comercial" style={{ display: 'block' }}>
+        <Link href={noContratos ? '/contratos' : '/comercial'} style={{ display: 'block' }}>
           <Image
             src="/images/logo-education.png"
             alt="Cidade Viva Education"
@@ -270,14 +278,14 @@ export default function Sidebar({ profile }: SidebarProps) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem', marginTop: '.55rem' }}>
           <span style={{
             display: 'inline-block',
-            width: 6, height: 6, borderRadius: '50%', background: '#d97706', flexShrink: 0,
+            width: 6, height: 6, borderRadius: '50%', background: noContratos ? '#16a34a' : '#d97706', flexShrink: 0,
           }} />
           <span style={{
             fontSize: '.6rem', fontWeight: 700, letterSpacing: '.1em',
-            textTransform: 'uppercase', color: 'rgba(217,119,6,.85)',
+            textTransform: 'uppercase', color: noContratos ? 'rgba(34,197,94,.9)' : 'rgba(217,119,6,.85)',
             fontFamily: 'var(--font-montserrat, sans-serif)',
           }}>
-            Gestão Comercial
+            {noContratos ? 'Gestão de Contratos' : 'Gestão Comercial'}
           </span>
         </div>
       </div>
@@ -285,6 +293,18 @@ export default function Sidebar({ profile }: SidebarProps) {
       {/* ── Nav ───────────────────────────────────────────────── */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '.5rem 0 1rem' }}>
 
+        {noContratos ? (
+          <>
+            <SectionLabel>Gestão de Contratos</SectionLabel>
+            {MODULO_CONTRATOS.paginas.map(pg => (
+              <NavItem key={pg.href} href={pg.href} label={pg.nome} icon={ICONES_CONTRATOS[pg.href] ?? FileText} active={isActive(pg.href)} />
+            ))}
+            <NavDivider />
+            <NavItem href="/" label="Voltar ao Hub" icon={Globe} active={false} />
+            {isAdmin && <NavItem href="/adminpanel" label="Gestão de Usuários" icon={Settings} active={isActive('/adminpanel')} />}
+          </>
+        ) : (
+          <>
         {/* ── Sobre + Tutorial — primeiras abas ────────────────── */}
         <NavItem href="/sobre"    label="Plataforma Education" icon={Info}     active={isActive('/sobre')} />
         <NavItem href="/tutorial" label="Tutorial"     icon={BookOpen} active={isActive('/tutorial')} />
@@ -363,6 +383,8 @@ export default function Sidebar({ profile }: SidebarProps) {
             wip
           />
         ))}
+          </>
+        )}
       </nav>
 
       {/* ── User Footer ──────────────────────────────────────── */}
