@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { salvarContrato } from '@/lib/contratos-actions'
-import { MODALIDADES, STATUS_CONTRATO, SERIES_CONTRATO, brl, fmtCnpj, soDigitos, type Modalidade } from '@/lib/contratos'
+import { MODALIDADES, STATUS_CONTRATO, STATUS_EM_USO, SERIES_CONTRATO, brl, fmtCnpj, soDigitos, type Modalidade } from '@/lib/contratos'
 
 export interface EscolaOpcao { id: string; nome: string; cnpj: string | null }
 export interface FormInicial {
@@ -136,8 +136,8 @@ export function ContratoForm({ modo, escolas, inicial }: { modo: 'novo' | 'edita
         <Grid>
           <div>
             <label style={lab} htmlFor="status">Situação</label>
-            <select id="status" name="status" defaultValue={c.status ?? 'rascunho'} style={inp}>
-              {Object.entries(STATUS_CONTRATO).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+            <select id="status" name="status" defaultValue={STATUS_EM_USO.includes(c.status) ? c.status : 'assinado'} style={inp}>
+              {STATUS_EM_USO.map(k => <option key={k} value={k}>{STATUS_CONTRATO[k].label}</option>)}
             </select>
           </div>
           <F l="Início da vigência (assinatura)" n="vigencia_inicio" t="date" v={c.vigencia_inicio} />

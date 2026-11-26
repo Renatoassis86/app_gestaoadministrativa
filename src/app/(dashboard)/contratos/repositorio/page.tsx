@@ -25,7 +25,7 @@ export default async function Repositorio() {
   return (
     <>
       <p style={{ fontSize: '.85rem', color: '#64748b', marginBottom: '1rem', maxWidth: 760 }}>
-        Anexe aqui o contrato assinado, minutas, aditivos e fichas de cada escola. Os arquivos ficam em armazenamento privado e abrem por link temporário.
+        Anexe aqui o contrato assinado e os termos aditivos de cada escola. Os arquivos ficam em armazenamento privado e abrem por link temporário.
       </p>
       {escolas.length === 0
         ? <p style={{ color: '#64748b' }}>Nenhum contrato cadastrado ainda.</p>

@@ -36,7 +36,7 @@ const L = (k: string, v: React.ReactNode) => (
 function Card({ d }: { d: CardData }) {
   const [verso, setVerso] = useState(false)
   const m = MODALIDADES[d.modalidade]
-  const st = STATUS_CONTRATO[d.status] ?? STATUS_CONTRATO.rascunho
+  const st = STATUS_CONTRATO[d.status] ?? STATUS_CONTRATO.assinado
   const nomeSerie = (id: string) => SERIES_CONTRATO.find(s => s.id === id)?.label ?? id
 
   return (

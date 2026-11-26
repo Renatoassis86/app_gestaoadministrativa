@@ -10,23 +10,23 @@ export const MODALIDADES = {
 export type Modalidade = keyof typeof MODALIDADES
 
 export const STATUS_CONTRATO: Record<string, { label: string; cor: string; bg: string }> = {
+  assinado:       { label: 'Assinado · em vigência', cor: '#047857', bg: '#d1fae5' },
+  arquivado:      { label: 'Encerrado',         cor: '#475569', bg: '#f1f5f9' },
+  // situações antigas (de antes do módulo ser só de contratos assinados) — só para exibir registros existentes
   rascunho:       { label: 'Rascunho',          cor: '#475569', bg: '#f1f5f9' },
   minuta_enviada: { label: 'Minuta enviada',    cor: '#b45309', bg: '#fef3c7' },
   em_revisao:     { label: 'Em revisão',        cor: '#b45309', bg: '#fef3c7' },
   enviado:        { label: 'Aguardando assinatura', cor: '#0369a1', bg: '#e0f2fe' },
-  assinado:       { label: 'Assinado',          cor: '#047857', bg: '#d1fae5' },
-  arquivado:      { label: 'Arquivado',         cor: '#047857', bg: '#d1fae5' },
   declinou:       { label: 'Declinou',          cor: '#b91c1c', bg: '#fee2e2' },
 }
 
 export const CATEGORIAS_ARQUIVO = [
   { id: 'contrato', label: 'Contrato assinado' },
-  { id: 'minuta',   label: 'Minuta' },
   { id: 'aditivo',  label: 'Termo aditivo' },
-  { id: 'proposta', label: 'Proposta comercial' },
-  { id: 'ficha',    label: 'Ficha de coleta de dados' },
   { id: 'outro',    label: 'Outro' },
 ] as const
+
+export const STATUS_EM_USO = ['assinado', 'arquivado']   // opções do formulário: o módulo só trata contratos assinados
 
 export const BUCKET_CONTRATOS = 'contratos-education'
 

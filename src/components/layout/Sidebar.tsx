@@ -211,8 +211,8 @@ export default function Sidebar({ profile }: SidebarProps) {
   const noContratos = pathname.startsWith('/contratos')
   const ICONES_CONTRATOS: Record<string, any> = {
     '/contratos/visao-geral': LayoutDashboard, '/contratos/escolas': School, '/contratos/novo': FileSignature,
-    '/contratos/repositorio': Database, '/contratos/reajustes': TrendingUp, '/contratos/modelos': ClipboardList,
-    '/contratos/assinatura': FileSignature, '/contratos/certidoes': FileText,
+    '/contratos/repositorio': Database, '/contratos/reajustes': TrendingUp,
+    '/contratos/bilinguismo/painel': LayoutDashboard, '/contratos/bilinguismo/escolas': Globe,
   }
   const isGerente = profile?.role === 'gerente'
   // Gestão de Usuários visível apenas para o administrador principal
@@ -295,9 +295,14 @@ export default function Sidebar({ profile }: SidebarProps) {
 
         {noContratos ? (
           <>
-            <SectionLabel>Gestão de Contratos</SectionLabel>
-            {MODULO_CONTRATOS.paginas.map(pg => (
-              <NavItem key={pg.href} href={pg.href} label={pg.nome} icon={ICONES_CONTRATOS[pg.href] ?? FileText} active={isActive(pg.href)} />
+            {Array.from(new Set(MODULO_CONTRATOS.paginas.map(pg => pg.secao))).map((sec, i) => (
+              <div key={sec}>
+                {i > 0 && <NavDivider />}
+                <SectionLabel>{sec === 'Geral' ? 'Gestão de Contratos' : sec}</SectionLabel>
+                {MODULO_CONTRATOS.paginas.filter(pg => pg.secao === sec).map(pg => (
+                  <NavItem key={pg.href} href={pg.href} label={pg.nome} icon={ICONES_CONTRATOS[pg.href] ?? FileText} active={isActive(pg.href)} />
+                ))}
+              </div>
             ))}
             <NavDivider />
             <NavItem href="/" label="Voltar ao Hub" icon={Globe} active={false} />

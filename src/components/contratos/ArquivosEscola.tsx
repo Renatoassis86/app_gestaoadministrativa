@@ -9,13 +9,13 @@ export interface ArquivoContrato { id: string; nome: string; path: string; taman
 const kb = (n?: number | null) => (n == null ? '' : n > 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.round(n / 1024)} KB`)
 
 // Upload + lista de documentos de UMA escola. Usado no cartão da escola e no Repositório.
-export function ArquivosEscola({ escolaId, inicial, compacto = false }: { escolaId: string; inicial: ArquivoContrato[]; compacto?: boolean }) {
+export function ArquivosEscola({ escolaId, inicial, compacto = false, linha = 'paideia' }: { escolaId: string; inicial: ArquivoContrato[]; compacto?: boolean; linha?: 'paideia' | 'bilinguismo' }) {
   const [arquivos, setArquivos] = useState(inicial)
   const [categoria, setCategoria] = useState('contrato')
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
   const ref = useRef<HTMLInputElement>(null)
-  const idInput = `up-${escolaId}-${compacto ? 'c' : 'r'}`
+  const idInput = `up-${linha}-${escolaId}-${compacto ? 'c' : 'r'}`
 
   async function enviar(ev: React.ChangeEvent<HTMLInputElement>) {
     const file = ev.target.files?.[0]
@@ -28,7 +28,7 @@ export function ArquivosEscola({ escolaId, inicial, compacto = false }: { escola
     const up = await sb.storage.from(BUCKET_CONTRATOS).upload(path, file, { contentType: file.type, upsert: false })
     if (up.error) { setErro(up.error.message); setEnviando(false); return }
     const { data, error } = await sb.from('contratos_arquivos')
-      .insert({ escola_id: escolaId, nome: file.name, path, tamanho: file.size, tipo: file.type, categoria })
+      .insert({ escola_id: escolaId, nome: file.name, path, tamanho: file.size, tipo: file.type, categoria, ...(linha === 'bilinguismo' ? { linha } : {}) })
       .select('id, nome, path, tamanho, categoria, created_at').single()
     if (error || !data) {
       await sb.storage.from(BUCKET_CONTRATOS).remove([path])

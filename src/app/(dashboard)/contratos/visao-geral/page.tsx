@@ -95,7 +95,7 @@ export default async function ContratosVisaoGeral() {
           <div style={{ display: 'grid', gap: '.75rem' }}>
             {linhas.map(l => {
               const p = progressoVigencia(l.c.vigencia_inicio, l.c.vigencia_fim)
-              const st = STATUS_CONTRATO[l.c.status] ?? STATUS_CONTRATO.rascunho
+              const st = STATUS_CONTRATO[l.c.status] ?? STATUS_CONTRATO.assinado
               return (
                 <div key={l.c.id}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '.5rem', fontSize: '.8rem' }}>

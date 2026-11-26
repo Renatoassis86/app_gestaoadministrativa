@@ -20,7 +20,7 @@ export default async function EscolasContratos() {
     return {
       escolaId: escola.id, nome: escola.nome, razao: escola.razao_social, cnpj: escola.cnpj,
       cidadeUf: [escola.cidade?.trim(), escola.estado].filter(Boolean).join('/'),
-      modalidade: c.modalidade as Modalidade, status: c.status ?? 'rascunho',
+      modalidade: c.modalidade as Modalidade, status: c.status ?? 'assinado',
       kits: totalKits(series, ano), valor: c.valor_total ?? calc,
       vigenciaInicio: c.vigencia_inicio, vigenciaFim: c.vigencia_fim,
       legal: { nome: c.legal_nome, cpf: c.legal_cpf, rg: c.legal_rg, email: c.legal_email, tel: c.legal_telefone },
@@ -38,14 +38,14 @@ export default async function EscolasContratos() {
   const ids = (rj ?? []).map(r => r.escola_id).filter(Boolean) as string[]
   const [{ data: arqs }, { data: todas }] = await Promise.all([
     ids.length
-      ? supabase.from('contratos_arquivos').select('id, escola_id, nome, path, tamanho, categoria, created_at').in('escola_id', ids).order('created_at', { ascending: false })
+      ? supabase.from('contratos_arquivos').select('*').in('escola_id', ids).order('created_at', { ascending: false })
       : Promise.resolve({ data: [] as any[] }),
     supabase.from('escolas').select('id, nome, cidade').order('nome'),
   ])
   const parceiras: Parceira[] = (rj ?? []).map(r => ({
     id: r.id, nome: r.escola, categoria: r.categoria, modelo: r.modelo,
     kits: (r.inf2 ?? 0) + (r.inf3 ?? 0) + (r.inf4 ?? 0) + (r.inf5 ?? 0), escolaId: r.escola_id,
-    arquivos: (arqs ?? []).filter(a => a.escola_id === r.escola_id).map(a => ({ ...a, categoria: a.categoria ?? 'contrato' })),
+    arquivos: (arqs ?? []).filter(a => a.escola_id === r.escola_id && (a.linha ?? 'paideia') === 'paideia').map(a => ({ ...a, categoria: a.categoria ?? 'contrato' })),
   }))
   return (
     <>
