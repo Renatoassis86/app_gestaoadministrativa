@@ -54,7 +54,7 @@ export function ArquivosEscola({ escolaId, inicial, compacto = false, linha = 'p
   }
 
   return (
-    <div style={{ borderTop: '1px solid #eef2f6', paddingTop: '.6rem' }}>
+    <div style={compacto ? { minWidth: 0 } : { borderTop: '1px solid #eef2f6', paddingTop: '.6rem' }}>
       <div style={{ display: 'flex', gap: '.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
         <select value={categoria} onChange={ev => setCategoria(ev.target.value)} aria-label="Tipo do documento"
           style={{ flex: compacto ? '1 1 120px' : undefined, padding: '.38rem .45rem', border: '1px solid #cbd5e1', borderRadius: 8, fontSize: '.74rem', minWidth: 0 }}>
